@@ -99,14 +99,31 @@ Unter WSL2 muss das USB-Gerät gegebenenfalls zuerst mit `usbipd-win` an die Dis
 
 ## OpenCode und Dart MCP
 
-Das Projekt enthält eine `opencode.json` mit dem offiziellen Dart-/Flutter-MCP-Server. OpenCode startet ihn über den Nix-Dev-Shell, damit immer die zum Projekt passende Flutter-/Dart-Version verwendet wird.
+Das Projekt enthält eine `opencode.json` mit dem offiziellen Dart-/Flutter-MCP-Server. Der Server wird direkt über `dart mcp-server` gestartet, ohne `nix develop` im MCP-Befehl. Dafür muss OpenCode selbst aus der Nix-Dev-Shell gestartet werden, damit `dart` im `PATH` liegt:
+
+```bash
+nix develop
+opencode --standalone
+```
+
+`--standalone` ist wichtig, wenn bereits ein OpenCode-Hintergrunddienst außerhalb der Dev-Shell läuft. OpenCode würde sonst diesen Dienst wiederverwenden; der MCP-Prozess erbt dessen `PATH` und findet `dart` nicht (`NotFound: ChildProcess.spawn`). Mit `--standalone` startet OpenCode einen privaten Server mit der Umgebung der aktuellen Shell.
+
+Wenn du bewusst den gemeinsamen Hintergrunddienst nutzen willst, beende ihn vorher und starte OpenCode anschließend innerhalb der Dev-Shell neu:
+
+```bash
+nix develop
+opencode service stop
+opencode
+```
+
+Den Status prüfst du im OpenCode-TUI über `/mcps`. Bei Nutzung des gemeinsamen Hintergrunddienstes zusätzlich per CLI:
 
 ```bash
 opencode mcp list
 # ✓ dart  connected
 ```
 
-Der Server stellt unter anderem Analyse, Tests, Pub, Hot Reload/Restart, Widget-Inspector und die Verbindung zur laufenden App über den Dart Tooling Daemon (DTD) bereit. Der erste Start kann etwas länger dauern, wenn der Dev-Shell noch nicht gebaut wurde.
+Der Server stellt unter anderem Analyse, Tests, Pub, Hot Reload/Restart, Widget-Inspector und die Verbindung zur laufenden App über den Dart Tooling Daemon (DTD) bereit.
 
 ## Projektstruktur
 

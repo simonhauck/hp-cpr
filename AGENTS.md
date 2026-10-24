@@ -47,4 +47,4 @@ flutter build apk --debug
 
 ## MCP
 
-Der Dart-/Flutter-MCP-Server ist in `opencode.json` konfiguriert und wird über `nix develop` gestartet. Nach Codeänderungen an einer laufenden App Hot Reload oder Hot Restart verwenden.
+Der Dart-/Flutter-MCP-Server ist in `opencode.json` konfiguriert und wird direkt über `dart mcp-server` gestartet. OpenCode muss dafür aus dem Nix-Dev-Shell laufen, damit `dart` im `PATH` liegt. Wenn ein gemeinsamer OpenCode-Hintergrunddienst bereits außerhalb der Dev-Shell läuft, `opencode --standalone` verwenden oder den Dienst vor dem Start beenden und innerhalb der Dev-Shell neu starten. Nach Codeänderungen an einer laufenden App Hot Reload oder Hot Restart verwenden.

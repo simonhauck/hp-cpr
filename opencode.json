@@ -5,9 +5,6 @@
       "dart": {
         "type": "local",
         "command": [
-          "nix",
-          "develop",
-          "--command",
           "dart",
           "mcp-server",
           "--force-roots-fallback",
@@ -17,7 +14,7 @@
           "flutter_app_lifecycle"
         ],
         "timeout": {
-          "startup": 300000
+          "startup": 30000
         }
       }
     }
