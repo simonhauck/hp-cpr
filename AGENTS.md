@@ -64,6 +64,14 @@ All commits follow [Conventional Commits](https://www.conventionalcommits.org/):
 - The generated `app_localizations*.dart` files are versioned.
 - The app is currently pinned to `Locale('de')` in `lib/app.dart`.
 
+## Code language
+
+- Domain nouns from `GLOSSARY.md` keep their German term in code identifiers: `Reanimationsfall`, `Startzeit`, `Druckphase`, `Leitlinienprofil`.
+- Technical scaffolding and framework concepts stay English: `Clock`, `Settings`, `Page`, `Snapshot`, `Chip`, `Timer`.
+- Methods and tests use English verbs with the German domain nouns: `startReanimationsfall`, `enterAnalysephase`.
+- L10n keys stay English identifiers; their values are German.
+- See `docs/adr/0001-german-domain-terms-in-code.md`.
+
 ## Platforms
 
 - Android and web are the active targets.

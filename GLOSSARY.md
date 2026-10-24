@@ -16,6 +16,18 @@ _Avoid_: Session, run, event
 The corrected time zero of a case, set from the first compression; it can be backdated on the start screen.
 _Avoid_: Start timestamp, begin time
 
+**Reanimationsdauer**:
+The time from the Startzeit to now, shown on the running case screen.
+_Avoid_: Case time, elapsed time
+
+**Leitlinienprofil**:
+The AHA 2025 or ERC 2025 timing baseline selected in settings and snapshotted for each Reanimationsfall.
+_Avoid_: Guideline profile, guideline standard
+
+**Reanimationsphase**:
+The current part of a Reanimationsfall: Druckphase or Analysephase.
+_Avoid_: Case phase, CPR phase
+
 **Druckphase**:
 The period in which chest compressions run and the 2-minute compression timer counts down.
 _Avoid_: Compression phase, CPR phase

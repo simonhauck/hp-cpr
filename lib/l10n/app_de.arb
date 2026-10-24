@@ -4,44 +4,119 @@
   "@appTitle": {
     "description": "Name der App"
   },
-  "homeTitle": "Reanimations-Tracker",
-  "@homeTitle": {
-    "description": "Titel der Startseite"
+  "newCaseTitle": "Neuer Reanimationsfall",
+  "@newCaseTitle": {
+    "description": "Überschrift der Startseite"
   },
-  "homeSubtitle": "High-Performance-CPR",
-  "@homeSubtitle": {
-    "description": "Untertitel der Startseite"
+  "guidelineLabel": "Leitlinie",
+  "@guidelineLabel": {
+    "description": "Beschriftung des Leitlinien-Chips"
   },
-  "homeDescription": "Die Companion-App begleitet künftig den Reanimationsablauf mit Timer, Medikamenten- und Analyse-Erinnerungen.",
-  "@homeDescription": {
-    "description": "Kurze Beschreibung des geplanten Funktionsumfangs"
+  "guidelineErc2025": "ERC 2025",
+  "@guidelineErc2025": {
+    "description": "Name des ERC-2025-Leitlinienprofils"
+  },
+  "guidelineAha2025": "AHA 2025",
+  "@guidelineAha2025": {
+    "description": "Name des AHA-2025-Leitlinienprofils"
+  },
+  "startNowTitle": "Reanimation startet jetzt",
+  "@startNowTitle": {
+    "description": "Überschrift der Sofort-Start-Karte"
+  },
+  "startNowDescription": "Die erste Thoraxkompression ist die Startzeit.",
+  "@startNowDescription": {
+    "description": "Erklärung der Sofort-Start-Karte"
+  },
+  "startNowButton": "Jetzt starten",
+  "@startNowButton": {
+    "description": "Schaltfläche zum sofortigen Start"
+  },
+  "runningCaseTitle": "Laufende Reanimation",
+  "@runningCaseTitle": {
+    "description": "Überschrift der Karte für eine bereits laufende Reanimation"
+  },
+  "backdateMinutesLabel": "Minuten seit Beginn",
+  "@backdateMinutesLabel": {
+    "description": "Beschriftung der Minuten-Auswahl für eine zurückdatierte Startzeit"
+  },
+  "backdateChip": "{minutes} min",
+  "@backdateChip": {
+    "description": "Voreinstellung für eine zurückdatierte Startzeit",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "customStartzeitButton": "Eigene Startzeit",
+  "@customStartzeitButton": {
+    "description": "Schaltfläche zum Eingeben einer eigenen Startzeit"
+  },
+  "customStartzeitTitle": "Eigene Startzeit",
+  "@customStartzeitTitle": {
+    "description": "Titel des Dialogs für eine eigene Startzeit"
+  },
+  "customStartzeitDescription": "Wie lange läuft die Reanimation bereits?",
+  "@customStartzeitDescription": {
+    "description": "Erklärung im Dialog für eine eigene Startzeit"
+  },
+  "minutesLabel": "Minuten",
+  "@minutesLabel": {
+    "description": "Beschriftung des Minutenfelds"
+  },
+  "secondsLabel": "Sekunden",
+  "@secondsLabel": {
+    "description": "Beschriftung des Sekundenfelds"
+  },
+  "cancelButton": "Abbrechen",
+  "@cancelButton": {
+    "description": "Schaltfläche zum Abbrechen eines Dialogs"
+  },
+  "startCaseButton": "Starten",
+  "@startCaseButton": {
+    "description": "Schaltfläche zum Starten eines Falls aus einem Dialog"
+  },
+  "invalidBackdateMessage": "Bitte eine Dauer größer als 0 eingeben.",
+  "@invalidBackdateMessage": {
+    "description": "Fehlermeldung bei einer leeren oder nullwertigen Startzeit"
+  },
+  "invalidSecondsMessage": "Sekunden müssen zwischen 0 und 59 liegen.",
+  "@invalidSecondsMessage": {
+    "description": "Fehlermeldung bei einem ungültigen Sekundenwert"
   },
   "elapsedTimeLabel": "Reanimationsdauer",
   "@elapsedTimeLabel": {
-    "description": "Beschriftung der Timer-Anzeige"
+    "description": "Beschriftung der Anzeige der Fall-Dauer"
   },
-  "elapsedTimePlaceholder": "00:00",
-  "@elapsedTimePlaceholder": {
-    "description": "Platzhalterwert der Timer-Anzeige"
+  "startzeitValue": "Startzeit {time}",
+  "@startzeitValue": {
+    "description": "Anzeige der Startzeit mit Uhrzeit",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
-  "statusNotStarted": "Noch nicht gestartet",
-  "@statusNotStarted": {
-    "description": "Status der Reanimation"
+  "phaseDruckphase": "Druckphase",
+  "@phaseDruckphase": {
+    "description": "Name der aktiven Phase mit Thoraxkompressionen"
   },
-  "startCprButton": "Reanimation starten",
-  "@startCprButton": {
-    "description": "Beschriftung der Startschaltfläche"
+  "nextAnalysisLabel": "Nächste Analyse",
+  "@nextAnalysisLabel": {
+    "description": "Beschriftung des Kompressionstimers vor Ablauf"
   },
-  "comingSoonHint": "Der Timer wird im nächsten Entwicklungsschritt ergänzt.",
-  "@comingSoonHint": {
-    "description": "Hinweis auf die noch fehlende Timer-Funktion"
+  "analysisDue": "Analyse fällig",
+  "@analysisDue": {
+    "description": "Hinweis, dass die Rhythmusanalyse jetzt fällig ist"
   },
-  "setupCompleteTitle": "Projekt eingerichtet",
-  "@setupCompleteTitle": {
-    "description": "Titel der Setup-Karte"
-  },
-  "setupCompleteDescription": "Flutter, die Android- und Web-Ziele sowie die deutsche Oberfläche sind vorbereitet.",
-  "@setupCompleteDescription": {
-    "description": "Beschreibung des abgeschlossenen Projekt-Setups"
+  "overdueTimer": "+{time}",
+  "@overdueTimer": {
+    "description": "Anzeige der überfälligen Zeit seit dem Analysezeitpunkt",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   }
 }

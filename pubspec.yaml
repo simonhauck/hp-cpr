@@ -13,6 +13,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: any
+  wakelock_plus: ^1.8.2
 
 dev_dependencies:
   flutter_test:

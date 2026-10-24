@@ -13,35 +13,87 @@ class AppLocalizationsDe extends AppLocalizations {
   String get appTitle => 'HP-CPR';
 
   @override
-  String get homeTitle => 'Reanimations-Tracker';
+  String get newCaseTitle => 'Neuer Reanimationsfall';
 
   @override
-  String get homeSubtitle => 'High-Performance-CPR';
+  String get guidelineLabel => 'Leitlinie';
 
   @override
-  String get homeDescription =>
-      'Die Companion-App begleitet künftig den Reanimationsablauf mit Timer, Medikamenten- und Analyse-Erinnerungen.';
+  String get guidelineErc2025 => 'ERC 2025';
+
+  @override
+  String get guidelineAha2025 => 'AHA 2025';
+
+  @override
+  String get startNowTitle => 'Reanimation startet jetzt';
+
+  @override
+  String get startNowDescription =>
+      'Die erste Thoraxkompression ist die Startzeit.';
+
+  @override
+  String get startNowButton => 'Jetzt starten';
+
+  @override
+  String get runningCaseTitle => 'Laufende Reanimation';
+
+  @override
+  String get backdateMinutesLabel => 'Minuten seit Beginn';
+
+  @override
+  String backdateChip(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get customStartzeitButton => 'Eigene Startzeit';
+
+  @override
+  String get customStartzeitTitle => 'Eigene Startzeit';
+
+  @override
+  String get customStartzeitDescription =>
+      'Wie lange läuft die Reanimation bereits?';
+
+  @override
+  String get minutesLabel => 'Minuten';
+
+  @override
+  String get secondsLabel => 'Sekunden';
+
+  @override
+  String get cancelButton => 'Abbrechen';
+
+  @override
+  String get startCaseButton => 'Starten';
+
+  @override
+  String get invalidBackdateMessage =>
+      'Bitte eine Dauer größer als 0 eingeben.';
+
+  @override
+  String get invalidSecondsMessage =>
+      'Sekunden müssen zwischen 0 und 59 liegen.';
 
   @override
   String get elapsedTimeLabel => 'Reanimationsdauer';
 
   @override
-  String get elapsedTimePlaceholder => '00:00';
+  String startzeitValue(String time) {
+    return 'Startzeit $time';
+  }
 
   @override
-  String get statusNotStarted => 'Noch nicht gestartet';
+  String get phaseDruckphase => 'Druckphase';
 
   @override
-  String get startCprButton => 'Reanimation starten';
+  String get nextAnalysisLabel => 'Nächste Analyse';
 
   @override
-  String get comingSoonHint =>
-      'Der Timer wird im nächsten Entwicklungsschritt ergänzt.';
+  String get analysisDue => 'Analyse fällig';
 
   @override
-  String get setupCompleteTitle => 'Projekt eingerichtet';
-
-  @override
-  String get setupCompleteDescription =>
-      'Flutter, die Android- und Web-Ziele sowie die deutsche Oberfläche sind vorbereitet.';
+  String overdueTimer(String time) {
+    return '+$time';
+  }
 }

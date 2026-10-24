@@ -100,65 +100,155 @@ abstract class AppLocalizations {
   /// **'HP-CPR'**
   String get appTitle;
 
-  /// Titel der Startseite
+  /// Überschrift der Startseite
   ///
   /// In de, this message translates to:
-  /// **'Reanimations-Tracker'**
-  String get homeTitle;
+  /// **'Neuer Reanimationsfall'**
+  String get newCaseTitle;
 
-  /// Untertitel der Startseite
+  /// Beschriftung des Leitlinien-Chips
   ///
   /// In de, this message translates to:
-  /// **'High-Performance-CPR'**
-  String get homeSubtitle;
+  /// **'Leitlinie'**
+  String get guidelineLabel;
 
-  /// Kurze Beschreibung des geplanten Funktionsumfangs
+  /// Name des ERC-2025-Leitlinienprofils
   ///
   /// In de, this message translates to:
-  /// **'Die Companion-App begleitet künftig den Reanimationsablauf mit Timer, Medikamenten- und Analyse-Erinnerungen.'**
-  String get homeDescription;
+  /// **'ERC 2025'**
+  String get guidelineErc2025;
 
-  /// Beschriftung der Timer-Anzeige
+  /// Name des AHA-2025-Leitlinienprofils
+  ///
+  /// In de, this message translates to:
+  /// **'AHA 2025'**
+  String get guidelineAha2025;
+
+  /// Überschrift der Sofort-Start-Karte
+  ///
+  /// In de, this message translates to:
+  /// **'Reanimation startet jetzt'**
+  String get startNowTitle;
+
+  /// Erklärung der Sofort-Start-Karte
+  ///
+  /// In de, this message translates to:
+  /// **'Die erste Thoraxkompression ist die Startzeit.'**
+  String get startNowDescription;
+
+  /// Schaltfläche zum sofortigen Start
+  ///
+  /// In de, this message translates to:
+  /// **'Jetzt starten'**
+  String get startNowButton;
+
+  /// Überschrift der Karte für eine bereits laufende Reanimation
+  ///
+  /// In de, this message translates to:
+  /// **'Laufende Reanimation'**
+  String get runningCaseTitle;
+
+  /// Beschriftung der Minuten-Auswahl für eine zurückdatierte Startzeit
+  ///
+  /// In de, this message translates to:
+  /// **'Minuten seit Beginn'**
+  String get backdateMinutesLabel;
+
+  /// Voreinstellung für eine zurückdatierte Startzeit
+  ///
+  /// In de, this message translates to:
+  /// **'{minutes} min'**
+  String backdateChip(int minutes);
+
+  /// Schaltfläche zum Eingeben einer eigenen Startzeit
+  ///
+  /// In de, this message translates to:
+  /// **'Eigene Startzeit'**
+  String get customStartzeitButton;
+
+  /// Titel des Dialogs für eine eigene Startzeit
+  ///
+  /// In de, this message translates to:
+  /// **'Eigene Startzeit'**
+  String get customStartzeitTitle;
+
+  /// Erklärung im Dialog für eine eigene Startzeit
+  ///
+  /// In de, this message translates to:
+  /// **'Wie lange läuft die Reanimation bereits?'**
+  String get customStartzeitDescription;
+
+  /// Beschriftung des Minutenfelds
+  ///
+  /// In de, this message translates to:
+  /// **'Minuten'**
+  String get minutesLabel;
+
+  /// Beschriftung des Sekundenfelds
+  ///
+  /// In de, this message translates to:
+  /// **'Sekunden'**
+  String get secondsLabel;
+
+  /// Schaltfläche zum Abbrechen eines Dialogs
+  ///
+  /// In de, this message translates to:
+  /// **'Abbrechen'**
+  String get cancelButton;
+
+  /// Schaltfläche zum Starten eines Falls aus einem Dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Starten'**
+  String get startCaseButton;
+
+  /// Fehlermeldung bei einer leeren oder nullwertigen Startzeit
+  ///
+  /// In de, this message translates to:
+  /// **'Bitte eine Dauer größer als 0 eingeben.'**
+  String get invalidBackdateMessage;
+
+  /// Fehlermeldung bei einem ungültigen Sekundenwert
+  ///
+  /// In de, this message translates to:
+  /// **'Sekunden müssen zwischen 0 und 59 liegen.'**
+  String get invalidSecondsMessage;
+
+  /// Beschriftung der Anzeige der Fall-Dauer
   ///
   /// In de, this message translates to:
   /// **'Reanimationsdauer'**
   String get elapsedTimeLabel;
 
-  /// Platzhalterwert der Timer-Anzeige
+  /// Anzeige der Startzeit mit Uhrzeit
   ///
   /// In de, this message translates to:
-  /// **'00:00'**
-  String get elapsedTimePlaceholder;
+  /// **'Startzeit {time}'**
+  String startzeitValue(String time);
 
-  /// Status der Reanimation
+  /// Name der aktiven Phase mit Thoraxkompressionen
   ///
   /// In de, this message translates to:
-  /// **'Noch nicht gestartet'**
-  String get statusNotStarted;
+  /// **'Druckphase'**
+  String get phaseDruckphase;
 
-  /// Beschriftung der Startschaltfläche
+  /// Beschriftung des Kompressionstimers vor Ablauf
   ///
   /// In de, this message translates to:
-  /// **'Reanimation starten'**
-  String get startCprButton;
+  /// **'Nächste Analyse'**
+  String get nextAnalysisLabel;
 
-  /// Hinweis auf die noch fehlende Timer-Funktion
+  /// Hinweis, dass die Rhythmusanalyse jetzt fällig ist
   ///
   /// In de, this message translates to:
-  /// **'Der Timer wird im nächsten Entwicklungsschritt ergänzt.'**
-  String get comingSoonHint;
+  /// **'Analyse fällig'**
+  String get analysisDue;
 
-  /// Titel der Setup-Karte
+  /// Anzeige der überfälligen Zeit seit dem Analysezeitpunkt
   ///
   /// In de, this message translates to:
-  /// **'Projekt eingerichtet'**
-  String get setupCompleteTitle;
-
-  /// Beschreibung des abgeschlossenen Projekt-Setups
-  ///
-  /// In de, this message translates to:
-  /// **'Flutter, die Android- und Web-Ziele sowie die deutsche Oberfläche sind vorbereitet.'**
-  String get setupCompleteDescription;
+  /// **'+{time}'**
+  String overdueTimer(String time);
 }
 
 class _AppLocalizationsDelegate

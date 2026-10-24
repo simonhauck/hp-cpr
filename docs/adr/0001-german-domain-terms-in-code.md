@@ -1,0 +1,5 @@
+# German domain terms in code
+
+The Zeitnehmer-facing domain is German: the UI, `GLOSSARY.md`, and the clinicians who define the workflow use terms such as **Reanimationsfall**, **Startzeit**, **Druckphase**, and **Leitlinienprofil**. Code identifiers that name a glossary concept therefore use the German term, while technical scaffolding and framework concepts stay English (`Clock`, `Settings`, `Page`, `Snapshot`, `Chip`). Methods and test descriptions combine English verbs with the German nouns, for example `startReanimationsfall` or `enterAnalysephase`.
+
+**Considered options:** English-only identifiers with a German glossary was rejected because it invites synonyms such as case, session, and run and weakens the link to the UI vocabulary. Translating all identifiers to German was rejected because it forces German wrappers around Flutter concepts and makes generic code harder to read. Renaming the domain terms later would touch the whole domain layer, which is why this decision is recorded.
