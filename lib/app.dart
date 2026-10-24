@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/core/clock.dart';
 import 'package:hp_cpr/core/wake_lock.dart';
-import 'package:hp_cpr/features/case_session/presentation/start_page.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/start_page.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 

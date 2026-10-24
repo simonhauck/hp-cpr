@@ -3,23 +3,28 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/core/wake_lock.dart';
-import 'package:hp_cpr/features/case_session/domain/case_session.dart';
-import 'package:hp_cpr/features/case_session/presentation/timer_format.dart';
-import 'package:hp_cpr/features/guideline/presentation/guideline_chip.dart';
+import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
+import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_chip.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 
 /// The running Reanimationsfall in its Druckphase.
-class CasePage extends StatefulWidget {
-  const CasePage({super.key, required this.session, required this.wakeLock});
+class ReanimationsfallPage extends StatefulWidget {
+  const ReanimationsfallPage({
+    super.key,
+    required this.reanimationsfall,
+    required this.wakeLock,
+  });
 
-  final CaseSession session;
+  final Reanimationsfall reanimationsfall;
   final WakeLock wakeLock;
 
   @override
-  State<CasePage> createState() => _CasePageState();
+  State<ReanimationsfallPage> createState() => _ReanimationsfallPageState();
 }
 
-class _CasePageState extends State<CasePage> with WidgetsBindingObserver {
+class _ReanimationsfallPageState extends State<ReanimationsfallPage>
+    with WidgetsBindingObserver {
   Timer? _ticker;
 
   @override
@@ -43,14 +48,14 @@ class _CasePageState extends State<CasePage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && mounted) {
-      widget.session.reconcileWithWallClock();
+      widget.reanimationsfall.reconcileWithWallClock();
       setState(() {});
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final view = widget.session.snapshot();
+    final snapshot = widget.reanimationsfall.snapshot();
 
     return Scaffold(
       body: SafeArea(
@@ -62,8 +67,10 @@ class _CasePageState extends State<CasePage> with WidgetsBindingObserver {
                 final isLandscape = viewport.maxWidth > viewport.maxHeight;
                 final isCompact = viewport.maxHeight < 400;
 
-                final elapsed = _ElapsedPanel(view: view);
-                final timer = _CompressionTimerPanel(view: view);
+                final reanimationsdauerPanel = _ReanimationsdauerPanel(
+                  snapshot: snapshot,
+                );
+                final timer = _CompressionTimerPanel(snapshot: snapshot);
 
                 return Padding(
                   padding: EdgeInsets.fromLTRB(
@@ -75,21 +82,27 @@ class _CasePageState extends State<CasePage> with WidgetsBindingObserver {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _CaseHeader(view: view, compact: isCompact),
+                      _ReanimationsfallHeader(
+                        snapshot: snapshot,
+                        compact: isCompact,
+                      ),
                       SizedBox(height: isCompact ? 8 : 12),
                       Expanded(
                         child: isLandscape
                             ? Row(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  Expanded(flex: 4, child: elapsed),
+                                  Expanded(
+                                    flex: 4,
+                                    child: reanimationsdauerPanel,
+                                  ),
                                   SizedBox(width: isCompact ? 12 : 16),
                                   Expanded(flex: 6, child: timer),
                                 ],
                               )
                             : Column(
                                 children: [
-                                  elapsed,
+                                  reanimationsdauerPanel,
                                   const SizedBox(height: 16),
                                   Expanded(child: timer),
                                 ],
@@ -107,10 +120,13 @@ class _CasePageState extends State<CasePage> with WidgetsBindingObserver {
   }
 }
 
-class _CaseHeader extends StatelessWidget {
-  const _CaseHeader({required this.view, required this.compact});
+class _ReanimationsfallHeader extends StatelessWidget {
+  const _ReanimationsfallHeader({
+    required this.snapshot,
+    required this.compact,
+  });
 
-  final CaseSessionView view;
+  final ReanimationsfallSnapshot snapshot;
   final bool compact;
 
   @override
@@ -118,8 +134,8 @@ class _CaseHeader extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
-    final phaseLabel = switch (view.phase) {
-      CasePhase.druckphase => l10n.phaseDruckphase,
+    final phaseLabel = switch (snapshot.phase) {
+      Reanimationsphase.druckphase => l10n.phaseDruckphase,
     };
 
     return Row(
@@ -142,16 +158,19 @@ class _CaseHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        GuidelineChip(profile: view.profile, compact: compact),
+        LeitlinienprofilChip(
+          leitlinienprofil: snapshot.leitlinienprofil,
+          compact: compact,
+        ),
       ],
     );
   }
 }
 
-class _ElapsedPanel extends StatelessWidget {
-  const _ElapsedPanel({required this.view});
+class _ReanimationsdauerPanel extends StatelessWidget {
+  const _ReanimationsdauerPanel({required this.snapshot});
 
-  final CaseSessionView view;
+  final ReanimationsfallSnapshot snapshot;
 
   @override
   Widget build(BuildContext context) {
@@ -170,7 +189,7 @@ class _ElapsedPanel extends StatelessWidget {
         FittedBox(
           fit: BoxFit.scaleDown,
           child: Text(
-            formatCaseElapsed(view.elapsed),
+            formatReanimationsdauer(snapshot.reanimationsdauer),
             style: theme.textTheme.displayMedium?.copyWith(
               fontWeight: FontWeight.w700,
               fontFeatures: const [FontFeature.tabularFigures()],
@@ -179,7 +198,7 @@ class _ElapsedPanel extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          l10n.startzeitValue(formatWallTime(view.startzeit)),
+          l10n.startzeitValue(formatWallTime(snapshot.startzeit)),
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -190,15 +209,15 @@ class _ElapsedPanel extends StatelessWidget {
 }
 
 class _CompressionTimerPanel extends StatelessWidget {
-  const _CompressionTimerPanel({required this.view});
+  const _CompressionTimerPanel({required this.snapshot});
 
-  final CaseSessionView view;
+  final ReanimationsfallSnapshot snapshot;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final isDue = view.isAnalysisDue;
+    final isDue = snapshot.isRhythmusanalyseDue;
     final foreground = isDue
         ? theme.colorScheme.onErrorContainer
         : theme.colorScheme.onSurface;
@@ -245,8 +264,10 @@ class _CompressionTimerPanel extends StatelessWidget {
               fit: BoxFit.scaleDown,
               child: Text(
                 isDue
-                    ? l10n.overdueTimer(formatElapsed(view.analysisOverdue))
-                    : formatCountdown(view.compressionRemaining),
+                    ? l10n.overdueTimer(
+                        formatElapsed(snapshot.rhythmusanalyseOverdue),
+                      )
+                    : formatCountdown(snapshot.compressionRemaining),
                 style: TextStyle(
                   fontSize: 150,
                   height: 1,

@@ -1,24 +1,25 @@
 import 'package:flutter/foundation.dart';
 
-import 'package:hp_cpr/features/guideline/domain/guideline_profile.dart';
+import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 
 /// App-wide settings.
 ///
-/// A case snapshots the guideline profile when it starts, so changing the
-/// setting later never rewrites an active or completed Reanimationsfall.
+/// A Reanimationsfall snapshots the Leitlinienprofil when it starts, so
+/// changing the setting later never rewrites an active or completed
+/// Reanimationsfall.
 class AppSettings extends ChangeNotifier {
-  AppSettings({GuidelineProfile guidelineProfile = GuidelineProfile.erc2025})
-    : this._(guidelineProfile);
+  AppSettings({Leitlinienprofil leitlinienprofil = Leitlinienprofil.erc2025})
+    : this._(leitlinienprofil);
 
-  AppSettings._(this._guidelineProfile);
+  AppSettings._(this._leitlinienprofil);
 
-  GuidelineProfile _guidelineProfile;
+  Leitlinienprofil _leitlinienprofil;
 
-  GuidelineProfile get guidelineProfile => _guidelineProfile;
+  Leitlinienprofil get leitlinienprofil => _leitlinienprofil;
 
-  set guidelineProfile(GuidelineProfile value) {
-    if (_guidelineProfile == value) return;
-    _guidelineProfile = value;
+  set leitlinienprofil(Leitlinienprofil value) {
+    if (_leitlinienprofil == value) return;
+    _leitlinienprofil = value;
     notifyListeners();
   }
 }

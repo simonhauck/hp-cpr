@@ -135,25 +135,26 @@ lib/
 │   ├── clock.dart                              # wall-clock + monotonic time source
 │   └── wake_lock.dart                          # keeps the screen awake during a case
 ├── features/
-│   ├── case_session/
+│   ├── reanimationsfall/
 │   │   ├── domain/
-│   │   │   └── case_session.dart               # Startzeit, Druckphase, timer read model
+│   │   │   └── reanimationsfall.dart           # Startzeit, Reanimationsphase, read model
 │   │   └── presentation/
-│   │       ├── case_page.dart                  # running case screen
+│   │       ├── reanimationsfall_page.dart      # running Reanimationsfall
 │   │       ├── custom_startzeit_dialog.dart    # custom backdate entry
-│   │       ├── start_page.dart                 # new case + backdated Startzeit
+│   │       ├── start_page.dart                 # new Reanimationsfall + backdated Startzeit
 │   │       └── timer_format.dart               # MM:SS / H:MM:SS formatting
-│   ├── guideline/
-│   │   ├── domain/guideline_profile.dart       # ERC 2025 / AHA 2025
-│   │   └── presentation/guideline_chip.dart    # read-only profile chip
+│   ├── leitlinienprofil/
+│   │   ├── domain/leitlinienprofil.dart        # ERC 2025 / AHA 2025
+│   │   └── presentation/
+│   │       └── leitlinienprofil_chip.dart      # read-only Leitlinienprofil chip
 │   └── settings/
-│       └── domain/app_settings.dart            # guideline standard selection
+│       └── domain/app_settings.dart            # Leitlinienprofil selection
 └── l10n/
     ├── app_de.arb                              # German UI strings
     └── app_localizations*.dart                 # generated
 test/
 ├── app_test.dart                               # start-screen and running-screen flows
-├── case_session_test.dart                      # start, backdate, and timer rules
+├── reanimationsfall_test.dart                  # start, backdate, and timer rules
 └── support/                                    # fake clock and wake lock
 android/                                        # Android target
 web/                                            # web target

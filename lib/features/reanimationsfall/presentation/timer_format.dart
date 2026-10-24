@@ -13,8 +13,8 @@ String formatElapsed(Duration elapsed) {
   return _minutesAndSeconds(elapsed.inSeconds);
 }
 
-/// Formats a duration as `MM:SS` or `H:MM:SS` for the case elapsed time.
-String formatCaseElapsed(Duration duration) {
+/// Formats a duration as `MM:SS` or `H:MM:SS` for the Reanimationsdauer.
+String formatReanimationsdauer(Duration duration) {
   if (duration.inHours == 0) return formatElapsed(duration);
 
   final minutes = _twoDigits(duration.inMinutes.remainder(60));

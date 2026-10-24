@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 
-import 'package:hp_cpr/features/guideline/domain/guideline_profile.dart';
+import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 
-/// The read-only guideline profile chip shown before and during a case.
-class GuidelineChip extends StatelessWidget {
-  const GuidelineChip({super.key, required this.profile, this.compact = false});
+/// The read-only Leitlinienprofil chip shown before and during a Reanimationsfall.
+class LeitlinienprofilChip extends StatelessWidget {
+  const LeitlinienprofilChip({
+    super.key,
+    required this.leitlinienprofil,
+    this.compact = false,
+  });
 
-  final GuidelineProfile profile;
+  final Leitlinienprofil leitlinienprofil;
 
   /// Whether to use a smaller chip for short landscape screens.
   final bool compact;
@@ -17,9 +21,9 @@ class GuidelineChip extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
-    final label = switch (profile) {
-      GuidelineProfile.erc2025 => l10n.guidelineErc2025,
-      GuidelineProfile.aha2025 => l10n.guidelineAha2025,
+    final label = switch (leitlinienprofil) {
+      Leitlinienprofil.erc2025 => l10n.guidelineErc2025,
+      Leitlinienprofil.aha2025 => l10n.guidelineAha2025,
     };
 
     return Tooltip(

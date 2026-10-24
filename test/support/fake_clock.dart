@@ -3,7 +3,8 @@ import 'package:hp_cpr/core/clock.dart';
 /// A controllable clock for tests.
 ///
 /// Wall-clock and monotonic time advance independently so tests can model a
-/// device clock jump without changing the elapsed time of a case.
+/// device clock jump without changing the Reanimationsdauer of a
+/// Reanimationsfall.
 class FakeClock implements AppClock {
   FakeClock({DateTime? wallTime})
     : _wallTime = wallTime ?? DateTime(2026, 10, 25, 8);

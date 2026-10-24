@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/core/clock.dart';
 import 'package:hp_cpr/core/wake_lock.dart';
-import 'package:hp_cpr/features/case_session/domain/case_session.dart';
-import 'package:hp_cpr/features/case_session/presentation/case_page.dart';
-import 'package:hp_cpr/features/case_session/presentation/custom_startzeit_dialog.dart';
-import 'package:hp_cpr/features/guideline/presentation/guideline_chip.dart';
+import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/reanimationsfall_page.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/custom_startzeit_dialog.dart';
+import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_chip.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 
@@ -39,13 +39,15 @@ class StartPage extends StatelessWidget {
 
                 final startNowCard = _StartNowCard(
                   compact: isCompact,
-                  onStart: () => _startCase(context, Duration.zero),
+                  onStart: () => _startReanimationsfall(context, Duration.zero),
                 );
-                final runningCaseCard = _RunningCaseCard(
-                  compact: isCompact,
-                  onStartBackdated: (backdate) => _startCase(context, backdate),
-                  onCustomStartzeit: () => _showCustomStartzeit(context),
-                );
+                final runningReanimationsfallCard =
+                    _RunningReanimationsfallCard(
+                      compact: isCompact,
+                      onStartBackdated: (backdate) =>
+                          _startReanimationsfall(context, backdate),
+                      onCustomStartzeit: () => _showCustomStartzeit(context),
+                    );
 
                 return Padding(
                   padding: EdgeInsets.fromLTRB(
@@ -89,8 +91,8 @@ class StartPage extends StatelessWidget {
                           ),
                           AnimatedBuilder(
                             animation: settings,
-                            builder: (context, _) => GuidelineChip(
-                              profile: settings.guidelineProfile,
+                            builder: (context, _) => LeitlinienprofilChip(
+                              leitlinienprofil: settings.leitlinienprofil,
                               compact: isCompact,
                             ),
                           ),
@@ -104,14 +106,14 @@ class StartPage extends StatelessWidget {
                                 children: [
                                   Expanded(child: startNowCard),
                                   const SizedBox(width: 12),
-                                  Expanded(child: runningCaseCard),
+                                  Expanded(child: runningReanimationsfallCard),
                                 ],
                               )
                             : ListView(
                                 children: [
                                   startNowCard,
                                   const SizedBox(height: 12),
-                                  runningCaseCard,
+                                  runningReanimationsfallCard,
                                 ],
                               ),
                       ),
@@ -126,16 +128,19 @@ class StartPage extends StatelessWidget {
     );
   }
 
-  void _startCase(BuildContext context, Duration backdate) {
-    final session = CaseSession.start(
+  void _startReanimationsfall(BuildContext context, Duration backdate) {
+    final reanimationsfall = Reanimationsfall.start(
       clock: clock,
-      profile: settings.guidelineProfile,
+      leitlinienprofil: settings.leitlinienprofil,
       backdate: backdate,
     );
 
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => CasePage(session: session, wakeLock: wakeLock),
+        builder: (_) => ReanimationsfallPage(
+          reanimationsfall: reanimationsfall,
+          wakeLock: wakeLock,
+        ),
       ),
     );
   }
@@ -147,7 +152,7 @@ class StartPage extends StatelessWidget {
     );
 
     if (backdate == null || !context.mounted) return;
-    _startCase(context, backdate);
+    _startReanimationsfall(context, backdate);
   }
 }
 
@@ -214,8 +219,8 @@ class _StartNowCard extends StatelessWidget {
   }
 }
 
-class _RunningCaseCard extends StatelessWidget {
-  const _RunningCaseCard({
+class _RunningReanimationsfallCard extends StatelessWidget {
+  const _RunningReanimationsfallCard({
     required this.compact,
     required this.onStartBackdated,
     required this.onCustomStartzeit,

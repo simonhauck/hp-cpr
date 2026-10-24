@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:hp_cpr/app.dart';
-import 'package:hp_cpr/features/guideline/domain/guideline_profile.dart';
+import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
 
 import 'support/fake_clock.dart';
@@ -81,7 +81,7 @@ void main() {
     expect(wakeLock.enabled, isTrue);
   });
 
-  testWidgets('counts the Druckphase down and the case elapsed time up', (
+  testWidgets('counts the Druckphase down and the Reanimationsdauer up', (
     tester,
   ) async {
     await pumpApp(tester);
@@ -115,7 +115,7 @@ void main() {
     expect(find.text('02:05'), findsOneWidget);
   });
 
-  testWidgets('starts a running case with a backdate preset and the corrected '
+  testWidgets('starts a running Reanimationsfall with a backdate preset and the corrected '
       'Startzeit', (tester) async {
     await pumpApp(tester);
 
@@ -129,7 +129,9 @@ void main() {
     expect(find.text('+03:00'), findsOneWidget);
   });
 
-  testWidgets('starts a running case with a custom Startzeit', (tester) async {
+  testWidgets('starts a running Reanimationsfall with a custom Startzeit', (
+    tester,
+  ) async {
     await pumpApp(tester);
 
     await tester.tap(find.text('Eigene Startzeit'));
@@ -155,13 +157,15 @@ void main() {
     expect(find.text('+01:30'), findsOneWidget);
   });
 
-  testWidgets('snapshots the guideline profile per case', (tester) async {
+  testWidgets('snapshots the Leitlinienprofil per Reanimationsfall', (
+    tester,
+  ) async {
     final settings = AppSettings();
     await pumpApp(tester, settings: settings);
     await startNow(tester);
     expect(find.text('ERC 2025'), findsOneWidget);
 
-    settings.guidelineProfile = GuidelineProfile.aha2025;
+    settings.leitlinienprofil = Leitlinienprofil.aha2025;
     await tester.pump();
 
     expect(find.text('ERC 2025'), findsOneWidget);
