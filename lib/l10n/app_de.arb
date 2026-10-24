@@ -1,0 +1,47 @@
+{
+  "@@locale": "de",
+  "appTitle": "HP-CPR",
+  "@appTitle": {
+    "description": "Name der App"
+  },
+  "homeTitle": "Reanimations-Tracker",
+  "@homeTitle": {
+    "description": "Titel der Startseite"
+  },
+  "homeSubtitle": "High-Performance-CPR",
+  "@homeSubtitle": {
+    "description": "Untertitel der Startseite"
+  },
+  "homeDescription": "Die Companion-App begleitet künftig den Reanimationsablauf mit Timer, Medikamenten- und Analyse-Erinnerungen.",
+  "@homeDescription": {
+    "description": "Kurze Beschreibung des geplanten Funktionsumfangs"
+  },
+  "elapsedTimeLabel": "Reanimationsdauer",
+  "@elapsedTimeLabel": {
+    "description": "Beschriftung der Timer-Anzeige"
+  },
+  "elapsedTimePlaceholder": "00:00",
+  "@elapsedTimePlaceholder": {
+    "description": "Platzhalterwert der Timer-Anzeige"
+  },
+  "statusNotStarted": "Noch nicht gestartet",
+  "@statusNotStarted": {
+    "description": "Status der Reanimation"
+  },
+  "startCprButton": "Reanimation starten",
+  "@startCprButton": {
+    "description": "Beschriftung der Startschaltfläche"
+  },
+  "comingSoonHint": "Der Timer wird im nächsten Entwicklungsschritt ergänzt.",
+  "@comingSoonHint": {
+    "description": "Hinweis auf die noch fehlende Timer-Funktion"
+  },
+  "setupCompleteTitle": "Projekt eingerichtet",
+  "@setupCompleteTitle": {
+    "description": "Titel der Setup-Karte"
+  },
+  "setupCompleteDescription": "Flutter, die Android- und Web-Ziele sowie die deutsche Oberfläche sind vorbereitet.",
+  "@setupCompleteDescription": {
+    "description": "Beschreibung des abgeschlossenen Projekt-Setups"
+  }
+}
