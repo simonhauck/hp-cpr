@@ -2,7 +2,7 @@
 
 Private Flutter app as a companion for the **High-Performance CPR standard**. The app is intended to support the resuscitation workflow with timing: resuscitation duration, medication administration, rhythm analyses, and further steps.
 
-> **Status:** Initial project setup. The domain features and the concrete HP-CPR workflow are still being agreed on. The current interface is a German scaffold without medical logic.
+> **Status:** First feature slice. The Zeitnehmer can start a new Reanimationsfall immediately or with a corrected Startzeit and watch the Druckphase with the 2-minute compression countdown. The Analysephase, medication timers, and the Einsatzlog are still to come.
 
 ## Goals
 
@@ -129,21 +129,36 @@ The server provides, among other things, analysis, tests, pub, hot reload/restar
 
 ```text
 lib/
-├── app.dart                              # MaterialApp, theme, and localization
-├── main.dart                             # entry point
+├── app.dart                                    # MaterialApp, theme, localization, dependencies
+├── main.dart                                   # entry point
+├── core/
+│   ├── clock.dart                              # wall-clock + monotonic time source
+│   └── wake_lock.dart                          # keeps the screen awake during a case
 ├── features/
-│   └── cpr_tracker/
-│       └── presentation/
-│           └── cpr_tracker_page.dart     # current home page
+│   ├── case_session/
+│   │   ├── domain/
+│   │   │   └── case_session.dart               # Startzeit, Druckphase, timer read model
+│   │   └── presentation/
+│   │       ├── case_page.dart                  # running case screen
+│   │       ├── custom_startzeit_dialog.dart    # custom backdate entry
+│   │       ├── start_page.dart                 # new case + backdated Startzeit
+│   │       └── timer_format.dart               # MM:SS / H:MM:SS formatting
+│   ├── guideline/
+│   │   ├── domain/guideline_profile.dart       # ERC 2025 / AHA 2025
+│   │   └── presentation/guideline_chip.dart    # read-only profile chip
+│   └── settings/
+│       └── domain/app_settings.dart            # guideline standard selection
 └── l10n/
-    ├── app_de.arb                        # German UI strings
-    └── app_localizations*.dart           # generated
+    ├── app_de.arb                              # German UI strings
+    └── app_localizations*.dart                 # generated
 test/
-└── app_test.dart
-android/                                  # Android target
-web/                                      # web target
-flake.nix                                 # Nix dev shell
-opencode.json                             # OpenCode/MCP configuration
+├── app_test.dart                               # start-screen and running-screen flows
+├── case_session_test.dart                      # start, backdate, and timer rules
+└── support/                                    # fake clock and wake lock
+android/                                        # Android target
+web/                                            # web target
+flake.nix                                       # Nix dev shell
+opencode.json                                   # OpenCode/MCP configuration
 ```
 
 ## Localization
