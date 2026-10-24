@@ -1,114 +1,114 @@
 # HP-CPR Companion
 
-Private Flutter-App als Begleiter für den **High-Performance-CPR-Standard**. Die App soll den Reanimationsablauf zeitlich unterstützen: Reanimationsdauer, Medikamentengaben, Rhythmusanalysen und weitere Schritte.
+Private Flutter app as a companion for the **High-Performance CPR standard**. The app is intended to support the resuscitation workflow with timing: resuscitation duration, medication administration, rhythm analyses, and further steps.
 
-> **Status:** Initiales Projekt-Setup. Die fachlichen Funktionen und der konkrete HP-CPR-Ablauf werden noch abgestimmt. Die aktuelle Oberfläche ist ein deutsches Grundgerüst ohne medizinische Logik.
+> **Status:** Initial project setup. The domain features and the concrete HP-CPR workflow are still being agreed on. The current interface is a German scaffold without medical logic.
 
-## Ziele
+## Goals
 
-| Plattform | Status |
+| Platform | Status |
 | --- | --- |
-| Android | ✅ vorbereitet und gebaut |
-| Web | ✅ vorbereitet und gebaut |
-| iOS | ⏳ später, erfordert macOS mit Xcode |
+| Android | ✅ prepared and built |
+| Web | ✅ prepared and built |
+| iOS | ⏳ later, requires macOS with Xcode |
 
-## Voraussetzungen
+## Prerequisites
 
-- NixOS oder ein anderes Linux mit aktivierten Nix-Flakes
-- Optional: [direnv](https://direnv.net/) für automatisches Betreten der Entwicklungsumgebung
-- Für Android-Tests: ein per USB verbundenes Gerät (ein Emulator ist nicht Teil des Dev-Shells)
+- NixOS or another Linux with Nix flakes enabled
+- Optional: [direnv](https://direnv.net/) to automatically enter the development environment
+- For Android tests: a device connected via USB (an emulator is not part of the dev shell)
 
-## Entwicklungsumgebung
+## Development environment
 
-Alle benötigten Werkzeuge werden über die Nix-Flake bereitgestellt:
+All required tools are provided by the Nix flake:
 
-- Flutter 3.47.4 und Dart 3.13.3
+- Flutter 3.47.4 and Dart 3.13.3
 - JDK 21
-- Android SDK 36, Build-Tools 36.0.0, NDK 28.2 und CMake
-- Chromium für Web-Entwicklung
-- Git, GitHub CLI, ripgrep, jq und weitere CLI-Werkzeuge
+- Android SDK 36, Build-Tools 36.0.0, NDK 28.2, and CMake
+- Chromium for web development
+- Git, GitHub CLI, ripgrep, jq, and other CLI tools
 
 ```bash
 nix develop
 ```
 
-Der erste Aufruf lädt und baut die Abhängigkeiten und kann einige Zeit dauern. Danach die Toolchain prüfen:
+The first invocation downloads and builds the dependencies and may take some time. Afterwards, check the toolchain:
 
 ```bash
 flutter doctor -v
 ```
 
-Mit direnv genügt alternativ einmalig `direnv allow`; der Dev-Shell wird danach automatisch aktiviert.
+With direnv, a one-time `direnv allow` is enough; the dev shell is then activated automatically.
 
-### Nix-Abhängigkeiten aktualisieren
+### Updating Nix dependencies
 
 ```bash
 nix flake update
 nix develop
 ```
 
-Die exakten Versionen sind in `flake.lock` festgehalten. Der Dev-Shell nutzt derzeit `nixos-unstable`, damit eine aktuelle stabile Flutter-Version verfügbar ist.
+The exact versions are pinned in `flake.lock`. The dev shell currently uses `nixos-unstable` so that a current stable Flutter version is available.
 
-## Erste Schritte
+## Getting started
 
 ```bash
 flutter pub get
 
-# Web im Browser starten
+# Start web in the browser
 flutter run -d chrome
 
-# Alternativ nur einen Web-Server starten (z. B. unter WSL2)
+# Alternatively, start only a web server (e.g. under WSL2)
 flutter run -d web-server --web-port 8080
 
-# Verfügbare Geräte anzeigen
+# Show available devices
 flutter devices
 
-# Android-App auf einem verbundenen Gerät starten
+# Start the Android app on a connected device
 flutter run -d <device-id>
 ```
 
 ### Builds
 
 ```bash
-# Web-Release, Ausgabe unter build/web
+# Web release, output under build/web
 flutter build web --release
 
-# Android-Debug-APK, Ausgabe unter build/app/outputs/flutter-apk/
+# Android debug APK, output under build/app/outputs/flutter-apk/
 flutter build apk --debug
 
-# Qualitätssicherung
+# Quality checks
 flutter analyze
 flutter test
 ```
 
-### Android-Gerät unter NixOS
+### Android device on NixOS
 
-Damit `adb` und Flutter das Gerät ohne Root sehen, in der NixOS-Konfiguration ADB aktivieren:
+For `adb` and Flutter to see the device without root, enable ADB in the NixOS configuration:
 
 ```nix
 programs.adb.enable = true;
 ```
 
-Nach `nixos-rebuild switch` das Gerät anschließen und prüfen:
+After `nixos-rebuild switch`, connect the device and check:
 
 ```bash
 adb devices
 ```
 
-Unter WSL2 muss das USB-Gerät gegebenenfalls zuerst mit `usbipd-win` an die Distribution weitergegeben werden.
+Under WSL2, the USB device may first need to be passed through to the distribution with `usbipd-win`.
 
-## OpenCode und Dart MCP
+## OpenCode and Dart MCP
 
-Das Projekt enthält eine `opencode.json` mit dem offiziellen Dart-/Flutter-MCP-Server. Der Server wird direkt über `dart mcp-server` gestartet, ohne `nix develop` im MCP-Befehl. Dafür muss OpenCode selbst aus der Nix-Dev-Shell gestartet werden, damit `dart` im `PATH` liegt:
+The project contains an `opencode.json` with the official Dart/Flutter MCP server. The server is started directly via `dart mcp-server`, without `nix develop` in the MCP command. For this, OpenCode itself must be started from the Nix dev shell so that `dart` is on the `PATH`:
 
 ```bash
 nix develop
 opencode --standalone
 ```
 
-`--standalone` ist wichtig, wenn bereits ein OpenCode-Hintergrunddienst außerhalb der Dev-Shell läuft. OpenCode würde sonst diesen Dienst wiederverwenden; der MCP-Prozess erbt dessen `PATH` und findet `dart` nicht (`NotFound: ChildProcess.spawn`). Mit `--standalone` startet OpenCode einen privaten Server mit der Umgebung der aktuellen Shell.
+`--standalone` matters when an OpenCode background service is already running outside the dev shell. Otherwise OpenCode would reuse that service; the MCP process inherits its `PATH` and cannot find `dart` (`NotFound: ChildProcess.spawn`). With `--standalone`, OpenCode starts a private server with the current shell's environment.
 
-Wenn du bewusst den gemeinsamen Hintergrunddienst nutzen willst, beende ihn vorher und starte OpenCode anschließend innerhalb der Dev-Shell neu:
+If you deliberately want to use the shared background service, stop it first and then restart OpenCode inside the dev shell:
 
 ```bash
 nix develop
@@ -116,58 +116,62 @@ opencode service stop
 opencode
 ```
 
-Den Status prüfst du im OpenCode-TUI über `/mcps`. Bei Nutzung des gemeinsamen Hintergrunddienstes zusätzlich per CLI:
+Check the status in the OpenCode TUI via `/mcps`. When using the shared background service, additionally via the CLI:
 
 ```bash
 opencode mcp list
 # ✓ dart  connected
 ```
 
-Der Server stellt unter anderem Analyse, Tests, Pub, Hot Reload/Restart, Widget-Inspector und die Verbindung zur laufenden App über den Dart Tooling Daemon (DTD) bereit.
+The server provides, among other things, analysis, tests, pub, hot reload/restart, the widget inspector, and the connection to the running app via the Dart Tooling Daemon (DTD).
 
-## Projektstruktur
+## Project structure
 
 ```text
 lib/
-├── app.dart                              # MaterialApp, Theme und Lokalisierung
-├── main.dart                             # Einstiegspunkt
+├── app.dart                              # MaterialApp, theme, and localization
+├── main.dart                             # entry point
 ├── features/
 │   └── cpr_tracker/
 │       └── presentation/
-│           └── cpr_tracker_page.dart     # aktuelle Startseite
+│           └── cpr_tracker_page.dart     # current home page
 └── l10n/
-    ├── app_de.arb                        # deutsche UI-Texte
-    └── app_localizations*.dart           # generiert
+    ├── app_de.arb                        # German UI strings
+    └── app_localizations*.dart           # generated
 test/
 └── app_test.dart
-android/                                  # Android-Ziel
-web/                                      # Web-Ziel
-flake.nix                                 # Nix-Dev-Shell
-opencode.json                             # OpenCode-/MCP-Konfiguration
+android/                                  # Android target
+web/                                      # web target
+flake.nix                                 # Nix dev shell
+opencode.json                             # OpenCode/MCP configuration
 ```
 
-## Lokalisierung
+## Localization
 
-Die Oberfläche ist derzeit fest auf Deutsch (`Locale('de')`) eingestellt. Alle sichtbaren Texte stehen in `lib/l10n/app_de.arb`; neue Texte gehören ebenfalls dorthin.
+The interface is currently pinned to German (`Locale('de')`). All visible text lives in `lib/l10n/app_de.arb`; new text belongs there as well.
 
 ```bash
 flutter gen-l10n
 ```
 
-Die generierten Dateien unter `lib/l10n/` werden versioniert. Wenn später weitere Sprachen dazukommen, wird eine passende ARB-Datei ergänzt und die feste Locale in `lib/app.dart` entfernt.
+The generated files under `lib/l10n/` are versioned. If more languages are added later, a corresponding ARB file is added and the fixed locale in `lib/app.dart` is removed.
 
-## iOS später ergänzen
+## Adding iOS later
 
-Die iOS-Dateien werden bewusst noch nicht angelegt, da zum Bauen macOS mit Xcode erforderlich ist. Auf einem Mac im Projektverzeichnis:
+The iOS files are deliberately not created yet, because building requires macOS with Xcode. On a Mac in the project directory:
 
 ```bash
 flutter create --platforms=ios .
 flutter build ios
 ```
 
-## Projekt-Metadaten
+## Contributing
 
-- Flutter-Projektname: `hp_cpr`
-- Android `applicationId` und Namespace: `de.simonhauck.hp_cpr`
-- Web-App-Titel: `HP-CPR`
-- Repository: [simonhauck/hp-cpr](https://github.com/simonhauck/hp-cpr) (privat)
+Commits follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, …) and commit messages are written in English. PRs link the issues they fully resolve with `Closes #<number>` (one keyword per issue) so GitHub closes them on merge. Specs use GitHub sub-issues for their tickets, and dependencies use the native blocked-by relation (`gh issue edit <child> --add-blocked-by <blocker>`). See `AGENTS.md` for the full issue, commit, and PR rules.
+
+## Project metadata
+
+- Flutter project name: `hp_cpr`
+- Android `applicationId` and namespace: `de.simonhauck.hp_cpr`
+- Web app title: `HP-CPR`
+- Repository: [simonhauck/hp-cpr](https://github.com/simonhauck/hp-cpr) (private)
