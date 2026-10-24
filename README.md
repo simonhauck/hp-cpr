@@ -57,6 +57,9 @@ flutter pub get
 # Web im Browser starten
 flutter run -d chrome
 
+# Alternativ nur einen Web-Server starten (z. B. unter WSL2)
+flutter run -d web-server --web-port 8080
+
 # Verfügbare Geräte anzeigen
 flutter devices
 
