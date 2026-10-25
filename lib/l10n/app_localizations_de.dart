@@ -321,4 +321,23 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get aboutCopyright => '© 2026 Simon Hauck';
+
+  @override
+  String get amiodaronLabel => 'Amiodaron';
+
+  @override
+  String amiodaronHint(int dosis) {
+    return 'Amiodaron erwägen – $dosis mg';
+  }
+
+  @override
+  String get amiodaronGiveButton => 'Gegeben';
+
+  @override
+  String get amiodaronDismissButton => 'Nicht jetzt';
+
+  @override
+  String amiodaronLastDose(String time) {
+    return 'Letzte Gabe $time';
+  }
 }

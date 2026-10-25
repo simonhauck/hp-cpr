@@ -711,6 +711,116 @@ void main() {
     expect(find.text('fällig'), findsOneWidget);
   });
 
+  testWidgets('shows the Amiodaron hint only after the third Schock and '
+      'dismisses it without recording a dose', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    for (var count = 0; count < 2; count++) {
+      await tester.tap(find.text('Schock ($count)'));
+      await tester.pump();
+    }
+
+    expect(find.text('Amiodaron erwägen – 300 mg'), findsNothing);
+    expect(find.textContaining('Letzte Gabe'), findsNothing);
+
+    await tester.tap(find.text('Schock (2)'));
+    await tester.pump();
+
+    expect(find.text('Amiodaron erwägen – 300 mg'), findsOneWidget);
+    expect(find.text('Gegeben'), findsOneWidget);
+    expect(find.text('Nicht jetzt'), findsOneWidget);
+    expect(find.textContaining('Letzte Gabe'), findsNothing);
+
+    await tester.tap(find.text('Nicht jetzt'));
+    await tester.pump();
+
+    expect(find.text('Amiodaron erwägen – 300 mg'), findsNothing);
+    expect(find.textContaining('Letzte Gabe'), findsNothing);
+  });
+
+  testWidgets('records Amiodaron when given and follows the ERC second-dose '
+      'trigger', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    for (var count = 0; count < 3; count++) {
+      await tester.tap(find.text('Schock ($count)'));
+      await tester.pump();
+    }
+
+    expect(find.text('Amiodaron erwägen – 300 mg'), findsOneWidget);
+    expect(find.textContaining('Letzte Gabe'), findsNothing);
+
+    await tester.tap(find.text('Gegeben'));
+    await tester.pump();
+
+    expect(find.text('Amiodaron erwägen – 300 mg'), findsNothing);
+    expect(find.text('Amiodaron · Letzte Gabe 00:00'), findsOneWidget);
+
+    await tester.tap(find.text('Schock (3)'));
+    await tester.pump();
+    expect(find.text('Amiodaron erwägen – 150 mg'), findsNothing);
+
+    clock.advance(const Duration(seconds: 45));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    await tester.tap(find.text('Schock (4)'));
+    await tester.pump();
+    expect(find.text('Amiodaron erwägen – 150 mg'), findsOneWidget);
+
+    await tester.tap(find.text('Gegeben'));
+    await tester.pump();
+
+    expect(find.text('Amiodaron erwägen – 150 mg'), findsNothing);
+    expect(find.text('Amiodaron · Letzte Gabe 00:45'), findsOneWidget);
+  });
+
+  testWidgets('uses the AHA second Amiodaron dose trigger after the fourth '
+      'Schock', (tester) async {
+    await pumpApp(
+      tester,
+      settings: AppSettings(leitlinienprofil: Leitlinienprofil.aha2025),
+    );
+    await startNow(tester);
+
+    for (var count = 0; count < 3; count++) {
+      await tester.tap(find.text('Schock ($count)'));
+      await tester.pump();
+    }
+    await tester.tap(find.text('Gegeben'));
+    await tester.pump();
+    expect(find.text('Amiodaron erwägen – 150 mg'), findsNothing);
+
+    await tester.tap(find.text('Schock (3)'));
+    await tester.pump();
+
+    expect(find.text('Amiodaron erwägen – 150 mg'), findsOneWidget);
+  });
+
+  testWidgets('keeps the Amiodaron hint inside a compact landscape phone', (
+    tester,
+  ) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(568, 320);
+
+    await pumpApp(tester);
+    await startNow(tester);
+
+    for (var count = 0; count < 3; count++) {
+      await tester.tap(find.text('Schock ($count)'));
+      await tester.pump();
+    }
+
+    expect(find.text('Amiodaron erwägen – 300 mg'), findsOneWidget);
+    expectInsideViewport(tester, find.text('Amiodaron erwägen – 300 mg'));
+    expectInsideViewport(tester, find.text('Gegeben'));
+    expectInsideViewport(tester, find.text('Nicht jetzt'));
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('keeps the timer and primary actions visible on landscape '
       'phones and tablets', (tester) async {
     addTearDown(tester.view.resetPhysicalSize);

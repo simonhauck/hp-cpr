@@ -24,6 +24,19 @@ enum Leitlinienprofil {
     Leitlinienprofil.erc2025 => 3,
   };
 
+  /// The active Schock count at which the first Amiodaron dose is suggested.
+  int get amiodaronErsteGabeNachSchock => 3;
+
+  /// The active Schock count at which the second Amiodaron dose is suggested.
+  ///
+  /// ERC 2025 gives 150 mg after shock 5. AHA 2025 lists the second 150 mg
+  /// dose without a shock-count trigger, so the next CPR block after the first
+  /// dose (shock 4) is used until clinical review confirms the AHA trigger.
+  int get amiodaronZweiteGabeNachSchock => switch (this) {
+    Leitlinienprofil.aha2025 => 4,
+    Leitlinienprofil.erc2025 => 5,
+  };
+
   /// The earliest time in the Adrenalin Zeitfenster.
   Duration get adrenalinZeitfensterFruehestens => const Duration(minutes: 3);
 

@@ -663,6 +663,36 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'© 2026 Simon Hauck'**
   String get aboutCopyright;
+
+  /// Beschriftung des Amiodaron-Hinweises
+  ///
+  /// In de, this message translates to:
+  /// **'Amiodaron'**
+  String get amiodaronLabel;
+
+  /// Hinweis auf eine mögliche Amiodaron-Gabe
+  ///
+  /// In de, this message translates to:
+  /// **'Amiodaron erwägen – {dosis} mg'**
+  String amiodaronHint(int dosis);
+
+  /// Schaltfläche zum Erfassen einer Amiodaron-Gabe
+  ///
+  /// In de, this message translates to:
+  /// **'Gegeben'**
+  String get amiodaronGiveButton;
+
+  /// Schaltfläche zum Ausblenden des Amiodaron-Hinweises
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht jetzt'**
+  String get amiodaronDismissButton;
+
+  /// Zeitpunkt der letzten Amiodaron-Gabe
+  ///
+  /// In de, this message translates to:
+  /// **'Letzte Gabe {time}'**
+  String amiodaronLastDose(String time);
 }
 
 class _AppLocalizationsDelegate
