@@ -242,6 +242,7 @@ class Reanimationsfall {
     _schocks.add(
       SchockEreignis(zeitpunkt: _elapsedOffset, energieJoule: energieJoule),
     );
+    // The shock count still feeds the derived Adrenalin and Amiodaron hints.
     _updateAdrenalinGabeFaelligkeit();
   }
 
