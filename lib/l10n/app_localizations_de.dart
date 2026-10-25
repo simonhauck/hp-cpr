@@ -146,6 +146,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get actionsNotiz => 'Notiz';
 
   @override
+  String get actionsRestartDruckphase => 'Druckphase neu starten';
+
+  @override
   String get pauseLabel => 'Pause';
 
   @override

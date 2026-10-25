@@ -184,6 +184,10 @@
   "@actionsNotiz": {
     "description": "Aktion zum Erfassen einer freien Notiz"
   },
+  "actionsRestartDruckphase": "Druckphase neu starten",
+  "@actionsRestartDruckphase": {
+    "description": "Aktion zum manuellen Neustart der Druckphase"
+  },
   "pauseLabel": "Pause",
   "@pauseLabel": {
     "description": "Beschriftung des Pausenzählers in der Analysephase"

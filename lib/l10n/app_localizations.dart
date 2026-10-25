@@ -340,6 +340,12 @@ abstract class AppLocalizations {
   /// **'Notiz'**
   String get actionsNotiz;
 
+  /// Aktion zum manuellen Neustart der Druckphase
+  ///
+  /// In de, this message translates to:
+  /// **'Druckphase neu starten'**
+  String get actionsRestartDruckphase;
+
   /// Beschriftung des Pausenzählers in der Analysephase
   ///
   /// In de, this message translates to:

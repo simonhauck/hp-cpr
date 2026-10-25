@@ -504,6 +504,7 @@ void main() {
 
       final restarted = reanimationsfall.snapshot();
       expect(restarted.phase, Reanimationsphase.druckphase);
+      expect(restarted.kannDruckphaseNeuStarten, isTrue);
       expect(restarted.compressionRemaining, const Duration(minutes: 2));
       expect(restarted.druckphaseNeustarts, hasLength(1));
       expect(
@@ -528,8 +529,10 @@ void main() {
     test('requires the Druckphase', () {
       final clock = FakeClock();
       final reanimationsfall = Reanimationsfall.start(clock: clock);
-      reanimationsfall.enterAnalysephase();
+      expect(reanimationsfall.snapshot().kannDruckphaseNeuStarten, isTrue);
 
+      reanimationsfall.enterAnalysephase();
+      expect(reanimationsfall.snapshot().kannDruckphaseNeuStarten, isFalse);
       expect(reanimationsfall.restartDruckphase, throwsStateError);
     });
 
@@ -538,6 +541,7 @@ void main() {
       final reanimationsfall = Reanimationsfall.start(clock: clock);
       reanimationsfall.recordRosc();
 
+      expect(reanimationsfall.snapshot().kannDruckphaseNeuStarten, isFalse);
       expect(reanimationsfall.restartDruckphase, throwsStateError);
     });
   });

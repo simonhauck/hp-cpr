@@ -9,6 +9,7 @@ Future<void> showActionsSheet(
   required VoidCallback onOpenMesswerte,
   required VoidCallback onRecordNotiz,
   VoidCallback? onRecordSchock,
+  VoidCallback? onRestartDruckphase,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -18,6 +19,7 @@ Future<void> showActionsSheet(
       onOpenMesswerte: onOpenMesswerte,
       onRecordNotiz: onRecordNotiz,
       onRecordSchock: onRecordSchock,
+      onRestartDruckphase: onRestartDruckphase,
     ),
   );
 }
@@ -33,17 +35,20 @@ class ActionsSheet extends StatelessWidget {
     required this.onOpenMesswerte,
     required this.onRecordNotiz,
     this.onRecordSchock,
+    this.onRestartDruckphase,
   });
 
   final VoidCallback onOpenMesswerte;
   final VoidCallback onRecordNotiz;
   final VoidCallback? onRecordSchock;
+  final VoidCallback? onRestartDruckphase;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final recordSchock = onRecordSchock;
+    final restartDruckphase = onRestartDruckphase;
 
     final actions = <_SheetAction>[
       _SheetAction(
@@ -61,6 +66,12 @@ class ActionsSheet extends StatelessWidget {
           icon: Icons.bolt_outlined,
           label: l10n.actionsSchock,
           onPressed: recordSchock,
+        ),
+      if (restartDruckphase != null)
+        _SheetAction(
+          icon: Icons.restart_alt,
+          label: l10n.actionsRestartDruckphase,
+          onPressed: restartDruckphase,
         ),
     ];
 

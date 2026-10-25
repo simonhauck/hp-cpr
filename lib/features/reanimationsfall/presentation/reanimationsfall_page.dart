@@ -117,7 +117,14 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
       onOpenMesswerte: _openMesswerte,
       onRecordNotiz: _recordNotiz,
       onRecordSchock: snapshot.istLaufend ? _recordSchock : null,
+      onRestartDruckphase: snapshot.kannDruckphaseNeuStarten
+          ? _restartDruckphase
+          : null,
     );
+  }
+
+  void _restartDruckphase() {
+    _mutate(widget.reanimationsfall.restartDruckphase);
   }
 
   Future<void> _recordNotiz() async {

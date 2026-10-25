@@ -843,6 +843,10 @@ class ReanimationsfallSnapshot {
   /// Whether the case is interrupted by ROSC.
   bool get istRosc => zustand == ReanimationsfallZustand.rosc;
 
+  /// Whether the current Druckphase can be restarted manually.
+  bool get kannDruckphaseNeuStarten =>
+      istLaufend && phase == Reanimationsphase.druckphase;
+
   /// Whether the case has ended.
   bool get istBeendet => zustand == ReanimationsfallZustand.beendet;
 
