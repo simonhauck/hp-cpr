@@ -31,22 +31,7 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
     final ende = snapshot.ende;
     final endZeitpunkt = ende?.zeitpunkt ?? snapshot.verworfenAm;
 
-    String? effectiveRhythmusanalyseNotiz(int index) {
-      for (final correction
-          in snapshot.rhythmusanalyseNotizKorrekturen.reversed) {
-        if (correction.eintragIndex == index) return correction.notiz;
-      }
-      return snapshot.rhythmusanalyseEintraege[index].notiz;
-    }
-
     final notes = <_SummaryNote>[
-      for (final (index, eintrag) in snapshot.rhythmusanalyseEintraege.indexed)
-        if (effectiveRhythmusanalyseNotiz(index) != null)
-          _SummaryNote(
-            zeitpunkt: eintrag.zeitpunkt,
-            text: effectiveRhythmusanalyseNotiz(index)!,
-            detail: rhythmusanalyseErgebnisLabel(l10n, eintrag.ergebnis),
-          ),
       for (final notiz in snapshot.notizen)
         _SummaryNote(zeitpunkt: notiz.zeitpunkt, text: notiz.text),
     ]..sort((a, b) => a.zeitpunkt.compareTo(b.zeitpunkt));
@@ -224,9 +209,6 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
                               ),
                             ),
                             title: Text(note.text),
-                            subtitle: note.detail == null
-                                ? null
-                                : Text(note.detail!),
                           ),
                       ],
                     ),
@@ -257,35 +239,14 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
 
     add(Duration.zero, Icons.play_arrow, l10n.eventCaseStart);
 
-    for (var index = 0; index < snapshot.schocks.length; index++) {
-      final schock = snapshot.schocks[index];
-      final count = index + 1;
-      final energie = schock.ereignis.energieJoule;
+    for (final (index, schock) in snapshot.schocks.indexed) {
+      final energie = schock.energieJoule;
       add(
         schock.zeitpunkt,
         Icons.bolt_outlined,
         energie == null
-            ? l10n.eventSchock(count)
-            : l10n.eventSchockWithEnergy(count, energie),
-      );
-    }
-
-    for (final rueckgaengig in snapshot.schockRueckgaengigkeiten) {
-      add(
-        rueckgaengig.zeitpunkt,
-        Icons.undo,
-        l10n.eventSchockUndone(rueckgaengig.schockIndex + 1),
-      );
-    }
-
-    for (final correction in snapshot.schockKorrekturen) {
-      add(
-        correction.zeitpunkt,
-        Icons.edit_outlined,
-        l10n.eventSchockEnergyCorrected(
-          correction.schockIndex + 1,
-          correction.energieJoule,
-        ),
+            ? l10n.eventSchock(index + 1)
+            : l10n.eventSchockWithEnergy(index + 1, energie),
       );
     }
 
@@ -312,16 +273,6 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
         l10n.eventRhythmusanalyse(
           rhythmusanalyseErgebnisLabel(l10n, eintrag.ergebnis),
         ),
-        detail: eintrag.notiz,
-      );
-    }
-
-    for (final correction in snapshot.rhythmusanalyseNotizKorrekturen) {
-      final notiz = correction.notiz;
-      add(
-        correction.zeitpunkt,
-        Icons.edit_note,
-        notiz == null ? l10n.eventNoteRemoved : l10n.eventNoteCorrected(notiz),
       );
     }
 
@@ -342,16 +293,15 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
     }
 
     for (final ueberspringung in snapshot.uebersprungeneRhythmusanalysen) {
-      final grund = ueberspringung.grund;
       add(
         ueberspringung.zeitpunkt,
         Icons.skip_next_outlined,
-        grund == null
-            ? l10n.eventRhythmusanalyseSkipped
-            : l10n.eventRhythmusanalyseSkippedWithReason(
-                rhythmusanalyseUebersprungenGrundLabel(l10n, grund),
-              ),
+        l10n.eventRhythmusanalyseSkipped,
       );
+    }
+
+    for (final neustart in snapshot.druckphaseNeustarts) {
+      add(neustart.zeitpunkt, Icons.restart_alt, l10n.eventDruckphaseRestarted);
     }
 
     for (final rosc in snapshot.roscEreignisse) {
@@ -393,15 +343,10 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
 }
 
 class _SummaryNote {
-  const _SummaryNote({
-    required this.zeitpunkt,
-    required this.text,
-    this.detail,
-  });
+  const _SummaryNote({required this.zeitpunkt, required this.text});
 
   final Duration zeitpunkt;
   final String text;
-  final String? detail;
 }
 
 class _SummaryRow extends StatelessWidget {

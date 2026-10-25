@@ -113,7 +113,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String pauseOverdueErc(int seconds) {
-    return 'Peri-Schock-Pause über $seconds s – CPR fortsetzen';
+    return 'Pause über $seconds s – CPR fortsetzen';
   }
 
   @override
@@ -150,80 +150,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rhythmusanalyseRecordButton => 'Ergebnis erfassen';
 
   @override
-  String get rhythmusanalyseRecordedLabel => 'Ergebnis';
-
-  @override
-  String get rhythmusanalyseNoteAdd => 'Notiz hinzufügen';
-
-  @override
-  String get rhythmusanalyseNoteEdit => 'Notiz bearbeiten';
-
-  @override
-  String get rhythmusanalyseNoteTitle => 'Notiz zur Rhythmusanalyse';
-
-  @override
-  String get rhythmusanalyseNoteLabel => 'Notiz (optional)';
-
-  @override
-  String get rhythmusanalyseRequired => 'Ergebnis oder Unklar erforderlich';
-
-  @override
-  String get cprContinueButton => 'CPR fortsetzen';
-
-  @override
   String get skipAnalysisButton => 'Analyse überspringen';
-
-  @override
-  String get skipAnalysisTitle => 'Analyse überspringen';
-
-  @override
-  String get skipAnalysisReasonLabel => 'Grund (optional)';
-
-  @override
-  String get skipReasonNoTime => 'Keine Zeit';
-
-  @override
-  String get skipReasonAed => 'AED übernimmt';
-
-  @override
-  String get skipReasonOther => 'Sonstiges';
-
-  @override
-  String get skipWithoutReasonButton => 'Ohne Angabe';
 
   @override
   String schockButton(int count) {
     return 'Schock ($count)';
   }
-
-  @override
-  String schockRecorded(int count) {
-    return 'Schock $count erfasst';
-  }
-
-  @override
-  String schockRecordedWithEnergy(int count, int energie) {
-    return 'Schock $count erfasst · $energie J';
-  }
-
-  @override
-  String get schockRecordedLabel => 'Schock erfasst';
-
-  @override
-  String get schockEnergyAction => 'Energie';
-
-  @override
-  String get schockUndoAction => 'Rückgängig';
-
-  @override
-  String get schockEnergyTitle => 'Schockenergie';
-
-  @override
-  String get schockEnergyLabel => 'Energie (J)';
-
-  @override
-  String get schockEnergyInvalid =>
-      'Bitte eine ganze Zahl größer als 0 eingeben.';
 
   @override
   String get adrenalinLabel => 'Adrenalin';
@@ -409,11 +341,6 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String eventSchockUndone(int count) {
-    return 'Schock $count zurückgenommen';
-  }
-
-  @override
   String eventAdrenalin(int dosis) {
     return 'Adrenalin $dosis mg';
   }
@@ -432,9 +359,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get eventRhythmusanalyseSkipped => 'Rhythmusanalyse übersprungen';
 
   @override
-  String eventRhythmusanalyseSkippedWithReason(String grund) {
-    return 'Rhythmusanalyse übersprungen: $grund';
-  }
+  String get eventDruckphaseRestarted => 'Druckphase neu gestartet';
 
   @override
   String get eventRosc => 'ROSC';
@@ -610,19 +535,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String eventNotiz(String text) {
     return 'Notiz: $text';
   }
-
-  @override
-  String eventSchockEnergyCorrected(int count, int energie) {
-    return 'Schock $count korrigiert: $energie J';
-  }
-
-  @override
-  String eventNoteCorrected(String text) {
-    return 'Notiz korrigiert: $text';
-  }
-
-  @override
-  String get eventNoteRemoved => 'Notiz entfernt';
 
   @override
   String versionWithBuild(String version, String build) {

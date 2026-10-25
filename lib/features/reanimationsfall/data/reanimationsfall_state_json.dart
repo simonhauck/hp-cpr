@@ -21,33 +21,12 @@ Map<String, dynamic> reanimationsfallStateToJson(ReanimationsfallState state) {
     'compressionCycleStartOffset': _millis(state.compressionCycleStartOffset),
     'compressionRemainingAtPause': _millis(state.compressionRemainingAtPause),
     'analysephaseStartOffset': _nullableMillis(state.analysephaseStartOffset),
-    'isSchockpause': state.isSchockpause,
-    'schockpauseWasDue': state.schockpauseWasDue,
-    'schockpauseOverdue': _millis(state.schockpauseOverdue),
-    'schockpauseOpeningSchockIndex': state.schockpauseOpeningSchockIndex,
-    'rhythmusanalyseErgebnis': state.rhythmusanalyseErgebnis?.name,
-    'rhythmusanalyseNotiz': state.rhythmusanalyseNotiz,
     'adrenalinAusloesendesErgebnis': state.adrenalinAusloesendesErgebnis?.name,
     'schocks': [
       for (final schock in state.schocks)
         {
           'zeitpunkt': _millis(schock.zeitpunkt),
           'energieJoule': schock.energieJoule,
-        },
-    ],
-    'schockRueckgaengigkeiten': [
-      for (final entry in state.schockRueckgaengigkeiten)
-        {
-          'schockIndex': entry.schockIndex,
-          'zeitpunkt': _millis(entry.zeitpunkt),
-        },
-    ],
-    'schockKorrekturen': [
-      for (final entry in state.schockKorrekturen)
-        {
-          'schockIndex': entry.schockIndex,
-          'zeitpunkt': _millis(entry.zeitpunkt),
-          'energieJoule': entry.energieJoule,
         },
     ],
     'adrenalinGaben': [
@@ -60,23 +39,18 @@ Map<String, dynamic> reanimationsfallStateToJson(ReanimationsfallState state) {
     ],
     'uebersprungeneRhythmusanalysen': [
       for (final entry in state.uebersprungeneRhythmusanalysen)
-        {'zeitpunkt': _millis(entry.zeitpunkt), 'grund': entry.grund?.name},
+        {'zeitpunkt': _millis(entry.zeitpunkt)},
     ],
     'rhythmusanalyseEintraege': [
       for (final entry in state.rhythmusanalyseEintraege)
         {
           'zeitpunkt': _millis(entry.zeitpunkt),
           'ergebnis': entry.ergebnis.name,
-          'notiz': entry.notiz,
         },
     ],
-    'rhythmusanalyseNotizKorrekturen': [
-      for (final entry in state.rhythmusanalyseNotizKorrekturen)
-        {
-          'eintragIndex': entry.eintragIndex,
-          'zeitpunkt': _millis(entry.zeitpunkt),
-          'notiz': entry.notiz,
-        },
+    'druckphaseNeustarts': [
+      for (final entry in state.druckphaseNeustarts)
+        {'zeitpunkt': _millis(entry.zeitpunkt)},
     ],
     'messwerte': [
       for (final messwert in state.messwerte) _messwertToJson(messwert),
@@ -131,15 +105,6 @@ ReanimationsfallState reanimationsfallStateFromJson(Map<String, dynamic> json) {
     compressionCycleStartOffset: _duration(json['compressionCycleStartOffset']),
     compressionRemainingAtPause: _duration(json['compressionRemainingAtPause']),
     analysephaseStartOffset: _nullableDuration(json['analysephaseStartOffset']),
-    isSchockpause: json['isSchockpause'] as bool,
-    schockpauseWasDue: json['schockpauseWasDue'] as bool,
-    schockpauseOverdue: _duration(json['schockpauseOverdue']),
-    schockpauseOpeningSchockIndex:
-        json['schockpauseOpeningSchockIndex'] as int?,
-    rhythmusanalyseErgebnis: _rhythmusanalyseErgebnis(
-      json['rhythmusanalyseErgebnis'],
-    ),
-    rhythmusanalyseNotiz: json['rhythmusanalyseNotiz'] as String?,
     adrenalinAusloesendesErgebnis: _rhythmusanalyseErgebnis(
       json['adrenalinAusloesendesErgebnis'],
     ),
@@ -148,23 +113,6 @@ ReanimationsfallState reanimationsfallStateFromJson(Map<String, dynamic> json) {
         SchockEreignis(
           zeitpunkt: _duration(map(item)['zeitpunkt']),
           energieJoule: map(item)['energieJoule'] as int?,
-        ),
-    ],
-    schockRueckgaengigkeiten: [
-      for (final item
-          in (json['schockRueckgaengigkeiten'] as List<dynamic>? ?? const []))
-        SchockRueckgaengig(
-          schockIndex: map(item)['schockIndex'] as int,
-          zeitpunkt: _duration(map(item)['zeitpunkt']),
-        ),
-    ],
-    schockKorrekturen: [
-      for (final item
-          in (json['schockKorrekturen'] as List<dynamic>? ?? const []))
-        SchockKorrektur(
-          schockIndex: map(item)['schockIndex'] as int,
-          zeitpunkt: _duration(map(item)['zeitpunkt']),
-          energieJoule: map(item)['energieJoule'] as int,
         ),
     ],
     adrenalinGaben: [
@@ -187,7 +135,6 @@ ReanimationsfallState reanimationsfallStateFromJson(Map<String, dynamic> json) {
               const []))
         RhythmusanalyseUeberspringung(
           zeitpunkt: _duration(map(item)['zeitpunkt']),
-          grund: _uebersprungenGrund(map(item)['grund']),
         ),
     ],
     rhythmusanalyseEintraege: [
@@ -198,18 +145,12 @@ ReanimationsfallState reanimationsfallStateFromJson(Map<String, dynamic> json) {
           ergebnis: RhythmusanalyseErgebnis.values.byName(
             map(item)['ergebnis'] as String,
           ),
-          notiz: map(item)['notiz'] as String?,
         ),
     ],
-    rhythmusanalyseNotizKorrekturen: [
+    druckphaseNeustarts: [
       for (final item
-          in (json['rhythmusanalyseNotizKorrekturen'] as List<dynamic>? ??
-              const []))
-        RhythmusanalyseNotizKorrektur(
-          eintragIndex: map(item)['eintragIndex'] as int,
-          zeitpunkt: _duration(map(item)['zeitpunkt']),
-          notiz: map(item)['notiz'] as String?,
-        ),
+          in (json['druckphaseNeustarts'] as List<dynamic>? ?? const []))
+        DruckphaseNeustart(zeitpunkt: _duration(map(item)['zeitpunkt'])),
     ],
     messwerte: [
       for (final item in (json['messwerte'] as List<dynamic>? ?? const []))
@@ -264,11 +205,6 @@ RhythmusanalyseErgebnis? _rhythmusanalyseErgebnis(Object? value) =>
     value == null
     ? null
     : RhythmusanalyseErgebnis.values.byName(value as String);
-
-RhythmusanalyseUebersprungenGrund? _uebersprungenGrund(Object? value) =>
-    value == null
-    ? null
-    : RhythmusanalyseUebersprungenGrund.values.byName(value as String);
 
 Map<String, dynamic> _messwertToJson(Messwert messwert) {
   final base = {

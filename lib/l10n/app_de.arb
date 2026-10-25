@@ -140,7 +140,7 @@
       }
     }
   },
-  "pauseOverdueErc": "Peri-Schock-Pause über {seconds} s – CPR fortsetzen",
+  "pauseOverdueErc": "Pause über {seconds} s – CPR fortsetzen",
   "@pauseOverdueErc": {
     "description": "Überfälligkeitshinweis in der Analysephase für ERC 2025",
     "placeholders": {
@@ -193,61 +193,9 @@
   "@rhythmusanalyseRecordButton": {
     "description": "Schaltfläche zum Erfassen des Rhythmusanalyse-Ergebnisses"
   },
-  "rhythmusanalyseRecordedLabel": "Ergebnis",
-  "@rhythmusanalyseRecordedLabel": {
-    "description": "Beschriftung des erfassten Rhythmusanalyse-Ergebnisses"
-  },
-  "rhythmusanalyseNoteAdd": "Notiz hinzufügen",
-  "@rhythmusanalyseNoteAdd": {
-    "description": "Schaltfläche zum Ergänzen einer Notiz am Ergebnis"
-  },
-  "rhythmusanalyseNoteEdit": "Notiz bearbeiten",
-  "@rhythmusanalyseNoteEdit": {
-    "description": "Schaltfläche zum Bearbeiten einer vorhandenen Notiz"
-  },
-  "rhythmusanalyseNoteTitle": "Notiz zur Rhythmusanalyse",
-  "@rhythmusanalyseNoteTitle": {
-    "description": "Titel des Dialogs für die Notiz zur Rhythmusanalyse"
-  },
-  "rhythmusanalyseNoteLabel": "Notiz (optional)",
-  "@rhythmusanalyseNoteLabel": {
-    "description": "Beschriftung des optionalen Notizfelds"
-  },
-  "rhythmusanalyseRequired": "Ergebnis oder Unklar erforderlich",
-  "@rhythmusanalyseRequired": {
-    "description": "Hinweis, dass vor dem Fortsetzen ein Ergebnis erfasst werden muss"
-  },
-  "cprContinueButton": "CPR fortsetzen",
-  "@cprContinueButton": {
-    "description": "Schaltfläche zum Beenden der Analysephase"
-  },
   "skipAnalysisButton": "Analyse überspringen",
   "@skipAnalysisButton": {
     "description": "Schaltfläche zum Überspringen der Rhythmusanalyse"
-  },
-  "skipAnalysisTitle": "Analyse überspringen",
-  "@skipAnalysisTitle": {
-    "description": "Titel des Dialogs zum Überspringen der Rhythmusanalyse"
-  },
-  "skipAnalysisReasonLabel": "Grund (optional)",
-  "@skipAnalysisReasonLabel": {
-    "description": "Beschriftung der Grundauswahl beim Überspringen"
-  },
-  "skipReasonNoTime": "Keine Zeit",
-  "@skipReasonNoTime": {
-    "description": "Grund für eine übersprungene Rhythmusanalyse"
-  },
-  "skipReasonAed": "AED übernimmt",
-  "@skipReasonAed": {
-    "description": "Grund für eine übersprungene Rhythmusanalyse: AED übernimmt"
-  },
-  "skipReasonOther": "Sonstiges",
-  "@skipReasonOther": {
-    "description": "Sonstiger Grund für eine übersprungene Rhythmusanalyse"
-  },
-  "skipWithoutReasonButton": "Ohne Angabe",
-  "@skipWithoutReasonButton": {
-    "description": "Überspringen ohne Angabe eines Grundes"
   },
   "schockButton": "Schock ({count})",
   "@schockButton": {
@@ -257,51 +205,6 @@
         "type": "int"
       }
     }
-  },
-  "schockRecorded": "Schock {count} erfasst",
-  "@schockRecorded": {
-    "description": "Bestätigung nach dem Erfassen eines Schocks",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "schockRecordedWithEnergy": "Schock {count} erfasst · {energie} J",
-  "@schockRecordedWithEnergy": {
-    "description": "Bestätigung nach dem Erfassen eines Schocks mit Energie",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      },
-      "energie": {
-        "type": "int"
-      }
-    }
-  },
-  "schockRecordedLabel": "Schock erfasst",
-  "@schockRecordedLabel": {
-    "description": "Statusanzeige, während die Druckphase nach einem Schock pausiert"
-  },
-  "schockEnergyAction": "Energie",
-  "@schockEnergyAction": {
-    "description": "Aktion zum Ergänzen der Schockenergie"
-  },
-  "schockUndoAction": "Rückgängig",
-  "@schockUndoAction": {
-    "description": "Aktion zum Rückgängigmachen des letzten Schocks"
-  },
-  "schockEnergyTitle": "Schockenergie",
-  "@schockEnergyTitle": {
-    "description": "Titel des Dialogs für die Schockenergie"
-  },
-  "schockEnergyLabel": "Energie (J)",
-  "@schockEnergyLabel": {
-    "description": "Beschriftung des Energie-Eingabefelds"
-  },
-  "schockEnergyInvalid": "Bitte eine ganze Zahl größer als 0 eingeben.",
-  "@schockEnergyInvalid": {
-    "description": "Fehlermeldung bei einer ungültigen Schockenergie"
   },
   "adrenalinLabel": "Adrenalin",
   "@adrenalinLabel": {
@@ -560,15 +463,6 @@
       }
     }
   },
-  "eventSchockUndone": "Schock {count} zurückgenommen",
-  "@eventSchockUndone": {
-    "description": "Ereignis: Rückgängigmachung eines Schocks",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
   "eventAdrenalin": "Adrenalin {dosis} mg",
   "@eventAdrenalin": {
     "description": "Ereignis: Adrenalin-Gabe",
@@ -598,16 +492,11 @@
   },
   "eventRhythmusanalyseSkipped": "Rhythmusanalyse übersprungen",
   "@eventRhythmusanalyseSkipped": {
-    "description": "Ereignis: Rhythmusanalyse ohne Grund übersprungen"
+    "description": "Ereignis: Rhythmusanalyse übersprungen"
   },
-  "eventRhythmusanalyseSkippedWithReason": "Rhythmusanalyse übersprungen: {grund}",
-  "@eventRhythmusanalyseSkippedWithReason": {
-    "description": "Ereignis: Rhythmusanalyse mit Grund übersprungen",
-    "placeholders": {
-      "grund": {
-        "type": "String"
-      }
-    }
+  "eventDruckphaseRestarted": "Druckphase neu gestartet",
+  "@eventDruckphaseRestarted": {
+    "description": "Ereignis: Manueller Neustart der Druckphase"
   },
   "eventRosc": "ROSC",
   "@eventRosc": {
@@ -866,31 +755,6 @@
         "type": "String"
       }
     }
-  },
-  "eventSchockEnergyCorrected": "Schock {count} korrigiert: {energie} J",
-  "@eventSchockEnergyCorrected": {
-    "description": "Ereignis: korrigierte Schockenergie",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      },
-      "energie": {
-        "type": "int"
-      }
-    }
-  },
-  "eventNoteCorrected": "Notiz korrigiert: {text}",
-  "@eventNoteCorrected": {
-    "description": "Ereignis: korrigierte Rhythmusanalyse-Notiz",
-    "placeholders": {
-      "text": {
-        "type": "String"
-      }
-    }
-  },
-  "eventNoteRemoved": "Notiz entfernt",
-  "@eventNoteRemoved": {
-    "description": "Ereignis: entfernte Rhythmusanalyse-Notiz"
   },
   "versionWithBuild": "{version} (Build {build})",
   "@versionWithBuild": {
