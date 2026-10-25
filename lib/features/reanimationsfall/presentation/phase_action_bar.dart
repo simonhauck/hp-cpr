@@ -15,6 +15,9 @@ class PhaseActionBar extends StatelessWidget {
     required this.snapshot,
     required this.layout,
     required this.onEnterAnalysephase,
+    required this.onRecordSchock,
+    required this.onUndoLastSchock,
+    required this.onEditSchockEnergie,
     required this.onRecordRhythmusanalyse,
     required this.onEditRhythmusanalyseNotiz,
     required this.onSkipRhythmusanalyse,
@@ -24,6 +27,9 @@ class PhaseActionBar extends StatelessWidget {
   final ReanimationsfallSnapshot snapshot;
   final PageLayout layout;
   final VoidCallback onEnterAnalysephase;
+  final VoidCallback onRecordSchock;
+  final VoidCallback onUndoLastSchock;
+  final VoidCallback onEditSchockEnergie;
   final VoidCallback onRecordRhythmusanalyse;
   final VoidCallback onEditRhythmusanalyseNotiz;
   final VoidCallback onSkipRhythmusanalyse;
@@ -35,17 +41,58 @@ class PhaseActionBar extends StatelessWidget {
     final theme = Theme.of(context);
     final isAnalysephase = snapshot.phase == Reanimationsphase.analysephase;
     final ergebnis = snapshot.rhythmusanalyseErgebnis;
+    final isShockable =
+        isAnalysephase &&
+        ergebnis?.kategorie == RhythmusanalyseKategorie.schockbar;
+
+    final schockButton = PhaseActionButton(
+      layout: layout,
+      label: l10n.schockButton(snapshot.schockAnzahl),
+      icon: Icons.bolt_outlined,
+      onPressed: onRecordSchock,
+      emphasis: isShockable
+          ? PhaseActionEmphasis.filled
+          : PhaseActionEmphasis.outlined,
+    );
+    final analyseButton = PhaseActionButton(
+      layout: layout,
+      label: l10n.analyseButton,
+      icon: Icons.monitor_heart_outlined,
+      onPressed: onEnterAnalysephase,
+    );
+    final pausedAnalyseButton = PhaseActionButton(
+      layout: layout,
+      emphasis: PhaseActionEmphasis.outlined,
+      label: l10n.analyseButton,
+      icon: Icons.monitor_heart_outlined,
+      onPressed: onEnterAnalysephase,
+    );
+    final continueButton = PhaseActionButton(
+      layout: layout,
+      label: l10n.cprContinueButton,
+      icon: Icons.play_arrow,
+      onPressed: onContinueCpr,
+    );
+    final resultContinueButton = PhaseActionButton(
+      layout: layout,
+      label: l10n.cprContinueButton,
+      icon: Icons.play_arrow,
+      onPressed: onContinueCpr,
+      emphasis: isShockable
+          ? PhaseActionEmphasis.outlined
+          : PhaseActionEmphasis.filled,
+    );
 
     final buttons = <Widget>[];
     if (!isAnalysephase) {
-      buttons.add(
-        PhaseActionButton(
-          layout: layout,
-          label: l10n.analyseButton,
-          icon: Icons.monitor_heart_outlined,
-          onPressed: onEnterAnalysephase,
-        ),
-      );
+      if (snapshot.isSchockpause) {
+        buttons.add(continueButton);
+        buttons.add(schockButton);
+        buttons.add(pausedAnalyseButton);
+      } else {
+        buttons.add(analyseButton);
+        buttons.add(schockButton);
+      }
     } else if (ergebnis == null) {
       buttons.add(
         PhaseActionButton(
@@ -55,6 +102,7 @@ class PhaseActionBar extends StatelessWidget {
           onPressed: onRecordRhythmusanalyse,
         ),
       );
+      buttons.add(schockButton);
       buttons.add(
         PhaseActionButton(
           layout: layout,
@@ -76,19 +124,23 @@ class PhaseActionBar extends StatelessWidget {
         ),
       );
     } else {
-      buttons.add(
-        PhaseActionButton(
-          layout: layout,
-          label: l10n.cprContinueButton,
-          icon: Icons.play_arrow,
-          onPressed: onContinueCpr,
-        ),
-      );
+      buttons.add(schockButton);
+      buttons.add(resultContinueButton);
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (snapshot.schockAnzahl > 0) ...[
+          _SchockStatusRow(
+            schockAnzahl: snapshot.schockAnzahl,
+            energieJoule: snapshot.letzterAktiverSchock?.energieJoule,
+            layout: layout,
+            onEditEnergie: onEditSchockEnergie,
+            onUndo: onUndoLastSchock,
+          ),
+          SizedBox(height: layout.isCompact ? 2 : 8),
+        ],
         if (isAnalysephase && ergebnis != null) ...[
           _RhythmusanalyseResultSummary(
             ergebnis: ergebnis,
@@ -96,7 +148,7 @@ class PhaseActionBar extends StatelessWidget {
             layout: layout,
             onEditNotiz: onEditRhythmusanalyseNotiz,
           ),
-          SizedBox(height: layout.isCompact ? 6 : 10),
+          SizedBox(height: layout.isCompact ? 4 : 10),
         ] else if (isAnalysephase) ...[
           Text(
             l10n.rhythmusanalyseRequired,
@@ -123,6 +175,67 @@ class PhaseActionBar extends StatelessWidget {
             runSpacing: 8,
             children: buttons,
           ),
+      ],
+    );
+  }
+}
+
+/// A persistent status row for the recorded Schocks.
+class _SchockStatusRow extends StatelessWidget {
+  const _SchockStatusRow({
+    required this.schockAnzahl,
+    required this.energieJoule,
+    required this.layout,
+    required this.onEditEnergie,
+    required this.onUndo,
+  });
+
+  final int schockAnzahl;
+  final int? energieJoule;
+  final PageLayout layout;
+  final VoidCallback onEditEnergie;
+  final VoidCallback onUndo;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final buttonStyle = layout.isCompact
+        ? TextButton.styleFrom(
+            minimumSize: const Size(0, 44),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            visualDensity: VisualDensity.compact,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          )
+        : null;
+    final text = energieJoule == null
+        ? l10n.schockRecorded(schockAnzahl)
+        : l10n.schockRecordedWithEnergy(schockAnzahl, energieJoule!);
+
+    return Row(
+      children: [
+        Icon(Icons.bolt_outlined, size: 18, color: theme.colorScheme.primary),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        TextButton(
+          onPressed: onEditEnergie,
+          style: buttonStyle,
+          child: Text(l10n.schockEnergyAction),
+        ),
+        TextButton(
+          onPressed: onUndo,
+          style: buttonStyle,
+          child: Text(l10n.schockUndoAction),
+        ),
       ],
     );
   }
@@ -228,7 +341,7 @@ class _RhythmusanalyseResultSummary extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: layout.isCompact ? 10 : 14,
-        vertical: layout.isCompact ? 6 : 10,
+        vertical: layout.isCompact ? 4 : 10,
       ),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,

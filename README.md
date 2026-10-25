@@ -190,7 +190,8 @@ lib/
 │   ├── reanimationsfall/
 │   │   ├── domain/
 │   │   │   ├── reanimationsfall.dart           # Startzeit, Reanimationsphase, read model
-│   │   │   └── rhythmusanalyse.dart            # Rhythmusanalyse result types
+│   │   │   ├── rhythmusanalyse.dart            # Rhythmusanalyse result types
+│   │   │   └── schock.dart                     # Schock events and undo entries
 │   │   └── presentation/
 │   │       ├── custom_startzeit_dialog.dart    # custom backdate entry
 │   │       ├── phase_action_bar.dart           # phase actions + result summary
@@ -198,6 +199,7 @@ lib/
 │   │       ├── rhythmusanalyse_dialog.dart     # two-step result flow
 │   │       ├── rhythmusanalyse_format.dart     # result labels
 │   │       ├── rhythmusanalyse_notiz_dialog.dart
+│   │       ├── schock_energie_dialog.dart      # optional Schock energy
 │   │       ├── skip_rhythmusanalyse_dialog.dart
 │   │       ├── start_card.dart                 # shared start-choice card shell
 │   │       ├── start_page.dart                 # new Reanimationsfall + backdated Startzeit
