@@ -15,7 +15,7 @@
 
       forEachSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f system);
 
-      mkDevShell =
+      mkShells =
         system:
         let
           pkgs = import nixpkgs {
@@ -50,40 +50,76 @@
           };
 
           androidSdk = android.androidsdk;
-        in
-        pkgs.mkShell {
-          packages = [
-            pkgs.flutter
-            pkgs.jdk21
-            androidSdk
-            pkgs.chromium
-            pkgs.curl
-            pkgs.git
-            pkgs.gh
-            pkgs.jq
-            pkgs.ripgrep
-            pkgs.unzip
-            pkgs.zip
+
+          commonPackages = with pkgs; [
+            flutter
+            git
+            curl
+            jq
+            ripgrep
+            unzip
+            zip
           ];
 
-          ANDROID_HOME = "${androidSdk}/libexec/android-sdk";
-          ANDROID_SDK_ROOT = "${androidSdk}/libexec/android-sdk";
-          JAVA_HOME = "${pkgs.jdk21.home}";
-          CHROME_EXECUTABLE = "${pkgs.chromium}/bin/chromium";
+          ciPackages = commonPackages ++ [
+            pkgs.chromium
+            pkgs.actionlint
+            pkgs.nixfmt
+          ];
 
-          shellHook = ''
+          androidPackages = commonPackages ++ [
+            pkgs.jdk21
+            androidSdk
+          ];
+
+          defaultPackages = commonPackages ++ [
+            pkgs.chromium
+            pkgs.actionlint
+            pkgs.gh
+            pkgs.nixfmt
+            pkgs.jdk21
+            androidSdk
+          ];
+
+          commonHook = ''
             export PUB_CACHE="''${PUB_CACHE:-$HOME/.pub-cache}"
             export PATH="$PUB_CACHE/bin:$PATH"
 
-            echo "HP-CPR development shell" >&2
-            echo "Run 'flutter doctor -v' to verify the toolchain." >&2
+            if [ -d .git ] && [ -d .githooks ]; then
+              git config --local core.hooksPath .githooks
+            fi
           '';
+
+          ciEnv = ''
+            export CHROME_EXECUTABLE="${pkgs.chromium}/bin/chromium"
+          '';
+
+          androidEnv = ''
+            export ANDROID_HOME="${androidSdk}/libexec/android-sdk"
+            export ANDROID_SDK_ROOT="$ANDROID_HOME"
+            export JAVA_HOME="${pkgs.jdk21.home}"
+          '';
+
+          mkShell =
+            name: packages: extraEnv:
+            pkgs.mkShell {
+              inherit packages;
+              shellHook = ''
+                ${commonHook}
+                ${extraEnv}
+                echo "HP-CPR ${name} development shell" >&2
+                echo "Run 'flutter doctor -v' to verify the toolchain." >&2
+              '';
+            };
+        in
+        {
+          default = mkShell "default" defaultPackages (ciEnv + androidEnv);
+          ci = mkShell "ci" ciPackages ciEnv;
+          android = mkShell "android" androidPackages androidEnv;
         };
     in
     {
-      devShells = forEachSystem (system: {
-        default = mkDevShell system;
-      });
+      devShells = forEachSystem (system: mkShells system);
 
       formatter = forEachSystem (system: (import nixpkgs { inherit system; }).nixfmt);
     };
