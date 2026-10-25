@@ -171,6 +171,34 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rhythmusanalyseUnklar => 'Unklar';
 
   @override
+  String get rhythmusanalyseStepKategorie => 'Rhythmusart';
+
+  @override
+  String get rhythmusanalyseStepRhythmus => 'Rhythmus';
+
+  @override
+  String get rhythmusanalyseSchockQuestion => 'Schock abgegeben?';
+
+  @override
+  String get rhythmusanalyseYes => 'Ja';
+
+  @override
+  String get rhythmusanalyseNo => 'Nein';
+
+  @override
+  String get roscConfirmTitle => 'ROSC bestätigen?';
+
+  @override
+  String get roscConfirmDescription =>
+      'Kreislauf zurückgekehrt? ROSC erfassen.';
+
+  @override
+  String get roscConfirmButton => 'ROSC bestätigen';
+
+  @override
+  String get rhythmusanalyseSkippedSnackbar => 'Analyse übersprungen';
+
+  @override
   String get rhythmusanalyseKammerflimmern => 'Kammerflimmern (VF)';
 
   @override

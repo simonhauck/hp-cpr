@@ -211,20 +211,19 @@ lib/
 │   │   │   ├── messwert.dart                    # Messwerte + free-text notes
 │   │   │   ├── reanimationsfall.dart           # Startzeit, Reanimationsphase, read model
 │   │   │   ├── rhythmusanalyse.dart            # Rhythmusanalyse result types
-│   │   │   └── schock.dart                     # Schock events and undo entries
+│   │   │   └── schock.dart                     # Schock events
 │   │   └── presentation/
+│   │       ├── actions_sheet.dart              # Weitere Aktionen sheet
 │   │       ├── adrenalin_panel.dart            # Adrenalin Zeitfenster bar
 │   │       ├── amiodaron_panel.dart            # Amiodaron hint + last dose
 │   │       ├── custom_startzeit_dialog.dart    # custom backdate entry
 │   │       ├── end_reanimationsfall_dialog.dart # ending reason
-│   │       ├── phase_action_bar.dart           # phase actions + result summary
+│   │       ├── phase_action_bar.dart           # phase actions + Aktionen entry
+│   │       ├── phase_strip.dart                # current action + shock count
 │   │       ├── reanimationsfall_page.dart      # running Reanimationsfall
 │   │       ├── reanimationsfall_summary_page.dart # in-app case summary
-│   │       ├── rhythmusanalyse_dialog.dart     # two-step result flow
+│   │       ├── rhythmusanalyse_dialog.dart     # guided result flow
 │   │       ├── rhythmusanalyse_format.dart     # result labels
-│   │       ├── rhythmusanalyse_notiz_dialog.dart
-│   │       ├── schock_energie_dialog.dart      # optional Schock energy
-│   │       ├── skip_rhythmusanalyse_dialog.dart
 │   │       ├── start_card.dart                 # shared start-choice card shell
 │   │       ├── start_page.dart                 # new Reanimationsfall + backdated Startzeit
 │   │       └── timer_format.dart               # MM:SS / H:MM:SS formatting

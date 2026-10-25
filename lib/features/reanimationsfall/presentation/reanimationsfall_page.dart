@@ -9,7 +9,6 @@ import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_c
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/amiodaron.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
-import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/adrenalin_panel.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/amiodaron_panel.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/actions_sheet.dart';
@@ -186,17 +185,32 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
   }
 
   Future<void> _recordRhythmusanalyse() async {
-    final ergebnis = await showDialog<RhythmusanalyseErgebnis>(
+    final abschluss = await showDialog<RhythmusanalyseAbschluss>(
       context: context,
       builder: (_) => const RhythmusanalyseDialog(),
     );
-    if (ergebnis == null || !mounted) return;
+    if (abschluss == null || !mounted) return;
 
-    _mutate(() => widget.reanimationsfall.completeRhythmusanalyse(ergebnis));
+    _mutate(() {
+      widget.reanimationsfall.completeRhythmusanalyse(
+        abschluss.ergebnis,
+        schockAbgegeben: abschluss.schockAbgegeben,
+      );
+      if (abschluss.schockAbgegeben) {
+        _amiodaronHinweisAusgeblendet = false;
+      }
+    });
   }
 
   void _skipRhythmusanalyse() {
     _mutate(widget.reanimationsfall.skipRhythmusanalyse);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          AppLocalizations.of(context).rhythmusanalyseSkippedSnackbar,
+        ),
+      ),
+    );
   }
 
   @override

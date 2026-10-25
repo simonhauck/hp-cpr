@@ -222,6 +222,42 @@
   "@rhythmusanalyseUnklar": {
     "description": "Ergebnis: Rhythmus unklar"
   },
+  "rhythmusanalyseStepKategorie": "Rhythmusart",
+  "@rhythmusanalyseStepKategorie": {
+    "description": "Erster Schritt der geführten Rhythmusanalyse"
+  },
+  "rhythmusanalyseStepRhythmus": "Rhythmus",
+  "@rhythmusanalyseStepRhythmus": {
+    "description": "Zweiter Schritt der geführten Rhythmusanalyse"
+  },
+  "rhythmusanalyseSchockQuestion": "Schock abgegeben?",
+  "@rhythmusanalyseSchockQuestion": {
+    "description": "Frage, ob nach einem schockbaren Rhythmus ein Schock abgegeben wurde"
+  },
+  "rhythmusanalyseYes": "Ja",
+  "@rhythmusanalyseYes": {
+    "description": "Bestätigung im Schock-Schritt"
+  },
+  "rhythmusanalyseNo": "Nein",
+  "@rhythmusanalyseNo": {
+    "description": "Verneinung im Schock-Schritt"
+  },
+  "roscConfirmTitle": "ROSC bestätigen?",
+  "@roscConfirmTitle": {
+    "description": "Titel der ROSC-Bestätigung"
+  },
+  "roscConfirmDescription": "Kreislauf zurückgekehrt? ROSC erfassen.",
+  "@roscConfirmDescription": {
+    "description": "Beschreibung der ROSC-Bestätigung"
+  },
+  "roscConfirmButton": "ROSC bestätigen",
+  "@roscConfirmButton": {
+    "description": "Bestätigungsschaltfläche für ROSC"
+  },
+  "rhythmusanalyseSkippedSnackbar": "Analyse übersprungen",
+  "@rhythmusanalyseSkippedSnackbar": {
+    "description": "Kurze Bestätigung nach dem Überspringen der Rhythmusanalyse"
+  },
   "rhythmusanalyseKammerflimmern": "Kammerflimmern (VF)",
   "@rhythmusanalyseKammerflimmern": {
     "description": "Schockbarer Rhythmus: Kammerflimmern"
