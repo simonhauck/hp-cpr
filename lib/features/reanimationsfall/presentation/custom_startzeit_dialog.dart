@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:hp_cpr/l10n/app_localizations.dart';
+import 'package:hp_cpr/ui/layout/page_layout.dart';
 
 /// Asks for a custom number of minutes and seconds since the first compression.
 class CustomStartzeitDialog extends StatefulWidget {
@@ -54,7 +55,7 @@ class _CustomStartzeitDialogState extends State<CustomStartzeitDialog> {
               l10n.customStartzeitDescription,
               style: theme.textTheme.bodyMedium,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: PageLayout.space16),
             Row(
               children: [
                 Expanded(
@@ -79,7 +80,7 @@ class _CustomStartzeitDialogState extends State<CustomStartzeitDialog> {
                     },
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: PageLayout.space12),
                 Expanded(
                   child: TextFormField(
                     controller: _secondsController,

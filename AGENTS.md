@@ -98,6 +98,13 @@ All commits follow [Conventional Commits](https://www.conventionalcommits.org/):
 - Do not invent CPR domain logic; the concrete HP-CPR workflow is still being agreed on.
 - Implement new features only after the domain requirements have been agreed.
 
+## Layout
+
+- All spacing, corner radii, icon sizes, touch targets, and compact/regular geometry decisions live in `lib/ui/layout/page_layout.dart`.
+- Do not add inline pixel offsets or compact/regular geometry ternaries in feature widgets. Use the `PageLayout` static tokens and semantic getters. Text styles may still branch on `layout.isCompact`.
+- Shared timer-page frames belong in `PageScaffold`; settings and dialogs keep their own shells but still use the same spacing tokens.
+- Add new shared geometry values to `PageLayout` and reuse them instead of defining local copies in widgets.
+
 ## MCP
 
 The Dart/Flutter MCP server is configured in `opencode.json` and started directly via `dart mcp-server`. OpenCode must therefore run from the Nix dev shell so that `dart` is on the `PATH`. If a shared OpenCode background service is already running outside the dev shell, use `opencode --standalone` or stop the service before starting and restart it inside the dev shell. After code changes to a running app, use hot reload or hot restart.

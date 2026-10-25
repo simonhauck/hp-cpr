@@ -29,7 +29,7 @@ class StartPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PageScaffold(
-      maxWidth: 1200,
+      maxWidth: PageLayout.maxContentWidth,
       header: (context, layout) => _StartHeader(
         layout: layout,
         settings: settings,
@@ -52,14 +52,14 @@ class StartPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Expanded(child: startNowCard),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: PageLayout.space12),
                   Expanded(child: runningReanimationsfallCard),
                 ],
               )
             : ListView(
                 children: [
                   startNowCard,
-                  const SizedBox(height: 12),
+                  const SizedBox(height: PageLayout.space12),
                   runningReanimationsfallCard,
                 ],
               );
@@ -133,7 +133,7 @@ class _StartHeader extends StatelessWidget {
                             : theme.textTheme.labelLarge)
                         ?.copyWith(
                           color: theme.colorScheme.primary,
-                          letterSpacing: 1.2,
+                          letterSpacing: PageLayout.appTitleLetterSpacing,
                         ),
               ),
               Text(
@@ -177,14 +177,14 @@ class _StartNowCard extends StatelessWidget {
         if (!layout.isCompact) ...[
           Icon(
             Icons.play_circle_outline,
-            size: 36,
+            size: PageLayout.iconLarge,
             color: theme.colorScheme.primary,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: PageLayout.space4),
         ],
         StartCardTitle(l10n.startNowTitle, layout: layout),
         if (!layout.isCompact) ...[
-          const SizedBox(height: 4),
+          const SizedBox(height: PageLayout.space4),
           Text(
             l10n.startNowDescription,
             textAlign: TextAlign.center,
@@ -192,9 +192,9 @@ class _StartNowCard extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: PageLayout.space16),
         ] else
-          const SizedBox(height: 8),
+          const SizedBox(height: PageLayout.space8),
         FilledButton.icon(
           onPressed: onStart,
           icon: const Icon(Icons.play_arrow),
@@ -239,7 +239,7 @@ class _RunningReanimationsfallCard extends StatelessWidget {
       layout: layout,
       children: [
         StartCardTitle(l10n.runningCaseTitle, layout: layout),
-        SizedBox(height: layout.isCompact ? 2 : 4),
+        SizedBox(height: layout.cardTitleGap),
         Text(
           l10n.backdateMinutesLabel,
           textAlign: TextAlign.center,
@@ -247,23 +247,26 @@ class _RunningReanimationsfallCard extends StatelessWidget {
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
-        SizedBox(height: layout.isCompact ? 6 : 8),
+        SizedBox(height: layout.cardLabelGap),
         Wrap(
           alignment: WrapAlignment.center,
-          spacing: 8,
-          runSpacing: 8,
+          spacing: layout.actionWrapRunSpacing,
+          runSpacing: layout.actionWrapRunSpacing,
           children: [
             for (final backdate in _backdatePresets)
               ActionChip(
                 label: Text('${backdate.inMinutes}'),
                 labelStyle: theme.textTheme.titleSmall,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: PageLayout.space8,
+                  vertical: PageLayout.space4,
+                ),
                 tooltip: l10n.backdateChip(backdate.inMinutes),
                 onPressed: () => onStartBackdated(backdate),
               ),
           ],
         ),
-        SizedBox(height: layout.isCompact ? 6 : 12),
+        SizedBox(height: layout.cardActionGap),
         OutlinedButton.icon(
           onPressed: onCustomStartzeit,
           icon: const Icon(Icons.edit_outlined),

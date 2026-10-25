@@ -44,13 +44,10 @@ class AdrenalinPanel extends StatelessWidget {
     final startFraction = windowStart.inMilliseconds / windowEnd.inMilliseconds;
 
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: layout.isCompact ? 10 : 14,
-        vertical: layout.isCompact ? 2 : 8,
-      ),
+      padding: layout.medicationPanelPadding,
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(layout.cardRadius),
       ),
       child: Row(
         children: [
@@ -63,17 +60,17 @@ class AdrenalinPanel extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.medication_outlined,
-                      size: 18,
+                      size: PageLayout.iconSmall,
                       color: theme.colorScheme.primary,
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: PageLayout.space6),
                     Text(
                       l10n.adrenalinLabel,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: PageLayout.space8),
                     Expanded(
                       child: Align(
                         alignment: Alignment.centerRight,
@@ -91,7 +88,7 @@ class AdrenalinPanel extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: PageLayout.space2),
                 if (lastDose != null && sinceLastDose != null) ...[
                   _ZeitfensterBar(
                     seitLetzterGabe: sinceLastDose,
@@ -99,9 +96,9 @@ class AdrenalinPanel extends StatelessWidget {
                     total: windowEnd,
                     color: stateColor,
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: PageLayout.space2),
                   SizedBox(
-                    height: 16,
+                    height: PageLayout.space16,
                     child: LayoutBuilder(
                       builder: (context, constraints) {
                         final width = constraints.maxWidth;
@@ -114,7 +111,9 @@ class AdrenalinPanel extends StatelessWidget {
                           children: [
                             Positioned(
                               left: 0,
-                              right: width * (1 - startFraction) + 16,
+                              right:
+                                  width * (1 - startFraction) +
+                                  PageLayout.space16,
                               child: Text(
                                 l10n.adrenalinLastDose(
                                   formatReanimationsdauer(lastDose.zeitpunkt),
@@ -125,7 +124,7 @@ class AdrenalinPanel extends StatelessWidget {
                               ),
                             ),
                             Positioned(
-                              left: width * startFraction - 14,
+                              left: width * startFraction - PageLayout.space14,
                               child: Text(
                                 formatElapsed(windowStart),
                                 style: labelStyle,
@@ -160,14 +159,16 @@ class AdrenalinPanel extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: PageLayout.space8),
           FilledButton.tonalIcon(
             onPressed: onRecordAdrenalin,
             icon: const Icon(Icons.medication_outlined),
             label: Text(l10n.adrenalinRecordButton),
             style: FilledButton.styleFrom(
-              minimumSize: Size(0, layout.actionHeight),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              minimumSize: Size(PageLayout.space0, layout.actionHeight),
+              padding: const EdgeInsets.symmetric(
+                horizontal: PageLayout.space12,
+              ),
               textStyle: theme.textTheme.titleSmall,
             ),
           ),
@@ -198,7 +199,7 @@ class _ZeitfensterBar extends StatelessWidget {
         .toDouble();
 
     return SizedBox(
-      height: 8,
+      height: PageLayout.barHeight,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
@@ -210,7 +211,7 @@ class _ZeitfensterBar extends StatelessWidget {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: theme.colorScheme.outlineVariant,
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(PageLayout.radius4),
                   ),
                 ),
               ),
@@ -222,37 +223,39 @@ class _ZeitfensterBar extends StatelessWidget {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: color,
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(PageLayout.radius4),
                   ),
                 ),
               ),
               Positioned(
-                left: width * startFraction - 1,
-                top: -2,
-                bottom: -2,
+                left: width * startFraction - PageLayout.barTickWidth / 2,
+                top: -PageLayout.barOverhang,
+                bottom: -PageLayout.barOverhang,
                 child: Container(
-                  width: 2,
+                  width: PageLayout.barTickWidth,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               Positioned(
                 right: 0,
-                top: -2,
-                bottom: -2,
+                top: -PageLayout.barOverhang,
+                bottom: -PageLayout.barOverhang,
                 child: Container(
-                  width: 2,
+                  width: PageLayout.barTickWidth,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               Positioned(
-                left: (width * progress - 2).clamp(0, width - 4).toDouble(),
-                top: -2,
-                bottom: -2,
+                left: (width * progress - PageLayout.barMarkerWidth / 2)
+                    .clamp(0, width - PageLayout.barMarkerWidth)
+                    .toDouble(),
+                top: -PageLayout.barOverhang,
+                bottom: -PageLayout.barOverhang,
                 child: Container(
-                  width: 4,
+                  width: PageLayout.barMarkerWidth,
                   decoration: BoxDecoration(
                     color: color,
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(PageLayout.radius2),
                   ),
                 ),
               ),

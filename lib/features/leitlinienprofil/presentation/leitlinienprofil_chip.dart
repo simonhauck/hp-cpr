@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
+import 'package:hp_cpr/ui/layout/page_layout.dart';
 
 /// The read-only Leitlinienprofil chip shown before and during a Reanimationsfall.
 class LeitlinienprofilChip extends StatelessWidget {
@@ -32,7 +33,7 @@ class LeitlinienprofilChip extends StatelessWidget {
 
     final avatar = compact
         ? null
-        : const Icon(Icons.verified_outlined, size: 18);
+        : const Icon(Icons.verified_outlined, size: PageLayout.iconSmall);
     final labelStyle = compact ? theme.textTheme.labelMedium : null;
     final visualDensity = compact ? VisualDensity.compact : null;
     final tapTargetSize = compact ? MaterialTapTargetSize.shrinkWrap : null;

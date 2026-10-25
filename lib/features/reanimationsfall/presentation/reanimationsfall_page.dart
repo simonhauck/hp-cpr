@@ -146,7 +146,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     final snapshot = widget.reanimationsfall.snapshot();
 
     return PageScaffold(
-      maxWidth: 1200,
+      maxWidth: PageLayout.maxContentWidth,
       header: (context, layout) =>
           _ReanimationsfallHeader(snapshot: snapshot, layout: layout),
       content: (context, layout) {
@@ -159,15 +159,18 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
             ? Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(flex: 4, child: reanimationsdauerPanel),
+                  Expanded(
+                    flex: PageLayout.elapsedPanelFlex,
+                    child: reanimationsdauerPanel,
+                  ),
                   SizedBox(width: layout.panelGap),
-                  Expanded(flex: 6, child: timer),
+                  Expanded(flex: PageLayout.timerPanelFlex, child: timer),
                 ],
               )
             : Column(
                 children: [
                   reanimationsdauerPanel,
-                  const SizedBox(height: 16),
+                  SizedBox(height: layout.panelGap),
                   Expanded(child: timer),
                 ],
               );
@@ -176,7 +179,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(child: main),
-            SizedBox(height: layout.isCompact ? 6 : 10),
+            SizedBox(height: layout.contentGap),
             AdrenalinPanel(
               snapshot: snapshot,
               layout: layout,
@@ -220,7 +223,7 @@ class _ReanimationsfallHeader extends StatelessWidget {
     return Row(
       children: [
         const BackButton(),
-        const SizedBox(width: 8),
+        const SizedBox(width: PageLayout.space8),
         Expanded(
           child: Align(
             alignment: Alignment.centerLeft,
@@ -236,7 +239,7 @@ class _ReanimationsfallHeader extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: PageLayout.space12),
         LeitlinienprofilChip(
           leitlinienprofil: snapshot.leitlinienprofil,
           compact: layout.isCompact,
@@ -275,7 +278,7 @@ class _ReanimationsdauerPanel extends StatelessWidget {
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: PageLayout.space4),
             Text(
               l10n.startzeitValue(formatWallTime(snapshot.startzeit)),
               style: theme.textTheme.bodyMedium?.copyWith(
@@ -313,12 +316,12 @@ class _PhaseTimerPanel extends StatelessWidget {
 class _PhasePanel extends StatelessWidget {
   const _PhasePanel({
     required this.isAlert,
-    required this.padding,
+    required this.layout,
     required this.child,
   });
 
   final bool isAlert;
-  final EdgeInsets padding;
+  final PageLayout layout;
   final Widget child;
 
   @override
@@ -326,17 +329,17 @@ class _PhasePanel extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: padding,
+      padding: layout.phasePanelPadding,
       decoration: BoxDecoration(
         color: isAlert
             ? theme.colorScheme.errorContainer
             : theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(layout.phasePanelRadius),
         border: Border.all(
           color: isAlert
               ? theme.colorScheme.error
               : theme.colorScheme.outlineVariant,
-          width: isAlert ? 3 : 1,
+          width: isAlert ? layout.alertBorderWidth : layout.panelBorderWidth,
         ),
       ),
       child: child,
@@ -369,7 +372,7 @@ class _DruckphaseTimerPanel extends StatelessWidget {
 
     return _PhasePanel(
       isAlert: isDue,
-      padding: EdgeInsets.all(layout.isCompact ? 6 : 20),
+      layout: layout,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -383,7 +386,7 @@ class _DruckphaseTimerPanel extends StatelessWidget {
                     isDue ? Icons.priority_high_rounded : Icons.bolt_outlined,
                     color: foreground,
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: PageLayout.space4),
                 ],
                 Text(
                   label,
@@ -401,7 +404,7 @@ class _DruckphaseTimerPanel extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: PageLayout.space4),
           Flexible(
             child: FittedBox(
               fit: BoxFit.scaleDown,
@@ -412,8 +415,8 @@ class _DruckphaseTimerPanel extends StatelessWidget {
                       )
                     : formatCountdown(snapshot.compressionRemaining),
                 style: TextStyle(
-                  fontSize: 150,
-                  height: 1,
+                  fontSize: PageLayout.druckphaseTimerFontSize,
+                  height: PageLayout.timerLineHeight,
                   fontWeight: FontWeight.w800,
                   fontFeatures: const [FontFeature.tabularFigures()],
                   color: foreground,
@@ -444,7 +447,7 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
 
     return _PhasePanel(
       isAlert: isOverdue,
-      padding: EdgeInsets.all(layout.isCompact ? 6 : 20),
+      layout: layout,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -461,15 +464,15 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: PageLayout.space4),
           Flexible(
             child: FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
                 formatElapsed(snapshot.pauseDuration),
                 style: TextStyle(
-                  fontSize: 84,
-                  height: 1,
+                  fontSize: PageLayout.analysephaseTimerFontSize,
+                  height: PageLayout.timerLineHeight,
                   fontWeight: isOverdue ? FontWeight.w700 : FontWeight.w500,
                   fontFeatures: const [FontFeature.tabularFigures()],
                   color: isOverdue
@@ -480,14 +483,14 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
             ),
           ),
           if (isOverdue) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: PageLayout.space8),
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.warning_amber_rounded, color: foreground),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: PageLayout.space6),
                   Text(
                     _pauseOverdueHint(l10n, snapshot.leitlinienprofil),
                     style: theme.textTheme.titleMedium?.copyWith(

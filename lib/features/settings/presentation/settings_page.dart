@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
+import 'package:hp_cpr/ui/layout/page_layout.dart';
 
 /// The app-wide settings for the Leitlinienprofil and alert signals.
 class SettingsPage extends StatelessWidget {
@@ -20,11 +21,18 @@ class SettingsPage extends StatelessWidget {
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
+            constraints: const BoxConstraints(
+              maxWidth: PageLayout.settingsContentWidth,
+            ),
             child: AnimatedBuilder(
               animation: settings,
               builder: (context, _) => ListView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                padding: const EdgeInsets.fromLTRB(
+                  PageLayout.space20,
+                  PageLayout.space16,
+                  PageLayout.space20,
+                  PageLayout.space24,
+                ),
                 children: [
                   Text(
                     l10n.settingsLeitlinienprofilSection,
@@ -32,14 +40,14 @@ class SettingsPage extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: PageLayout.space4),
                   Text(
                     l10n.settingsLeitlinienprofilDescription,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: PageLayout.space16),
                   SegmentedButton<Leitlinienprofil>(
                     segments: [
                       ButtonSegment(
@@ -56,7 +64,7 @@ class SettingsPage extends StatelessWidget {
                       settings.leitlinienprofil = selection.single;
                     },
                   ),
-                  const Divider(height: 40),
+                  const Divider(height: PageLayout.space40),
                   Text(
                     l10n.settingsAlertsSection,
                     style: theme.textTheme.titleMedium?.copyWith(
