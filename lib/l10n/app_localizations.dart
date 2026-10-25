@@ -334,6 +334,12 @@ abstract class AppLocalizations {
   /// **'Schock erfassen'**
   String get actionsSchock;
 
+  /// Aktion zum Erfassen einer freien Notiz
+  ///
+  /// In de, this message translates to:
+  /// **'Notiz'**
+  String get actionsNotiz;
+
   /// Beschriftung des Pausenzählers in der Analysephase
   ///
   /// In de, this message translates to:

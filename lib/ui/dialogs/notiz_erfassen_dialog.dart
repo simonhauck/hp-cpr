@@ -3,6 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 
+/// Opens the free-text note dialog and returns its trimmed text.
+Future<String?> showNotizErfassenDialog(BuildContext context) {
+  return showDialog<String>(
+    context: context,
+    builder: (_) => const NotizErfassenDialog(),
+  );
+}
+
 /// Asks for a free-text note and returns its trimmed text.
 class NotizErfassenDialog extends StatefulWidget {
   const NotizErfassenDialog({super.key});

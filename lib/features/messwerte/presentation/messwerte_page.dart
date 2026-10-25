@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/features/messwerte/presentation/messwert_erfassen_dialog.dart';
 import 'package:hp_cpr/features/messwerte/presentation/messwert_tile.dart';
-import 'package:hp_cpr/features/messwerte/presentation/notiz_erfassen_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
+import 'package:hp_cpr/ui/dialogs/notiz_erfassen_dialog.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 import 'package:hp_cpr/ui/navigation/app_drawer.dart';
 import 'package:hp_cpr/ui/navigation/app_routes.dart';
@@ -75,10 +75,7 @@ class _MesswertePageState extends State<MesswertePage> {
   }
 
   Future<void> _recordNotiz() async {
-    final text = await showDialog<String>(
-      context: context,
-      builder: (_) => const NotizErfassenDialog(),
-    );
+    final text = await showNotizErfassenDialog(context);
     if (text == null || !mounted) return;
 
     final reanimationsfall = widget.reanimationsfall!;
