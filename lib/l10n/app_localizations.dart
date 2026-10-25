@@ -382,6 +382,60 @@ abstract class AppLocalizations {
   /// **'Unklar'**
   String get rhythmusanalyseUnklar;
 
+  /// Erster Schritt der geführten Rhythmusanalyse
+  ///
+  /// In de, this message translates to:
+  /// **'Rhythmusart'**
+  String get rhythmusanalyseStepKategorie;
+
+  /// Zweiter Schritt der geführten Rhythmusanalyse
+  ///
+  /// In de, this message translates to:
+  /// **'Rhythmus'**
+  String get rhythmusanalyseStepRhythmus;
+
+  /// Frage, ob nach einem schockbaren Rhythmus ein Schock abgegeben wurde
+  ///
+  /// In de, this message translates to:
+  /// **'Schock abgegeben?'**
+  String get rhythmusanalyseSchockQuestion;
+
+  /// Bestätigung im Schock-Schritt
+  ///
+  /// In de, this message translates to:
+  /// **'Ja'**
+  String get rhythmusanalyseYes;
+
+  /// Verneinung im Schock-Schritt
+  ///
+  /// In de, this message translates to:
+  /// **'Nein'**
+  String get rhythmusanalyseNo;
+
+  /// Titel der ROSC-Bestätigung
+  ///
+  /// In de, this message translates to:
+  /// **'ROSC bestätigen?'**
+  String get roscConfirmTitle;
+
+  /// Beschreibung der ROSC-Bestätigung
+  ///
+  /// In de, this message translates to:
+  /// **'Kreislauf zurückgekehrt? ROSC erfassen.'**
+  String get roscConfirmDescription;
+
+  /// Bestätigungsschaltfläche für ROSC
+  ///
+  /// In de, this message translates to:
+  /// **'ROSC bestätigen'**
+  String get roscConfirmButton;
+
+  /// Kurze Bestätigung nach dem Überspringen der Rhythmusanalyse
+  ///
+  /// In de, this message translates to:
+  /// **'Analyse übersprungen'**
+  String get rhythmusanalyseSkippedSnackbar;
+
   /// Schockbarer Rhythmus: Kammerflimmern
   ///
   /// In de, this message translates to:

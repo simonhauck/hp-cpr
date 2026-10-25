@@ -224,10 +224,81 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Kammerflimmern (VF)'));
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Nein'));
+    await tester.pumpAndSettle();
 
     expect(find.text('Druckphase'), findsOneWidget);
     expect(find.text('Nächste Analyse'), findsOneWidget);
     expect(find.text('02:00'), findsNWidgets(2));
+  });
+
+  testWidgets('records a confirmed Schock from the wizard and resumes', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Analyse starten'));
+    await tester.pump();
+
+    await tester.tap(find.text('Ergebnis erfassen'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Schockbar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Kammerflimmern (VF)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ja'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.text('Schocks: 1'), findsOneWidget);
+    expect(find.text('02:00'), findsNWidgets(2));
+    expect(find.text('CPR fortsetzen'), findsNothing);
+
+    await tester.tap(find.byTooltip('Fall beenden'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Abbruch'));
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(find.text('Schock 1'), 200);
+    expect(find.text('Schock 1'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Rhythmusanalyse: Schockbar – Kammerflimmern (VF)'),
+      200,
+    );
+    expect(
+      find.text('Rhythmusanalyse: Schockbar – Kammerflimmern (VF)'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('cancels the ROSC confirmation without recording ROSC', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Analyse starten'));
+    await tester.pump();
+    await tester.tap(find.text('Ergebnis erfassen'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ROSC'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ROSC bestätigen?'), findsOneWidget);
+    await tester.tap(find.text('Abbrechen').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Rhythmusart'), findsOneWidget);
+    expect(find.text('Kreislauf zurückgekehrt'), findsNothing);
+
+    await tester.tap(find.text('Abbrechen'));
+    await tester.pumpAndSettle();
+    expect(find.text('Analysephase'), findsOneWidget);
   });
 
   testWidgets('opens settings from the Leitlinienprofil chip and applies the '
@@ -313,6 +384,14 @@ void main() {
     expect(find.text('Notiz zur Rhythmusanalyse'), findsNothing);
     expect(find.text('Druckphase'), findsOneWidget);
     expect(find.text('Nächste Analyse'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Fall beenden'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Abbruch'));
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(find.text('Rhythmusanalyse: Unklar'), 200);
+    expect(find.text('Rhythmusanalyse: Unklar'), findsOneWidget);
   });
 
   testWidgets('skips the Rhythmusanalyse in one tap and starts a fresh cycle', (
@@ -330,12 +409,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Grund (optional)'), findsNothing);
+    expect(find.text('Analyse übersprungen'), findsOneWidget);
     expect(find.text('Druckphase'), findsOneWidget);
     expect(find.text('Nächste Analyse'), findsOneWidget);
     expect(find.text('02:00'), findsNWidgets(2));
   });
 
-  testWidgets('records a non-shockable rhythm and ROSC from the two-step '
+  testWidgets('records a non-shockable rhythm and ROSC from the guided '
       'dialog', (tester) async {
     await pumpApp(tester);
     await startNow(tester);
@@ -365,6 +445,8 @@ void main() {
     await tester.tap(find.text('Ergebnis erfassen'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('ROSC'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ROSC bestätigen'));
     await tester.pumpAndSettle();
 
     expect(find.text('ROSC'), findsWidgets);
@@ -510,6 +592,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Kammerflimmern (VF)'));
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Nein'));
+    await tester.pumpAndSettle();
 
     expect(find.text('Druckphase'), findsOneWidget);
     expect(find.text('Nächste Analyse'), findsOneWidget);
@@ -557,6 +641,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Kammerflimmern (VF)'));
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Nein'));
+    await tester.pumpAndSettle();
 
     expect(find.text('Erste Gabe fällig'), findsNothing);
 
@@ -587,6 +673,8 @@ void main() {
     await tester.tap(find.text('Schockbar'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Kammerflimmern (VF)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nein'));
     await tester.pumpAndSettle();
 
     await recordSchock(tester);
@@ -837,6 +925,8 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Kammerflimmern (VF)'));
       await tester.pumpAndSettle();
+      await tester.tap(find.text('Nein'));
+      await tester.pumpAndSettle();
 
       expect(find.text('Druckphase'), findsOneWidget);
       expect(find.text('CPR fortsetzen'), findsNothing);
@@ -889,6 +979,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('ROSC'));
     await tester.pumpAndSettle();
+    await tester.tap(find.text('ROSC bestätigen'));
+    await tester.pumpAndSettle();
 
     expect(find.text('ROSC'), findsWidgets);
     expect(find.text('ROSC · Reanimation pausiert'), findsOneWidget);
@@ -924,6 +1016,8 @@ void main() {
     await tester.tap(find.text('Ergebnis erfassen'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('ROSC'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ROSC bestätigen'));
     await tester.pumpAndSettle();
 
     clock.advance(const Duration(seconds: 30));
