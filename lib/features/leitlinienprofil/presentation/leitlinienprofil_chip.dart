@@ -9,12 +9,16 @@ class LeitlinienprofilChip extends StatelessWidget {
     super.key,
     required this.leitlinienprofil,
     this.compact = false,
+    this.onPressed,
   });
 
   final Leitlinienprofil leitlinienprofil;
 
   /// Whether to use a smaller chip for short landscape screens.
   final bool compact;
+
+  /// Opens settings when set; the chip itself always stays read-only.
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -26,17 +30,33 @@ class LeitlinienprofilChip extends StatelessWidget {
       Leitlinienprofil.aha2025 => l10n.guidelineAha2025,
     };
 
+    final avatar = compact
+        ? null
+        : const Icon(Icons.verified_outlined, size: 18);
+    final labelStyle = compact ? theme.textTheme.labelMedium : null;
+    final visualDensity = compact ? VisualDensity.compact : null;
+    final tapTargetSize = compact ? MaterialTapTargetSize.shrinkWrap : null;
+
     return Tooltip(
-      message: l10n.guidelineLabel,
-      child: Chip(
-        avatar: compact ? null : const Icon(Icons.verified_outlined, size: 18),
-        labelStyle: compact ? theme.textTheme.labelMedium : null,
-        visualDensity: compact ? VisualDensity.compact : null,
-        materialTapTargetSize: compact
-            ? MaterialTapTargetSize.shrinkWrap
-            : null,
-        label: Text(label),
-      ),
+      message: onPressed == null
+          ? l10n.guidelineLabel
+          : l10n.settingsOpenTooltip,
+      child: onPressed == null
+          ? Chip(
+              avatar: avatar,
+              labelStyle: labelStyle,
+              visualDensity: visualDensity,
+              materialTapTargetSize: tapTargetSize,
+              label: Text(label),
+            )
+          : ActionChip(
+              avatar: avatar,
+              labelStyle: labelStyle,
+              visualDensity: visualDensity,
+              materialTapTargetSize: tapTargetSize,
+              onPressed: onPressed,
+              label: Text(label),
+            ),
     );
   }
 }

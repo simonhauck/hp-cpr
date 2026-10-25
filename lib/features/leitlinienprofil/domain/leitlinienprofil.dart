@@ -8,4 +8,13 @@ enum Leitlinienprofil {
 
   /// The length of a compression cycle before the next Rhythmusanalyse.
   Duration get compressionCycle => const Duration(seconds: 120);
+
+  /// How long the Analysephase may pause before the overdue hint appears.
+  ///
+  /// AHA uses the 10-second pulse-check limit; ERC sets a 5-second
+  /// peri-shock-pause target.
+  Duration get pauseTarget => switch (this) {
+    Leitlinienprofil.aha2025 => const Duration(seconds: 10),
+    Leitlinienprofil.erc2025 => const Duration(seconds: 5),
+  };
 }
