@@ -430,6 +430,60 @@ abstract class AppLocalizations {
   /// **'Ohne Angabe'**
   String get skipWithoutReasonButton;
 
+  /// Schaltfläche zum Erfassen eines Schocks mit der aktuellen Anzahl
+  ///
+  /// In de, this message translates to:
+  /// **'Schock ({count})'**
+  String schockButton(int count);
+
+  /// Bestätigung nach dem Erfassen eines Schocks
+  ///
+  /// In de, this message translates to:
+  /// **'Schock {count} erfasst'**
+  String schockRecorded(int count);
+
+  /// Bestätigung nach dem Erfassen eines Schocks mit Energie
+  ///
+  /// In de, this message translates to:
+  /// **'Schock {count} erfasst · {energie} J'**
+  String schockRecordedWithEnergy(int count, int energie);
+
+  /// Statusanzeige, während die Druckphase nach einem Schock pausiert
+  ///
+  /// In de, this message translates to:
+  /// **'Schock erfasst'**
+  String get schockRecordedLabel;
+
+  /// Aktion zum Ergänzen der Schockenergie
+  ///
+  /// In de, this message translates to:
+  /// **'Energie'**
+  String get schockEnergyAction;
+
+  /// Aktion zum Rückgängigmachen des letzten Schocks
+  ///
+  /// In de, this message translates to:
+  /// **'Rückgängig'**
+  String get schockUndoAction;
+
+  /// Titel des Dialogs für die Schockenergie
+  ///
+  /// In de, this message translates to:
+  /// **'Schockenergie'**
+  String get schockEnergyTitle;
+
+  /// Beschriftung des Energie-Eingabefelds
+  ///
+  /// In de, this message translates to:
+  /// **'Energie (J)'**
+  String get schockEnergyLabel;
+
+  /// Fehlermeldung bei einer ungültigen Schockenergie
+  ///
+  /// In de, this message translates to:
+  /// **'Bitte eine ganze Zahl größer als 0 eingeben.'**
+  String get schockEnergyInvalid;
+
   /// Schaltfläche zum Speichern eines Dialogs
   ///
   /// In de, this message translates to:

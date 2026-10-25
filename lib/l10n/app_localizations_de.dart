@@ -192,6 +192,40 @@ class AppLocalizationsDe extends AppLocalizations {
   String get skipWithoutReasonButton => 'Ohne Angabe';
 
   @override
+  String schockButton(int count) {
+    return 'Schock ($count)';
+  }
+
+  @override
+  String schockRecorded(int count) {
+    return 'Schock $count erfasst';
+  }
+
+  @override
+  String schockRecordedWithEnergy(int count, int energie) {
+    return 'Schock $count erfasst · $energie J';
+  }
+
+  @override
+  String get schockRecordedLabel => 'Schock erfasst';
+
+  @override
+  String get schockEnergyAction => 'Energie';
+
+  @override
+  String get schockUndoAction => 'Rückgängig';
+
+  @override
+  String get schockEnergyTitle => 'Schockenergie';
+
+  @override
+  String get schockEnergyLabel => 'Energie (J)';
+
+  @override
+  String get schockEnergyInvalid =>
+      'Bitte eine ganze Zahl größer als 0 eingeben.';
+
+  @override
   String get saveButton => 'Speichern';
 
   @override

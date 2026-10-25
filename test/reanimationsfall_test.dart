@@ -371,4 +371,198 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  test(
+    'records a Schock in the Druckphase and pauses the compression timer',
+    () {
+      final clock = FakeClock();
+      final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+      clock.advance(const Duration(seconds: 30));
+      reanimationsfall.recordSchock();
+
+      final paused = reanimationsfall.snapshot();
+      expect(paused.isSchockpause, isTrue);
+      expect(paused.phase, Reanimationsphase.druckphase);
+      expect(paused.compressionRemaining, const Duration(seconds: 90));
+      expect(paused.schockAnzahl, 1);
+      expect(paused.schocks, hasLength(1));
+      expect(paused.schocks.single.zeitpunkt, const Duration(seconds: 30));
+      expect(paused.schocks.single.energieJoule, isNull);
+
+      clock.advance(const Duration(seconds: 10));
+      final frozen = reanimationsfall.snapshot();
+      expect(frozen.compressionRemaining, const Duration(seconds: 90));
+      expect(frozen.isRhythmusanalyseDue, isFalse);
+    },
+  );
+
+  test('entering the Analysephase from a Schockpause keeps the frozen '
+      'compression timer', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    clock.advance(const Duration(seconds: 30));
+    reanimationsfall.recordSchock();
+    clock.advance(const Duration(seconds: 10));
+    reanimationsfall.enterAnalysephase();
+
+    final entered = reanimationsfall.snapshot();
+    expect(entered.phase, Reanimationsphase.analysephase);
+    expect(entered.isSchockpause, isFalse);
+    expect(entered.compressionRemaining, const Duration(seconds: 90));
+    expect(entered.pauseDuration, Duration.zero);
+
+    clock.advance(const Duration(seconds: 5));
+    final paused = reanimationsfall.snapshot();
+    expect(paused.pauseDuration, const Duration(seconds: 5));
+    expect(paused.compressionRemaining, const Duration(seconds: 90));
+  });
+
+  test('continuing CPR after a Schock starts a fresh Druckphase', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    reanimationsfall.recordSchock();
+    clock.advance(const Duration(seconds: 10));
+    reanimationsfall.continueCpr();
+
+    final fresh = reanimationsfall.snapshot();
+    expect(fresh.phase, Reanimationsphase.druckphase);
+    expect(fresh.isSchockpause, isFalse);
+    expect(fresh.compressionRemaining, const Duration(minutes: 2));
+
+    clock.advance(const Duration(seconds: 10));
+    expect(
+      reanimationsfall.snapshot().compressionRemaining,
+      const Duration(minutes: 1, seconds: 50),
+    );
+  });
+
+  test('records a Schock in the Analysephase and keeps the result '
+      'requirement', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    clock.advance(const Duration(seconds: 45));
+    reanimationsfall.enterAnalysephase();
+    clock.advance(const Duration(seconds: 5));
+    reanimationsfall.recordSchock(energieJoule: 200);
+
+    final recorded = reanimationsfall.snapshot();
+    expect(recorded.phase, Reanimationsphase.analysephase);
+    expect(recorded.isSchockpause, isFalse);
+    expect(recorded.schockAnzahl, 1);
+    expect(recorded.schocks.single.energieJoule, 200);
+    expect(recorded.pauseDuration, const Duration(seconds: 5));
+    expect(reanimationsfall.continueCpr, throwsStateError);
+
+    reanimationsfall.recordRhythmusanalyse(
+      RhythmusanalyseErgebnis.kammerflimmern,
+    );
+    reanimationsfall.continueCpr();
+    expect(reanimationsfall.snapshot().phase, Reanimationsphase.druckphase);
+  });
+
+  test('undo marks the last Schock undone and keeps the original event', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    reanimationsfall.recordSchock();
+    reanimationsfall.recordSchock();
+    reanimationsfall.undoLastSchock();
+
+    final afterUndo = reanimationsfall.snapshot();
+    expect(afterUndo.isSchockpause, isTrue);
+    expect(afterUndo.schockAnzahl, 1);
+    expect(afterUndo.schocks, hasLength(2));
+    expect(afterUndo.schocks.first.rueckgaengig, isFalse);
+    expect(afterUndo.schocks.last.rueckgaengig, isTrue);
+    expect(afterUndo.schockRueckgaengigkeiten, hasLength(1));
+    expect(afterUndo.schockRueckgaengigkeiten.single.schockIndex, 1);
+
+    reanimationsfall.undoLastSchock();
+    final resumed = reanimationsfall.snapshot();
+    expect(resumed.schockAnzahl, 0);
+    expect(resumed.isSchockpause, isFalse);
+    expect(resumed.compressionRemaining, const Duration(minutes: 2));
+    expect(resumed.schockRueckgaengigkeiten, hasLength(2));
+    expect(reanimationsfall.undoLastSchock, throwsStateError);
+  });
+
+  test('undo resumes the cycle when the Schock that opened the pause is '
+      'undone', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    clock.advance(const Duration(seconds: 30));
+    reanimationsfall.recordSchock();
+    reanimationsfall.continueCpr();
+
+    clock.advance(const Duration(seconds: 30));
+    reanimationsfall.recordSchock();
+    clock.advance(const Duration(seconds: 10));
+    reanimationsfall.undoLastSchock();
+
+    final resumed = reanimationsfall.snapshot();
+    expect(resumed.schockAnzahl, 1);
+    expect(resumed.isSchockpause, isFalse);
+    expect(resumed.compressionRemaining, const Duration(seconds: 90));
+
+    clock.advance(const Duration(seconds: 10));
+    expect(
+      reanimationsfall.snapshot().compressionRemaining,
+      const Duration(seconds: 80),
+    );
+  });
+
+  test('a Schock after the due time keeps the overdue Rhythmusanalyse while '
+      'paused', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    clock.advance(const Duration(minutes: 2, seconds: 5));
+    reanimationsfall.recordSchock();
+
+    final paused = reanimationsfall.snapshot();
+    expect(paused.isSchockpause, isTrue);
+    expect(paused.isRhythmusanalyseDue, isTrue);
+    expect(paused.rhythmusanalyseOverdue, const Duration(seconds: 5));
+    expect(paused.compressionRemaining, Duration.zero);
+
+    clock.advance(const Duration(seconds: 10));
+    expect(
+      reanimationsfall.snapshot().rhythmusanalyseOverdue,
+      const Duration(seconds: 5),
+    );
+
+    reanimationsfall.undoLastSchock();
+    final resumed = reanimationsfall.snapshot();
+    expect(resumed.isSchockpause, isFalse);
+    expect(resumed.isRhythmusanalyseDue, isTrue);
+    expect(resumed.rhythmusanalyseOverdue, const Duration(seconds: 5));
+
+    clock.advance(const Duration(seconds: 1));
+    expect(
+      reanimationsfall.snapshot().rhythmusanalyseOverdue,
+      const Duration(seconds: 6),
+    );
+  });
+
+  test('Schock energy is optional and can be added later', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    reanimationsfall.recordSchock();
+    expect(reanimationsfall.snapshot().schocks.single.energieJoule, isNull);
+
+    reanimationsfall.setLastSchockEnergie(200);
+    expect(reanimationsfall.snapshot().schocks.single.energieJoule, 200);
+
+    expect(() => reanimationsfall.setLastSchockEnergie(0), throwsArgumentError);
+    expect(
+      () => reanimationsfall.recordSchock(energieJoule: -1),
+      throwsArgumentError,
+    );
+  });
 }

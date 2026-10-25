@@ -249,6 +249,60 @@
   "@skipWithoutReasonButton": {
     "description": "Überspringen ohne Angabe eines Grundes"
   },
+  "schockButton": "Schock ({count})",
+  "@schockButton": {
+    "description": "Schaltfläche zum Erfassen eines Schocks mit der aktuellen Anzahl",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "schockRecorded": "Schock {count} erfasst",
+  "@schockRecorded": {
+    "description": "Bestätigung nach dem Erfassen eines Schocks",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "schockRecordedWithEnergy": "Schock {count} erfasst · {energie} J",
+  "@schockRecordedWithEnergy": {
+    "description": "Bestätigung nach dem Erfassen eines Schocks mit Energie",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "energie": {
+        "type": "int"
+      }
+    }
+  },
+  "schockRecordedLabel": "Schock erfasst",
+  "@schockRecordedLabel": {
+    "description": "Statusanzeige, während die Druckphase nach einem Schock pausiert"
+  },
+  "schockEnergyAction": "Energie",
+  "@schockEnergyAction": {
+    "description": "Aktion zum Ergänzen der Schockenergie"
+  },
+  "schockUndoAction": "Rückgängig",
+  "@schockUndoAction": {
+    "description": "Aktion zum Rückgängigmachen des letzten Schocks"
+  },
+  "schockEnergyTitle": "Schockenergie",
+  "@schockEnergyTitle": {
+    "description": "Titel des Dialogs für die Schockenergie"
+  },
+  "schockEnergyLabel": "Energie (J)",
+  "@schockEnergyLabel": {
+    "description": "Beschriftung des Energie-Eingabefelds"
+  },
+  "schockEnergyInvalid": "Bitte eine ganze Zahl größer als 0 eingeben.",
+  "@schockEnergyInvalid": {
+    "description": "Fehlermeldung bei einer ungültigen Schockenergie"
+  },
   "saveButton": "Speichern",
   "@saveButton": {
     "description": "Schaltfläche zum Speichern eines Dialogs"

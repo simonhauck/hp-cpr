@@ -10,6 +10,7 @@ import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/phase_action_bar.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_notiz_dialog.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/schock_energie_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/skip_rhythmusanalyse_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
@@ -69,6 +70,29 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     setState(widget.reanimationsfall.continueCpr);
   }
 
+  void _recordSchock() {
+    setState(widget.reanimationsfall.recordSchock);
+  }
+
+  void _undoLastSchock() {
+    if (widget.reanimationsfall.snapshot().schockAnzahl == 0) return;
+    setState(widget.reanimationsfall.undoLastSchock);
+  }
+
+  Future<void> _editLastSchockEnergie() async {
+    final lastSchock = widget.reanimationsfall.snapshot().letzterAktiverSchock;
+    if (lastSchock == null) return;
+
+    final energie = await showDialog<int>(
+      context: context,
+      builder: (_) =>
+          SchockEnergieDialog(initialEnergie: lastSchock.energieJoule),
+    );
+    if (energie == null || !mounted) return;
+
+    setState(() => widget.reanimationsfall.setLastSchockEnergie(energie));
+  }
+
   Future<void> _recordRhythmusanalyse() async {
     final ergebnis = await showDialog<RhythmusanalyseErgebnis>(
       context: context,
@@ -124,7 +148,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
         final reanimationsdauerPanel = _ReanimationsdauerPanel(
           snapshot: snapshot,
         );
-        final timer = _PhaseTimerPanel(snapshot: snapshot);
+        final timer = _PhaseTimerPanel(snapshot: snapshot, layout: layout);
 
         return layout.isLandscape
             ? Row(
@@ -147,6 +171,9 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
         snapshot: snapshot,
         layout: layout,
         onEnterAnalysephase: _enterAnalysephase,
+        onRecordSchock: _recordSchock,
+        onUndoLastSchock: _undoLastSchock,
+        onEditSchockEnergie: _editLastSchockEnergie,
         onRecordRhythmusanalyse: _recordRhythmusanalyse,
         onEditRhythmusanalyseNotiz: _editRhythmusanalyseNotiz,
         onSkipRhythmusanalyse: _skipRhythmusanalyse,
@@ -245,25 +272,35 @@ class _ReanimationsdauerPanel extends StatelessWidget {
 }
 
 class _PhaseTimerPanel extends StatelessWidget {
-  const _PhaseTimerPanel({required this.snapshot});
+  const _PhaseTimerPanel({required this.snapshot, required this.layout});
 
   final ReanimationsfallSnapshot snapshot;
+  final PageLayout layout;
 
   @override
   Widget build(BuildContext context) {
     return switch (snapshot.phase) {
-      Reanimationsphase.druckphase => _DruckphaseTimerPanel(snapshot: snapshot),
+      Reanimationsphase.druckphase => _DruckphaseTimerPanel(
+        snapshot: snapshot,
+        layout: layout,
+      ),
       Reanimationsphase.analysephase => _AnalysephaseTimerPanel(
         snapshot: snapshot,
+        layout: layout,
       ),
     };
   }
 }
 
 class _PhasePanel extends StatelessWidget {
-  const _PhasePanel({required this.isAlert, required this.child});
+  const _PhasePanel({
+    required this.isAlert,
+    required this.padding,
+    required this.child,
+  });
 
   final bool isAlert;
+  final EdgeInsets padding;
   final Widget child;
 
   @override
@@ -271,7 +308,7 @@ class _PhasePanel extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: padding,
       decoration: BoxDecoration(
         color: isAlert
             ? theme.colorScheme.errorContainer
@@ -290,21 +327,31 @@ class _PhasePanel extends StatelessWidget {
 }
 
 class _DruckphaseTimerPanel extends StatelessWidget {
-  const _DruckphaseTimerPanel({required this.snapshot});
+  const _DruckphaseTimerPanel({required this.snapshot, required this.layout});
 
   final ReanimationsfallSnapshot snapshot;
+  final PageLayout layout;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final isPaused = snapshot.isSchockpause;
     final isDue = snapshot.isRhythmusanalyseDue;
     final foreground = isDue
         ? theme.colorScheme.onErrorContainer
+        : isPaused
+        ? theme.colorScheme.onSurfaceVariant
         : theme.colorScheme.onSurface;
+    final label = isDue
+        ? l10n.analysisDue
+        : isPaused
+        ? l10n.schockRecordedLabel
+        : l10n.nextAnalysisLabel;
 
     return _PhasePanel(
       isAlert: isDue,
+      padding: EdgeInsets.all(layout.isCompact ? 12 : 20),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -313,12 +360,15 @@ class _DruckphaseTimerPanel extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (isDue) ...[
-                  Icon(Icons.priority_high_rounded, color: foreground),
+                if (isDue || isPaused) ...[
+                  Icon(
+                    isDue ? Icons.priority_high_rounded : Icons.bolt_outlined,
+                    color: foreground,
+                  ),
                   const SizedBox(width: 4),
                 ],
                 Text(
-                  isDue ? l10n.analysisDue : l10n.nextAnalysisLabel,
+                  label,
                   style: theme.textTheme.headlineMedium?.copyWith(
                     color: foreground,
                     fontWeight: isDue ? FontWeight.w800 : FontWeight.w500,
@@ -354,9 +404,10 @@ class _DruckphaseTimerPanel extends StatelessWidget {
 }
 
 class _AnalysephaseTimerPanel extends StatelessWidget {
-  const _AnalysephaseTimerPanel({required this.snapshot});
+  const _AnalysephaseTimerPanel({required this.snapshot, required this.layout});
 
   final ReanimationsfallSnapshot snapshot;
+  final PageLayout layout;
 
   @override
   Widget build(BuildContext context) {
@@ -369,6 +420,7 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
 
     return _PhasePanel(
       isAlert: isOverdue,
+      padding: EdgeInsets.all(layout.isCompact ? 12 : 20),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

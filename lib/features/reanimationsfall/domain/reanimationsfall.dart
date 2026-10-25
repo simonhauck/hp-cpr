@@ -1,6 +1,7 @@
 import 'package:hp_cpr/core/clock.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
+import 'package:hp_cpr/features/reanimationsfall/domain/schock.dart';
 
 /// The current part of a Reanimationsfall.
 enum Reanimationsphase { druckphase, analysephase }
@@ -47,11 +48,17 @@ class Reanimationsfall {
   late Duration _compressionCycleStartOffset;
   Duration _compressionRemainingAtPause = Duration.zero;
   Duration? _analysephaseStartOffset;
+  bool _isSchockpause = false;
+  bool _schockpauseWasDue = false;
+  Duration _schockpauseOverdue = Duration.zero;
+  int? _schockpauseOpeningSchockIndex;
 
   RhythmusanalyseErgebnis? _rhythmusanalyseErgebnis;
   String? _rhythmusanalyseNotiz;
   final List<RhythmusanalyseUeberspringung> _uebersprungeneRhythmusanalysen =
       [];
+  final List<SchockEreignis> _schocks = [];
+  final List<SchockRueckgaengig> _schockRueckgaengigkeiten = [];
 
   /// The monotonic timeline shifted by intervals recovered from the wall clock.
   Duration _monotonicNow() => _clock.monotonicNow() + _monotonicAdjustment;
@@ -77,15 +84,104 @@ class Reanimationsfall {
     }
 
     final now = _monotonicNow();
-    final cycle = leitlinienprofil.compressionCycle;
-    final cycleElapsed = now - _compressionCycleStartOffset;
-    _compressionRemainingAtPause = cycleElapsed >= cycle
-        ? Duration.zero
-        : cycle - cycleElapsed;
+    if (!_isSchockpause) {
+      _compressionRemainingAtPause = _remainingInCycle(now);
+    }
+
     _analysephaseStartOffset = now;
     _rhythmusanalyseErgebnis = null;
     _rhythmusanalyseNotiz = null;
+    _isSchockpause = false;
+    _schockpauseWasDue = false;
+    _schockpauseOverdue = Duration.zero;
+    _schockpauseOpeningSchockIndex = null;
     _phase = Reanimationsphase.analysephase;
+  }
+
+  /// Records a Schock with optional energy.
+  ///
+  /// A Schock in the Druckphase pauses the compression timer; the Zeitnehmer
+  /// continues CPR explicitly. A Schock in the Analysephase leaves the paused
+  /// phase and the result requirement unchanged.
+  void recordSchock({int? energieJoule}) {
+    _requireValidEnergie(energieJoule);
+
+    final now = _monotonicNow();
+    _schocks.add(
+      SchockEreignis(
+        zeitpunkt: now - _monotonicStartOffset,
+        energieJoule: energieJoule,
+      ),
+    );
+
+    if (_phase == Reanimationsphase.druckphase && !_isSchockpause) {
+      final cycleElapsed = now - _compressionCycleStartOffset;
+      final cycle = leitlinienprofil.compressionCycle;
+      _schockpauseWasDue = cycleElapsed >= cycle;
+      _schockpauseOverdue = _schockpauseWasDue
+          ? cycleElapsed - cycle
+          : Duration.zero;
+      _compressionRemainingAtPause = _remainingInCycle(now);
+      _schockpauseOpeningSchockIndex = _schocks.length - 1;
+      _isSchockpause = true;
+    }
+  }
+
+  /// Marks the most recent active Schock as undone.
+  void undoLastSchock() {
+    final index = _lastActiveSchockIndex;
+    if (index == -1) {
+      throw StateError('no active Schock to undo');
+    }
+
+    final now = _monotonicNow();
+    _schockRueckgaengigkeiten.add(
+      SchockRueckgaengig(
+        schockIndex: index,
+        zeitpunkt: now - _monotonicStartOffset,
+      ),
+    );
+
+    if (_phase == Reanimationsphase.druckphase &&
+        _isSchockpause &&
+        index == _schockpauseOpeningSchockIndex) {
+      final cycle = leitlinienprofil.compressionCycle;
+      final remaining = _compressionRemainingAtPause;
+      _compressionCycleStartOffset =
+          now - (cycle - remaining) - _schockpauseOverdue;
+      _compressionRemainingAtPause = Duration.zero;
+      _isSchockpause = false;
+      _schockpauseWasDue = false;
+      _schockpauseOverdue = Duration.zero;
+      _schockpauseOpeningSchockIndex = null;
+    }
+  }
+
+  /// Adds or replaces the energy of the most recent active Schock.
+  void setLastSchockEnergie(int energieJoule) {
+    _requireValidEnergie(energieJoule);
+
+    final index = _lastActiveSchockIndex;
+    if (index == -1) {
+      throw StateError('no active Schock');
+    }
+    _schocks[index] = _schocks[index].copyWith(energieJoule: energieJoule);
+  }
+
+  int get _lastActiveSchockIndex {
+    for (var index = _schocks.length - 1; index >= 0; index--) {
+      final undone = _schockRueckgaengigkeiten.any(
+        (entry) => entry.schockIndex == index,
+      );
+      if (!undone) return index;
+    }
+    return -1;
+  }
+
+  Duration _remainingInCycle(Duration now) {
+    final cycle = leitlinienprofil.compressionCycle;
+    final cycleElapsed = now - _compressionCycleStartOffset;
+    return cycleElapsed >= cycle ? Duration.zero : cycle - cycleElapsed;
   }
 
   /// Records the Rhythmusanalyse result with an optional note.
@@ -125,15 +221,27 @@ class Reanimationsfall {
     _startNextDruckphase();
   }
 
-  /// Ends the Analysephase and starts a fresh 2-minute Druckphase.
+  /// Ends the Analysephase or a Schock pause and starts a fresh 2-minute
+  /// Druckphase.
   ///
-  /// A recorded result or an explicit `unklar` is required first.
+  /// In the Analysephase, a recorded result or an explicit `unklar` is
+  /// required first. A Schock recorded in the Druckphase can be continued
+  /// without a result.
   void continueCpr() {
-    _requireAnalysephase();
-    if (_rhythmusanalyseErgebnis == null) {
-      throw StateError('a Rhythmusanalyse result is required');
+    if (_phase == Reanimationsphase.analysephase) {
+      if (_rhythmusanalyseErgebnis == null) {
+        throw StateError('a Rhythmusanalyse result is required');
+      }
+      _startNextDruckphase();
+      return;
     }
-    _startNextDruckphase();
+
+    if (_isSchockpause) {
+      _startNextDruckphase();
+      return;
+    }
+
+    throw StateError('CPR is already running');
   }
 
   ReanimationsfallSnapshot snapshot() {
@@ -141,11 +249,19 @@ class Reanimationsfall {
     final elapsed = now - _monotonicStartOffset;
     final cycle = leitlinienprofil.compressionCycle;
     final isDruckphase = _phase == Reanimationsphase.druckphase;
+    final isSchockpause = isDruckphase && _isSchockpause;
     final cycleElapsed = now - _compressionCycleStartOffset;
-    final isRhythmusanalyseDue = isDruckphase && cycleElapsed >= cycle;
+    final isRhythmusanalyseDue =
+        isDruckphase &&
+        (isSchockpause ? _schockpauseWasDue : cycleElapsed >= cycle);
     final compressionRemaining = isDruckphase
-        ? (isRhythmusanalyseDue ? Duration.zero : cycle - cycleElapsed)
+        ? (isSchockpause
+              ? _compressionRemainingAtPause
+              : (isRhythmusanalyseDue ? Duration.zero : cycle - cycleElapsed))
         : _compressionRemainingAtPause;
+    final rhythmusanalyseOverdue = isSchockpause
+        ? _schockpauseOverdue
+        : (isRhythmusanalyseDue ? cycleElapsed - cycle : Duration.zero);
 
     final analysephaseStart = _analysephaseStartOffset;
     final pauseDuration = analysephaseStart == null
@@ -153,6 +269,16 @@ class Reanimationsfall {
         : now - analysephaseStart;
     final pauseTarget = leitlinienprofil.pauseTarget;
     final isPauseOverdue = pauseDuration > pauseTarget;
+
+    final schocks = [
+      for (var index = 0; index < _schocks.length; index++)
+        SchockEintrag(
+          ereignis: _schocks[index],
+          rueckgaengig: _schockRueckgaengigkeiten.any(
+            (entry) => entry.schockIndex == index,
+          ),
+        ),
+    ];
 
     return ReanimationsfallSnapshot(
       phase: _phase,
@@ -162,10 +288,9 @@ class Reanimationsfall {
       startzeit: startzeit,
       reanimationsdauer: elapsed,
       compressionRemaining: compressionRemaining,
-      rhythmusanalyseOverdue: isRhythmusanalyseDue
-          ? cycleElapsed - cycle
-          : Duration.zero,
+      rhythmusanalyseOverdue: rhythmusanalyseOverdue,
       isRhythmusanalyseDue: isRhythmusanalyseDue,
+      isSchockpause: isSchockpause,
       pauseDuration: pauseDuration,
       isPauseOverdue: isPauseOverdue,
       rhythmusanalyseErgebnis: _rhythmusanalyseErgebnis,
@@ -173,6 +298,8 @@ class Reanimationsfall {
       uebersprungeneRhythmusanalysen: List.unmodifiable(
         _uebersprungeneRhythmusanalysen,
       ),
+      schocks: List.unmodifiable(schocks),
+      schockRueckgaengigkeiten: List.unmodifiable(_schockRueckgaengigkeiten),
     );
   }
 
@@ -187,6 +314,20 @@ class Reanimationsfall {
     _compressionCycleStartOffset = _monotonicNow();
     _compressionRemainingAtPause = Duration.zero;
     _analysephaseStartOffset = null;
+    _isSchockpause = false;
+    _schockpauseWasDue = false;
+    _schockpauseOverdue = Duration.zero;
+    _schockpauseOpeningSchockIndex = null;
+  }
+
+  static void _requireValidEnergie(int? energieJoule) {
+    if (energieJoule != null && energieJoule <= 0) {
+      throw ArgumentError.value(
+        energieJoule,
+        'energieJoule',
+        'must be greater than zero',
+      );
+    }
   }
 
   static String? _normalizeNotiz(String? notiz) {
@@ -207,11 +348,14 @@ class ReanimationsfallSnapshot {
     required this.compressionRemaining,
     required this.rhythmusanalyseOverdue,
     required this.isRhythmusanalyseDue,
+    required this.isSchockpause,
     required this.pauseDuration,
     required this.isPauseOverdue,
     required this.rhythmusanalyseErgebnis,
     required this.rhythmusanalyseNotiz,
     required this.uebersprungeneRhythmusanalysen,
+    required this.schocks,
+    required this.schockRueckgaengigkeiten,
   });
 
   final Reanimationsphase phase;
@@ -226,6 +370,9 @@ class ReanimationsfallSnapshot {
   final Duration rhythmusanalyseOverdue;
   final bool isRhythmusanalyseDue;
 
+  /// Whether a Schock recorded in the Druckphase paused the compression timer.
+  final bool isSchockpause;
+
   /// How long the Analysephase has paused the compression timer.
   final Duration pauseDuration;
 
@@ -237,6 +384,24 @@ class ReanimationsfallSnapshot {
 
   /// Every skipped Rhythmusanalyse, including skips without a reason.
   final List<RhythmusanalyseUeberspringung> uebersprungeneRhythmusanalysen;
+
+  /// Every recorded Schock, including the ones marked as undone.
+  final List<SchockEintrag> schocks;
+
+  /// Every undo entry for a Schock, kept as its own log record.
+  final List<SchockRueckgaengig> schockRueckgaengigkeiten;
+
+  /// The number of Schocks that have not been undone.
+  int get schockAnzahl =>
+      schocks.where((schock) => !schock.rueckgaengig).length;
+
+  /// The most recent Schock that has not been undone, if any.
+  SchockEintrag? get letzterAktiverSchock {
+    for (final schock in schocks.reversed) {
+      if (!schock.rueckgaengig) return schock;
+    }
+    return null;
+  }
 
   /// The most recently skipped Rhythmusanalyse, if any.
   RhythmusanalyseUeberspringung? get letzteRhythmusanalyseUeberspringung {

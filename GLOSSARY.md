@@ -88,6 +88,10 @@ _Avoid_: Amiodarone in UI copy
 A defibrillation event recorded with its time and shock count; shock energy is optional.
 _Avoid_: Defibrillation in UI copy, shock delivery
 
+**Schockpause**:
+The interrupted Druckphase after a recorded Schock; the compression timer is frozen until CPR continues.
+_Avoid_: Compression pause, shock delivery pause
+
 **Zeitfenster**:
 The interval in which a time-based drug dose should be given, for example 3–5 minutes for adrenaline.
 _Avoid_: Timer, countdown
