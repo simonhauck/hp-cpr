@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
+import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 
 import 'support/fake_clock.dart';
@@ -55,6 +56,231 @@ void main() {
       expect(overdue.rhythmusanalyseOverdue, const Duration(seconds: 5));
     },
   );
+
+  test('entering the Analysephase pauses the compression timer and starts the '
+      'pause counter', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    clock.advance(const Duration(seconds: 45));
+    reanimationsfall.enterAnalysephase();
+
+    final paused = reanimationsfall.snapshot();
+    expect(paused.phase, Reanimationsphase.analysephase);
+    expect(paused.compressionRemaining, const Duration(seconds: 75));
+    expect(paused.pauseDuration, Duration.zero);
+    expect(paused.isPauseOverdue, isFalse);
+
+    clock.advance(const Duration(seconds: 30));
+    final later = reanimationsfall.snapshot();
+
+    expect(later.compressionRemaining, const Duration(seconds: 75));
+    expect(later.pauseDuration, const Duration(seconds: 30));
+  });
+
+  test(
+    'uses the Leitlinienprofil-specific pause target for the overdue hint',
+    () {
+      for (final (profil, target) in [
+        (Leitlinienprofil.erc2025, const Duration(seconds: 5)),
+        (Leitlinienprofil.aha2025, const Duration(seconds: 10)),
+      ]) {
+        final clock = FakeClock();
+        final reanimationsfall = Reanimationsfall.start(
+          clock: clock,
+          leitlinienprofil: profil,
+        );
+        reanimationsfall.enterAnalysephase();
+
+        clock.advance(target);
+        final atTarget = reanimationsfall.snapshot();
+        expect(atTarget.isPauseOverdue, isFalse, reason: '$profil');
+
+        clock.advance(const Duration(seconds: 1));
+        final overdue = reanimationsfall.snapshot();
+        expect(overdue.isPauseOverdue, isTrue, reason: '$profil');
+        expect(
+          overdue.pauseDuration,
+          target + const Duration(seconds: 1),
+          reason: '$profil',
+        );
+      }
+    },
+  );
+
+  test('records a two-step Rhythmusanalyse result with an optional note', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+    reanimationsfall.enterAnalysephase();
+
+    reanimationsfall.recordRhythmusanalyse(
+      RhythmusanalyseErgebnis.kammerflimmern,
+      notiz: '  VF seit drei Minuten  ',
+    );
+
+    final recorded = reanimationsfall.snapshot();
+    expect(
+      recorded.rhythmusanalyseErgebnis,
+      RhythmusanalyseErgebnis.kammerflimmern,
+    );
+    expect(recorded.rhythmusanalyseNotiz, 'VF seit drei Minuten');
+
+    reanimationsfall.setRhythmusanalyseNotiz('   ');
+    expect(reanimationsfall.snapshot().rhythmusanalyseNotiz, isNull);
+  });
+
+  test('rejects a second result in the same Analysephase', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+    reanimationsfall.enterAnalysephase();
+    reanimationsfall.recordRhythmusanalyse(
+      RhythmusanalyseErgebnis.kammerflimmern,
+    );
+
+    expect(
+      () => reanimationsfall.recordRhythmusanalyse(
+        RhythmusanalyseErgebnis.asystolie,
+      ),
+      throwsStateError,
+    );
+    expect(
+      reanimationsfall.snapshot().rhythmusanalyseErgebnis,
+      RhythmusanalyseErgebnis.kammerflimmern,
+    );
+  });
+
+  test('requires a result or explicit Unklar before CPR continues', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+    reanimationsfall.enterAnalysephase();
+
+    expect(reanimationsfall.continueCpr, throwsStateError);
+
+    reanimationsfall.recordRhythmusanalyse(RhythmusanalyseErgebnis.unklar);
+    reanimationsfall.continueCpr();
+
+    expect(reanimationsfall.snapshot().phase, Reanimationsphase.druckphase);
+    expect(
+      reanimationsfall.snapshot().rhythmusanalyseErgebnis,
+      RhythmusanalyseErgebnis.unklar,
+    );
+  });
+
+  test('continuing CPR starts a fresh two-minute Druckphase', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    clock.advance(const Duration(seconds: 30));
+    reanimationsfall.enterAnalysephase();
+    clock.advance(const Duration(seconds: 20));
+    reanimationsfall.recordRhythmusanalyse(
+      RhythmusanalyseErgebnis.pulsloseKammertachykardie,
+    );
+    reanimationsfall.continueCpr();
+
+    final fresh = reanimationsfall.snapshot();
+    expect(fresh.phase, Reanimationsphase.druckphase);
+    expect(fresh.compressionRemaining, const Duration(minutes: 2));
+    expect(fresh.pauseDuration, Duration.zero);
+
+    clock.advance(const Duration(seconds: 10));
+    expect(
+      reanimationsfall.snapshot().compressionRemaining,
+      const Duration(minutes: 1, seconds: 50),
+    );
+  });
+
+  test('skipping the Rhythmusanalyse records the reason and starts a fresh '
+      'two-minute Druckphase', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    clock.advance(const Duration(minutes: 2, seconds: 15));
+    reanimationsfall.enterAnalysephase();
+    clock.advance(const Duration(seconds: 8));
+    reanimationsfall.skipRhythmusanalyse(
+      RhythmusanalyseUebersprungenGrund.keineZeit,
+    );
+
+    final skipped = reanimationsfall.snapshot();
+    expect(skipped.phase, Reanimationsphase.druckphase);
+    expect(skipped.compressionRemaining, const Duration(minutes: 2));
+    final skip = skipped.letzteRhythmusanalyseUeberspringung;
+    expect(skip, isNotNull);
+    expect(skip!.grund, RhythmusanalyseUebersprungenGrund.keineZeit);
+    expect(skip.zeitpunkt, const Duration(minutes: 2, seconds: 23));
+    expect(skipped.pauseDuration, Duration.zero);
+  });
+
+  test('skipping without a reason is still recorded', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+    reanimationsfall.enterAnalysephase();
+
+    reanimationsfall.skipRhythmusanalyse();
+
+    final skipped = reanimationsfall.snapshot();
+    expect(skipped.phase, Reanimationsphase.druckphase);
+    expect(skipped.uebersprungeneRhythmusanalysen, hasLength(1));
+    final skip = skipped.letzteRhythmusanalyseUeberspringung;
+    expect(skip, isNotNull);
+    expect(skip!.grund, isNull);
+    expect(skip.zeitpunkt, Duration.zero);
+  });
+
+  test('keeps every skipped Rhythmusanalyse', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    reanimationsfall.enterAnalysephase();
+    reanimationsfall.skipRhythmusanalyse(
+      RhythmusanalyseUebersprungenGrund.keineZeit,
+    );
+    clock.advance(const Duration(minutes: 2));
+    reanimationsfall.enterAnalysephase();
+    reanimationsfall.skipRhythmusanalyse(
+      RhythmusanalyseUebersprungenGrund.sonstiges,
+    );
+
+    final skipped = reanimationsfall.snapshot();
+    expect(skipped.uebersprungeneRhythmusanalysen, hasLength(2));
+    expect(
+      skipped.uebersprungeneRhythmusanalysen.first.grund,
+      RhythmusanalyseUebersprungenGrund.keineZeit,
+    );
+    expect(
+      skipped.uebersprungeneRhythmusanalysen.last.grund,
+      RhythmusanalyseUebersprungenGrund.sonstiges,
+    );
+  });
+
+  test('recovers suspended time while the Analysephase is paused', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+    reanimationsfall.enterAnalysephase();
+
+    clock.advanceWallClockOnly(const Duration(seconds: 12));
+    reanimationsfall.reconcileWithWallClock();
+
+    final paused = reanimationsfall.snapshot();
+    expect(paused.phase, Reanimationsphase.analysephase);
+    expect(paused.pauseDuration, const Duration(seconds: 12));
+    expect(paused.isPauseOverdue, isTrue);
+    expect(paused.compressionRemaining, const Duration(minutes: 2));
+  });
+
+  test('snapshots the alert settings per Reanimationsfall', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(
+      clock: clock,
+      vibrationEnabled: false,
+      soundEnabled: true,
+    );
+
+    final snapshot = reanimationsfall.snapshot();
+    expect(snapshot.vibrationEnabled, isFalse);
+    expect(snapshot.soundEnabled, isTrue);
+  });
 
   test('backdates the Startzeit and starts the Druckphase at the matching '
       'elapsed offset', () {

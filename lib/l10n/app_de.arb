@@ -118,5 +118,179 @@
         "type": "String"
       }
     }
+  },
+  "phaseAnalysephase": "Analysephase",
+  "@phaseAnalysephase": {
+    "description": "Name der aktiven Phase mit pausierter Kompression"
+  },
+  "analyseButton": "Analyse",
+  "@analyseButton": {
+    "description": "Schaltfläche zum Starten der Analysephase"
+  },
+  "pauseLabel": "Pause",
+  "@pauseLabel": {
+    "description": "Beschriftung des Pausenzählers in der Analysephase"
+  },
+  "pauseOverdueAha": "Pulscheck über {seconds} s – CPR fortsetzen",
+  "@pauseOverdueAha": {
+    "description": "Überfälligkeitshinweis in der Analysephase für AHA 2025",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "pauseOverdueErc": "Peri-Schock-Pause über {seconds} s – CPR fortsetzen",
+  "@pauseOverdueErc": {
+    "description": "Überfälligkeitshinweis in der Analysephase für ERC 2025",
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "rhythmusanalyseTitle": "Rhythmusanalyse",
+  "@rhythmusanalyseTitle": {
+    "description": "Titel des Dialogs für das Rhythmusanalyse-Ergebnis"
+  },
+  "rhythmusanalyseSchockbar": "Schockbar",
+  "@rhythmusanalyseSchockbar": {
+    "description": "Erste Ergebnisstufe: schockbarer Rhythmus"
+  },
+  "rhythmusanalyseNichtSchockbar": "Nicht schockbar",
+  "@rhythmusanalyseNichtSchockbar": {
+    "description": "Erste Ergebnisstufe: nicht schockbarer Rhythmus"
+  },
+  "rhythmusanalyseRosc": "ROSC",
+  "@rhythmusanalyseRosc": {
+    "description": "Ergebnis: Wiedererlangung eines Spontankreislaufs"
+  },
+  "rhythmusanalyseUnklar": "Unklar",
+  "@rhythmusanalyseUnklar": {
+    "description": "Ergebnis: Rhythmus unklar"
+  },
+  "rhythmusanalyseKammerflimmern": "Kammerflimmern (VF)",
+  "@rhythmusanalyseKammerflimmern": {
+    "description": "Schockbarer Rhythmus: Kammerflimmern"
+  },
+  "rhythmusanalysePvt": "Pulslose Kammertachykardie (pVT)",
+  "@rhythmusanalysePvt": {
+    "description": "Schockbarer Rhythmus: pulslose Kammertachykardie"
+  },
+  "rhythmusanalyseAsystolie": "Asystolie",
+  "@rhythmusanalyseAsystolie": {
+    "description": "Nicht schockbarer Rhythmus: Asystolie"
+  },
+  "rhythmusanalysePea": "PEA",
+  "@rhythmusanalysePea": {
+    "description": "Nicht schockbarer Rhythmus: elektrische Aktivität ohne Puls"
+  },
+  "rhythmusanalyseUnbekanntAed": "Unbekannt (AED)",
+  "@rhythmusanalyseUnbekanntAed": {
+    "description": "Rhythmus unbekannt, Ergebnis stammt aus einer AED-Empfehlung"
+  },
+  "rhythmusanalyseRecordButton": "Ergebnis erfassen",
+  "@rhythmusanalyseRecordButton": {
+    "description": "Schaltfläche zum Erfassen des Rhythmusanalyse-Ergebnisses"
+  },
+  "rhythmusanalyseRecordedLabel": "Ergebnis",
+  "@rhythmusanalyseRecordedLabel": {
+    "description": "Beschriftung des erfassten Rhythmusanalyse-Ergebnisses"
+  },
+  "rhythmusanalyseNoteAdd": "Notiz hinzufügen",
+  "@rhythmusanalyseNoteAdd": {
+    "description": "Schaltfläche zum Ergänzen einer Notiz am Ergebnis"
+  },
+  "rhythmusanalyseNoteEdit": "Notiz bearbeiten",
+  "@rhythmusanalyseNoteEdit": {
+    "description": "Schaltfläche zum Bearbeiten einer vorhandenen Notiz"
+  },
+  "rhythmusanalyseNoteTitle": "Notiz zur Rhythmusanalyse",
+  "@rhythmusanalyseNoteTitle": {
+    "description": "Titel des Dialogs für die Notiz zur Rhythmusanalyse"
+  },
+  "rhythmusanalyseNoteLabel": "Notiz (optional)",
+  "@rhythmusanalyseNoteLabel": {
+    "description": "Beschriftung des optionalen Notizfelds"
+  },
+  "rhythmusanalyseRequired": "Ergebnis oder Unklar erforderlich",
+  "@rhythmusanalyseRequired": {
+    "description": "Hinweis, dass vor dem Fortsetzen ein Ergebnis erfasst werden muss"
+  },
+  "cprContinueButton": "CPR fortsetzen",
+  "@cprContinueButton": {
+    "description": "Schaltfläche zum Beenden der Analysephase"
+  },
+  "skipAnalysisButton": "Analyse überspringen",
+  "@skipAnalysisButton": {
+    "description": "Schaltfläche zum Überspringen der Rhythmusanalyse"
+  },
+  "skipAnalysisTitle": "Analyse überspringen",
+  "@skipAnalysisTitle": {
+    "description": "Titel des Dialogs zum Überspringen der Rhythmusanalyse"
+  },
+  "skipAnalysisReasonLabel": "Grund (optional)",
+  "@skipAnalysisReasonLabel": {
+    "description": "Beschriftung der Grundauswahl beim Überspringen"
+  },
+  "skipReasonNoTime": "Keine Zeit",
+  "@skipReasonNoTime": {
+    "description": "Grund für eine übersprungene Rhythmusanalyse"
+  },
+  "skipReasonAed": "AED übernimmt",
+  "@skipReasonAed": {
+    "description": "Grund für eine übersprungene Rhythmusanalyse: AED übernimmt"
+  },
+  "skipReasonOther": "Sonstiges",
+  "@skipReasonOther": {
+    "description": "Sonstiger Grund für eine übersprungene Rhythmusanalyse"
+  },
+  "skipWithoutReasonButton": "Ohne Angabe",
+  "@skipWithoutReasonButton": {
+    "description": "Überspringen ohne Angabe eines Grundes"
+  },
+  "saveButton": "Speichern",
+  "@saveButton": {
+    "description": "Schaltfläche zum Speichern eines Dialogs"
+  },
+  "backButton": "Zurück",
+  "@backButton": {
+    "description": "Schaltfläche zum Zurückgehen in einem Dialog"
+  },
+  "settingsTitle": "Einstellungen",
+  "@settingsTitle": {
+    "description": "Titel des Einstellungsbildschirms"
+  },
+  "settingsOpenTooltip": "Einstellungen öffnen",
+  "@settingsOpenTooltip": {
+    "description": "Tooltip des Leitlinien-Chips auf der Startseite"
+  },
+  "settingsLeitlinienprofilSection": "Leitlinienprofil",
+  "@settingsLeitlinienprofilSection": {
+    "description": "Überschrift der Leitlinienprofil-Einstellung"
+  },
+  "settingsLeitlinienprofilDescription": "Gilt für neue Reanimationsfälle. Laufende Fälle behalten ihr Profil.",
+  "@settingsLeitlinienprofilDescription": {
+    "description": "Erklärung, dass das Leitlinienprofil pro Fall gespeichert wird"
+  },
+  "settingsAlertsSection": "Signale",
+  "@settingsAlertsSection": {
+    "description": "Überschrift der Signal-Einstellungen"
+  },
+  "settingsVibration": "Vibration",
+  "@settingsVibration": {
+    "description": "Einstellung für Vibrationssignale"
+  },
+  "settingsVibrationDescription": "Vibration bei fälligen Aktionen",
+  "@settingsVibrationDescription": {
+    "description": "Erklärung der Vibrationseinstellung"
+  },
+  "settingsSound": "Ton",
+  "@settingsSound": {
+    "description": "Einstellung für Tonsignale"
+  },
+  "settingsSoundDescription": "Ton bei fälligen Aktionen",
+  "@settingsSoundDescription": {
+    "description": "Erklärung der Toneinstellung"
   }
 }

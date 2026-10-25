@@ -115,6 +115,220 @@ void main() {
     expect(find.text('02:05'), findsOneWidget);
   });
 
+  testWidgets('enters the Analysephase from the due Druckphase and pauses the '
+      'compression timer', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Analyse'));
+    await tester.pump();
+
+    expect(find.text('Analysephase'), findsOneWidget);
+    expect(find.text('Pause'), findsOneWidget);
+    expect(find.text('00:00'), findsOneWidget);
+
+    clock.advance(const Duration(seconds: 6));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    expect(find.text('00:06'), findsOneWidget);
+    expect(
+      find.text('Peri-Schock-Pause über 5 s – CPR fortsetzen'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('requires a result before CPR continues and starts a fresh '
+      'Druckphase afterwards', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Analyse'));
+    await tester.pump();
+
+    final disabledContinue = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'CPR fortsetzen'),
+    );
+    expect(disabledContinue.onPressed, isNull);
+
+    await tester.tap(find.text('Ergebnis erfassen'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Schockbar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Kammerflimmern (VF)'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Ergebnis: Schockbar – Kammerflimmern (VF)'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('CPR fortsetzen'));
+    await tester.pump();
+
+    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.text('Nächste Analyse'), findsOneWidget);
+    expect(find.text('02:00'), findsNWidgets(2));
+  });
+
+  testWidgets('opens settings from the Leitlinienprofil chip and applies the '
+      'selection to new Reanimationsfälle', (tester) async {
+    final settings = AppSettings();
+    await pumpApp(tester, settings: settings);
+
+    await tester.tap(find.text('ERC 2025'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Einstellungen'), findsOneWidget);
+    expect(find.text('Leitlinienprofil'), findsOneWidget);
+    expect(find.text('AHA 2025'), findsOneWidget);
+    expect(find.text('Vibration'), findsOneWidget);
+    expect(find.text('Ton'), findsOneWidget);
+
+    await tester.tap(find.text('AHA 2025'));
+    await tester.pump();
+    expect(settings.leitlinienprofil, Leitlinienprofil.aha2025);
+
+    final vibrationSwitch = tester.widget<SwitchListTile>(
+      find.widgetWithText(SwitchListTile, 'Vibration'),
+    );
+    expect(vibrationSwitch.value, isTrue);
+    await tester.tap(find.text('Vibration'));
+    await tester.pump();
+    expect(settings.vibrationEnabled, isFalse);
+
+    final soundSwitch = tester.widget<SwitchListTile>(
+      find.widgetWithText(SwitchListTile, 'Ton'),
+    );
+    expect(soundSwitch.value, isFalse);
+    await tester.tap(find.text('Ton'));
+    await tester.pump();
+    expect(settings.soundEnabled, isTrue);
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text('AHA 2025'), findsOneWidget);
+
+    await startNow(tester);
+    expect(find.text('AHA 2025'), findsOneWidget);
+  });
+
+  testWidgets('shows the AHA pause hint only after ten seconds', (
+    tester,
+  ) async {
+    final settings = AppSettings(leitlinienprofil: Leitlinienprofil.aha2025);
+    await pumpApp(tester, settings: settings);
+    await startNow(tester);
+
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Analyse'));
+    await tester.pump();
+
+    clock.advance(const Duration(seconds: 10));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('Pulscheck über 10 s – CPR fortsetzen'), findsNothing);
+
+    clock.advance(const Duration(seconds: 1));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('Pulscheck über 10 s – CPR fortsetzen'), findsOneWidget);
+  });
+
+  testWidgets('records Unklar with a note and continues CPR', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Analyse'));
+    await tester.pump();
+
+    await tester.tap(find.text('Ergebnis erfassen'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Unklar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Notiz zur Rhythmusanalyse'), findsOneWidget);
+    await tester.enterText(
+      find.byType(TextField),
+      'Rhythmus nicht beurteilbar',
+    );
+    await tester.tap(find.text('Speichern'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ergebnis: Unklar'), findsOneWidget);
+    expect(find.text('Rhythmus nicht beurteilbar'), findsOneWidget);
+    expect(find.text('Notiz bearbeiten'), findsOneWidget);
+
+    await tester.tap(find.text('CPR fortsetzen'));
+    await tester.pump();
+
+    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.text('Nächste Analyse'), findsOneWidget);
+  });
+
+  testWidgets('skips the Rhythmusanalyse with a reason and starts a fresh '
+      'cycle', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Analyse'));
+    await tester.pump();
+
+    await tester.tap(find.text('Analyse überspringen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Grund (optional)'), findsOneWidget);
+    await tester.tap(find.text('Keine Zeit'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.text('Nächste Analyse'), findsOneWidget);
+    expect(find.text('02:00'), findsNWidgets(2));
+  });
+
+  testWidgets('records a non-shockable rhythm and ROSC from the two-step '
+      'dialog', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Analyse'));
+    await tester.pump();
+
+    await tester.tap(find.text('Ergebnis erfassen'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nicht schockbar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Asystolie'), findsOneWidget);
+    expect(find.text('PEA'), findsOneWidget);
+    expect(find.text('Unbekannt (AED)'), findsOneWidget);
+
+    await tester.tap(find.text('Asystolie'));
+    await tester.pumpAndSettle();
+    expect(find.text('Ergebnis: Nicht schockbar – Asystolie'), findsOneWidget);
+
+    await tester.tap(find.text('CPR fortsetzen'));
+    await tester.pump();
+    await tester.tap(find.text('Analyse'));
+    await tester.pump();
+
+    await tester.tap(find.text('Ergebnis erfassen'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ROSC'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ergebnis: ROSC'), findsOneWidget);
+  });
+
   testWidgets('starts a running Reanimationsfall with a backdate preset and the corrected '
       'Startzeit', (tester) async {
     await pumpApp(tester);
@@ -236,6 +450,43 @@ void main() {
       expectInsideViewport(tester, find.text('02:00'));
       expectInsideViewport(tester, find.text('Druckphase'));
       expect(tester.takeException(), isNull);
+
+      await tester.tap(find.text('Analyse'));
+      await tester.pump();
+
+      expect(find.text('Analysephase'), findsOneWidget);
+      expect(find.text('Ergebnis erfassen'), findsOneWidget);
+      expect(find.text('Analyse überspringen'), findsOneWidget);
+      expectInsideViewport(tester, find.text('Ergebnis erfassen'));
+      expectInsideViewport(tester, find.text('Analyse überspringen'));
+      expect(tester.takeException(), isNull, reason: 'size $size');
+
+      await tester.tap(find.text('Ergebnis erfassen'));
+      await tester.pumpAndSettle();
+      expect(find.text('Schockbar'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.text('Abbrechen'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Ergebnis erfassen'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Schockbar'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Kammerflimmern (VF)'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Ergebnis: Schockbar – Kammerflimmern (VF)'),
+        findsOneWidget,
+      );
+      expectInsideViewport(tester, find.text('CPR fortsetzen'));
+      expect(tester.takeException(), isNull, reason: 'size $size result');
+
+      await tester.tap(find.text('CPR fortsetzen'));
+      await tester.pump();
+
+      expect(find.text('Druckphase'), findsOneWidget);
+      expect(tester.takeException(), isNull, reason: 'size $size continued');
 
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();

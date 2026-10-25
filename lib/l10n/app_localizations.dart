@@ -249,6 +249,252 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'+{time}'**
   String overdueTimer(String time);
+
+  /// Name der aktiven Phase mit pausierter Kompression
+  ///
+  /// In de, this message translates to:
+  /// **'Analysephase'**
+  String get phaseAnalysephase;
+
+  /// Schaltfläche zum Starten der Analysephase
+  ///
+  /// In de, this message translates to:
+  /// **'Analyse'**
+  String get analyseButton;
+
+  /// Beschriftung des Pausenzählers in der Analysephase
+  ///
+  /// In de, this message translates to:
+  /// **'Pause'**
+  String get pauseLabel;
+
+  /// Überfälligkeitshinweis in der Analysephase für AHA 2025
+  ///
+  /// In de, this message translates to:
+  /// **'Pulscheck über {seconds} s – CPR fortsetzen'**
+  String pauseOverdueAha(int seconds);
+
+  /// Überfälligkeitshinweis in der Analysephase für ERC 2025
+  ///
+  /// In de, this message translates to:
+  /// **'Peri-Schock-Pause über {seconds} s – CPR fortsetzen'**
+  String pauseOverdueErc(int seconds);
+
+  /// Titel des Dialogs für das Rhythmusanalyse-Ergebnis
+  ///
+  /// In de, this message translates to:
+  /// **'Rhythmusanalyse'**
+  String get rhythmusanalyseTitle;
+
+  /// Erste Ergebnisstufe: schockbarer Rhythmus
+  ///
+  /// In de, this message translates to:
+  /// **'Schockbar'**
+  String get rhythmusanalyseSchockbar;
+
+  /// Erste Ergebnisstufe: nicht schockbarer Rhythmus
+  ///
+  /// In de, this message translates to:
+  /// **'Nicht schockbar'**
+  String get rhythmusanalyseNichtSchockbar;
+
+  /// Ergebnis: Wiedererlangung eines Spontankreislaufs
+  ///
+  /// In de, this message translates to:
+  /// **'ROSC'**
+  String get rhythmusanalyseRosc;
+
+  /// Ergebnis: Rhythmus unklar
+  ///
+  /// In de, this message translates to:
+  /// **'Unklar'**
+  String get rhythmusanalyseUnklar;
+
+  /// Schockbarer Rhythmus: Kammerflimmern
+  ///
+  /// In de, this message translates to:
+  /// **'Kammerflimmern (VF)'**
+  String get rhythmusanalyseKammerflimmern;
+
+  /// Schockbarer Rhythmus: pulslose Kammertachykardie
+  ///
+  /// In de, this message translates to:
+  /// **'Pulslose Kammertachykardie (pVT)'**
+  String get rhythmusanalysePvt;
+
+  /// Nicht schockbarer Rhythmus: Asystolie
+  ///
+  /// In de, this message translates to:
+  /// **'Asystolie'**
+  String get rhythmusanalyseAsystolie;
+
+  /// Nicht schockbarer Rhythmus: elektrische Aktivität ohne Puls
+  ///
+  /// In de, this message translates to:
+  /// **'PEA'**
+  String get rhythmusanalysePea;
+
+  /// Rhythmus unbekannt, Ergebnis stammt aus einer AED-Empfehlung
+  ///
+  /// In de, this message translates to:
+  /// **'Unbekannt (AED)'**
+  String get rhythmusanalyseUnbekanntAed;
+
+  /// Schaltfläche zum Erfassen des Rhythmusanalyse-Ergebnisses
+  ///
+  /// In de, this message translates to:
+  /// **'Ergebnis erfassen'**
+  String get rhythmusanalyseRecordButton;
+
+  /// Beschriftung des erfassten Rhythmusanalyse-Ergebnisses
+  ///
+  /// In de, this message translates to:
+  /// **'Ergebnis'**
+  String get rhythmusanalyseRecordedLabel;
+
+  /// Schaltfläche zum Ergänzen einer Notiz am Ergebnis
+  ///
+  /// In de, this message translates to:
+  /// **'Notiz hinzufügen'**
+  String get rhythmusanalyseNoteAdd;
+
+  /// Schaltfläche zum Bearbeiten einer vorhandenen Notiz
+  ///
+  /// In de, this message translates to:
+  /// **'Notiz bearbeiten'**
+  String get rhythmusanalyseNoteEdit;
+
+  /// Titel des Dialogs für die Notiz zur Rhythmusanalyse
+  ///
+  /// In de, this message translates to:
+  /// **'Notiz zur Rhythmusanalyse'**
+  String get rhythmusanalyseNoteTitle;
+
+  /// Beschriftung des optionalen Notizfelds
+  ///
+  /// In de, this message translates to:
+  /// **'Notiz (optional)'**
+  String get rhythmusanalyseNoteLabel;
+
+  /// Hinweis, dass vor dem Fortsetzen ein Ergebnis erfasst werden muss
+  ///
+  /// In de, this message translates to:
+  /// **'Ergebnis oder Unklar erforderlich'**
+  String get rhythmusanalyseRequired;
+
+  /// Schaltfläche zum Beenden der Analysephase
+  ///
+  /// In de, this message translates to:
+  /// **'CPR fortsetzen'**
+  String get cprContinueButton;
+
+  /// Schaltfläche zum Überspringen der Rhythmusanalyse
+  ///
+  /// In de, this message translates to:
+  /// **'Analyse überspringen'**
+  String get skipAnalysisButton;
+
+  /// Titel des Dialogs zum Überspringen der Rhythmusanalyse
+  ///
+  /// In de, this message translates to:
+  /// **'Analyse überspringen'**
+  String get skipAnalysisTitle;
+
+  /// Beschriftung der Grundauswahl beim Überspringen
+  ///
+  /// In de, this message translates to:
+  /// **'Grund (optional)'**
+  String get skipAnalysisReasonLabel;
+
+  /// Grund für eine übersprungene Rhythmusanalyse
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Zeit'**
+  String get skipReasonNoTime;
+
+  /// Grund für eine übersprungene Rhythmusanalyse: AED übernimmt
+  ///
+  /// In de, this message translates to:
+  /// **'AED übernimmt'**
+  String get skipReasonAed;
+
+  /// Sonstiger Grund für eine übersprungene Rhythmusanalyse
+  ///
+  /// In de, this message translates to:
+  /// **'Sonstiges'**
+  String get skipReasonOther;
+
+  /// Überspringen ohne Angabe eines Grundes
+  ///
+  /// In de, this message translates to:
+  /// **'Ohne Angabe'**
+  String get skipWithoutReasonButton;
+
+  /// Schaltfläche zum Speichern eines Dialogs
+  ///
+  /// In de, this message translates to:
+  /// **'Speichern'**
+  String get saveButton;
+
+  /// Schaltfläche zum Zurückgehen in einem Dialog
+  ///
+  /// In de, this message translates to:
+  /// **'Zurück'**
+  String get backButton;
+
+  /// Titel des Einstellungsbildschirms
+  ///
+  /// In de, this message translates to:
+  /// **'Einstellungen'**
+  String get settingsTitle;
+
+  /// Tooltip des Leitlinien-Chips auf der Startseite
+  ///
+  /// In de, this message translates to:
+  /// **'Einstellungen öffnen'**
+  String get settingsOpenTooltip;
+
+  /// Überschrift der Leitlinienprofil-Einstellung
+  ///
+  /// In de, this message translates to:
+  /// **'Leitlinienprofil'**
+  String get settingsLeitlinienprofilSection;
+
+  /// Erklärung, dass das Leitlinienprofil pro Fall gespeichert wird
+  ///
+  /// In de, this message translates to:
+  /// **'Gilt für neue Reanimationsfälle. Laufende Fälle behalten ihr Profil.'**
+  String get settingsLeitlinienprofilDescription;
+
+  /// Überschrift der Signal-Einstellungen
+  ///
+  /// In de, this message translates to:
+  /// **'Signale'**
+  String get settingsAlertsSection;
+
+  /// Einstellung für Vibrationssignale
+  ///
+  /// In de, this message translates to:
+  /// **'Vibration'**
+  String get settingsVibration;
+
+  /// Erklärung der Vibrationseinstellung
+  ///
+  /// In de, this message translates to:
+  /// **'Vibration bei fälligen Aktionen'**
+  String get settingsVibrationDescription;
+
+  /// Einstellung für Tonsignale
+  ///
+  /// In de, this message translates to:
+  /// **'Ton'**
+  String get settingsSound;
+
+  /// Erklärung der Toneinstellung
+  ///
+  /// In de, this message translates to:
+  /// **'Ton bei fälligen Aktionen'**
+  String get settingsSoundDescription;
 }
 
 class _AppLocalizationsDelegate

@@ -96,4 +96,132 @@ class AppLocalizationsDe extends AppLocalizations {
   String overdueTimer(String time) {
     return '+$time';
   }
+
+  @override
+  String get phaseAnalysephase => 'Analysephase';
+
+  @override
+  String get analyseButton => 'Analyse';
+
+  @override
+  String get pauseLabel => 'Pause';
+
+  @override
+  String pauseOverdueAha(int seconds) {
+    return 'Pulscheck über $seconds s – CPR fortsetzen';
+  }
+
+  @override
+  String pauseOverdueErc(int seconds) {
+    return 'Peri-Schock-Pause über $seconds s – CPR fortsetzen';
+  }
+
+  @override
+  String get rhythmusanalyseTitle => 'Rhythmusanalyse';
+
+  @override
+  String get rhythmusanalyseSchockbar => 'Schockbar';
+
+  @override
+  String get rhythmusanalyseNichtSchockbar => 'Nicht schockbar';
+
+  @override
+  String get rhythmusanalyseRosc => 'ROSC';
+
+  @override
+  String get rhythmusanalyseUnklar => 'Unklar';
+
+  @override
+  String get rhythmusanalyseKammerflimmern => 'Kammerflimmern (VF)';
+
+  @override
+  String get rhythmusanalysePvt => 'Pulslose Kammertachykardie (pVT)';
+
+  @override
+  String get rhythmusanalyseAsystolie => 'Asystolie';
+
+  @override
+  String get rhythmusanalysePea => 'PEA';
+
+  @override
+  String get rhythmusanalyseUnbekanntAed => 'Unbekannt (AED)';
+
+  @override
+  String get rhythmusanalyseRecordButton => 'Ergebnis erfassen';
+
+  @override
+  String get rhythmusanalyseRecordedLabel => 'Ergebnis';
+
+  @override
+  String get rhythmusanalyseNoteAdd => 'Notiz hinzufügen';
+
+  @override
+  String get rhythmusanalyseNoteEdit => 'Notiz bearbeiten';
+
+  @override
+  String get rhythmusanalyseNoteTitle => 'Notiz zur Rhythmusanalyse';
+
+  @override
+  String get rhythmusanalyseNoteLabel => 'Notiz (optional)';
+
+  @override
+  String get rhythmusanalyseRequired => 'Ergebnis oder Unklar erforderlich';
+
+  @override
+  String get cprContinueButton => 'CPR fortsetzen';
+
+  @override
+  String get skipAnalysisButton => 'Analyse überspringen';
+
+  @override
+  String get skipAnalysisTitle => 'Analyse überspringen';
+
+  @override
+  String get skipAnalysisReasonLabel => 'Grund (optional)';
+
+  @override
+  String get skipReasonNoTime => 'Keine Zeit';
+
+  @override
+  String get skipReasonAed => 'AED übernimmt';
+
+  @override
+  String get skipReasonOther => 'Sonstiges';
+
+  @override
+  String get skipWithoutReasonButton => 'Ohne Angabe';
+
+  @override
+  String get saveButton => 'Speichern';
+
+  @override
+  String get backButton => 'Zurück';
+
+  @override
+  String get settingsTitle => 'Einstellungen';
+
+  @override
+  String get settingsOpenTooltip => 'Einstellungen öffnen';
+
+  @override
+  String get settingsLeitlinienprofilSection => 'Leitlinienprofil';
+
+  @override
+  String get settingsLeitlinienprofilDescription =>
+      'Gilt für neue Reanimationsfälle. Laufende Fälle behalten ihr Profil.';
+
+  @override
+  String get settingsAlertsSection => 'Signale';
+
+  @override
+  String get settingsVibration => 'Vibration';
+
+  @override
+  String get settingsVibrationDescription => 'Vibration bei fälligen Aktionen';
+
+  @override
+  String get settingsSound => 'Ton';
+
+  @override
+  String get settingsSoundDescription => 'Ton bei fälligen Aktionen';
 }

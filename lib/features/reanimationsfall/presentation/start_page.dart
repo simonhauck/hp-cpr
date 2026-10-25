@@ -7,6 +7,7 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/reanimationsfall_p
 import 'package:hp_cpr/features/reanimationsfall/presentation/custom_startzeit_dialog.dart';
 import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_chip.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
+import 'package:hp_cpr/features/settings/presentation/settings_page.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 
 /// Starts a new Reanimationsfall, either now or with a corrected Startzeit.
@@ -94,6 +95,7 @@ class StartPage extends StatelessWidget {
                             builder: (context, _) => LeitlinienprofilChip(
                               leitlinienprofil: settings.leitlinienprofil,
                               compact: isCompact,
+                              onPressed: () => _openSettings(context),
                             ),
                           ),
                         ],
@@ -132,6 +134,8 @@ class StartPage extends StatelessWidget {
     final reanimationsfall = Reanimationsfall.start(
       clock: clock,
       leitlinienprofil: settings.leitlinienprofil,
+      vibrationEnabled: settings.vibrationEnabled,
+      soundEnabled: settings.soundEnabled,
       backdate: backdate,
     );
 
@@ -142,6 +146,12 @@ class StartPage extends StatelessWidget {
           wakeLock: wakeLock,
         ),
       ),
+    );
+  }
+
+  void _openSettings(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => SettingsPage(settings: settings)),
     );
   }
 
