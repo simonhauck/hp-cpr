@@ -21,7 +21,6 @@ Map<String, dynamic> reanimationsfallStateToJson(ReanimationsfallState state) {
     'compressionCycleStartOffset': _millis(state.compressionCycleStartOffset),
     'compressionRemainingAtPause': _millis(state.compressionRemainingAtPause),
     'analysephaseStartOffset': _nullableMillis(state.analysephaseStartOffset),
-    'rhythmusanalyseErgebnis': state.rhythmusanalyseErgebnis?.name,
     'adrenalinAusloesendesErgebnis': state.adrenalinAusloesendesErgebnis?.name,
     'schocks': [
       for (final schock in state.schocks)
@@ -106,9 +105,6 @@ ReanimationsfallState reanimationsfallStateFromJson(Map<String, dynamic> json) {
     compressionCycleStartOffset: _duration(json['compressionCycleStartOffset']),
     compressionRemainingAtPause: _duration(json['compressionRemainingAtPause']),
     analysephaseStartOffset: _nullableDuration(json['analysephaseStartOffset']),
-    rhythmusanalyseErgebnis: _rhythmusanalyseErgebnis(
-      json['rhythmusanalyseErgebnis'],
-    ),
     adrenalinAusloesendesErgebnis: _rhythmusanalyseErgebnis(
       json['adrenalinAusloesendesErgebnis'],
     ),

@@ -164,10 +164,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 250));
 
     expect(find.text('00:06'), findsOneWidget);
-    expect(
-      find.text('Peri-Schock-Pause über 5 s – CPR fortsetzen'),
-      findsOneWidget,
-    );
+    expect(find.text('Pause über 5 s – CPR fortsetzen'), findsOneWidget);
   });
 
   testWidgets('records a Rhythmusanalyse result and starts a fresh Druckphase '

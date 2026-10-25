@@ -192,7 +192,6 @@ void main() {
       expect(resumed.phase, Reanimationsphase.druckphase);
       expect(resumed.compressionRemaining, const Duration(minutes: 2));
       expect(resumed.pauseDuration, Duration.zero);
-      expect(resumed.rhythmusanalyseErgebnis, isNull);
       expect(resumed.rhythmusanalyseEintraege, hasLength(1));
       expect(
         resumed.rhythmusanalyseEintraege.single.ergebnis,
@@ -426,6 +425,25 @@ void main() {
       expect(reanimationsfall.snapshot().isRhythmusanalyseDue, isFalse);
     });
 
+    test('a manual Schock after the due time keeps the overdue analysis', () {
+      final clock = FakeClock();
+      final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+      clock.advance(const Duration(minutes: 2, seconds: 5));
+      reanimationsfall.recordSchock();
+
+      final running = reanimationsfall.snapshot();
+      expect(running.isRhythmusanalyseDue, isTrue);
+      expect(running.rhythmusanalyseOverdue, const Duration(seconds: 5));
+      expect(running.compressionRemaining, Duration.zero);
+
+      clock.advance(const Duration(seconds: 10));
+      expect(
+        reanimationsfall.snapshot().rhythmusanalyseOverdue,
+        const Duration(seconds: 15),
+      );
+    });
+
     test(
       'a manual Schock in the Analysephase keeps the result requirement',
       () {
@@ -478,6 +496,9 @@ void main() {
       final reanimationsfall = Reanimationsfall.start(clock: clock);
 
       reanimationsfall.recordAdrenalin();
+      reanimationsfall.recordSchock();
+      reanimationsfall.recordSchock();
+      reanimationsfall.recordSchock();
       clock.advance(const Duration(seconds: 90));
       reanimationsfall.restartDruckphase();
 
@@ -495,6 +516,7 @@ void main() {
         restarted.adrenalinZeitfensterZustand,
         AdrenalinZeitfensterZustand.wartet,
       );
+      expect(restarted.amiodaronHinweis, AmiodaronHinweis.ersteGabe);
 
       clock.advance(const Duration(seconds: 10));
       expect(

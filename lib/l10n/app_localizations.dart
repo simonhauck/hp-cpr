@@ -277,7 +277,7 @@ abstract class AppLocalizations {
   /// Überfälligkeitshinweis in der Analysephase für ERC 2025
   ///
   /// In de, this message translates to:
-  /// **'Peri-Schock-Pause über {seconds} s – CPR fortsetzen'**
+  /// **'Pause über {seconds} s – CPR fortsetzen'**
   String pauseOverdueErc(int seconds);
 
   /// Titel des Dialogs für das Rhythmusanalyse-Ergebnis
@@ -346,143 +346,17 @@ abstract class AppLocalizations {
   /// **'Ergebnis erfassen'**
   String get rhythmusanalyseRecordButton;
 
-  /// Beschriftung des erfassten Rhythmusanalyse-Ergebnisses
-  ///
-  /// In de, this message translates to:
-  /// **'Ergebnis'**
-  String get rhythmusanalyseRecordedLabel;
-
-  /// Schaltfläche zum Ergänzen einer Notiz am Ergebnis
-  ///
-  /// In de, this message translates to:
-  /// **'Notiz hinzufügen'**
-  String get rhythmusanalyseNoteAdd;
-
-  /// Schaltfläche zum Bearbeiten einer vorhandenen Notiz
-  ///
-  /// In de, this message translates to:
-  /// **'Notiz bearbeiten'**
-  String get rhythmusanalyseNoteEdit;
-
-  /// Titel des Dialogs für die Notiz zur Rhythmusanalyse
-  ///
-  /// In de, this message translates to:
-  /// **'Notiz zur Rhythmusanalyse'**
-  String get rhythmusanalyseNoteTitle;
-
-  /// Beschriftung des optionalen Notizfelds
-  ///
-  /// In de, this message translates to:
-  /// **'Notiz (optional)'**
-  String get rhythmusanalyseNoteLabel;
-
-  /// Hinweis, dass vor dem Fortsetzen ein Ergebnis erfasst werden muss
-  ///
-  /// In de, this message translates to:
-  /// **'Ergebnis oder Unklar erforderlich'**
-  String get rhythmusanalyseRequired;
-
-  /// Schaltfläche zum Beenden der Analysephase
-  ///
-  /// In de, this message translates to:
-  /// **'CPR fortsetzen'**
-  String get cprContinueButton;
-
   /// Schaltfläche zum Überspringen der Rhythmusanalyse
   ///
   /// In de, this message translates to:
   /// **'Analyse überspringen'**
   String get skipAnalysisButton;
 
-  /// Titel des Dialogs zum Überspringen der Rhythmusanalyse
-  ///
-  /// In de, this message translates to:
-  /// **'Analyse überspringen'**
-  String get skipAnalysisTitle;
-
-  /// Beschriftung der Grundauswahl beim Überspringen
-  ///
-  /// In de, this message translates to:
-  /// **'Grund (optional)'**
-  String get skipAnalysisReasonLabel;
-
-  /// Grund für eine übersprungene Rhythmusanalyse
-  ///
-  /// In de, this message translates to:
-  /// **'Keine Zeit'**
-  String get skipReasonNoTime;
-
-  /// Grund für eine übersprungene Rhythmusanalyse: AED übernimmt
-  ///
-  /// In de, this message translates to:
-  /// **'AED übernimmt'**
-  String get skipReasonAed;
-
-  /// Sonstiger Grund für eine übersprungene Rhythmusanalyse
-  ///
-  /// In de, this message translates to:
-  /// **'Sonstiges'**
-  String get skipReasonOther;
-
-  /// Überspringen ohne Angabe eines Grundes
-  ///
-  /// In de, this message translates to:
-  /// **'Ohne Angabe'**
-  String get skipWithoutReasonButton;
-
   /// Schaltfläche zum Erfassen eines Schocks mit der aktuellen Anzahl
   ///
   /// In de, this message translates to:
   /// **'Schock ({count})'**
   String schockButton(int count);
-
-  /// Bestätigung nach dem Erfassen eines Schocks
-  ///
-  /// In de, this message translates to:
-  /// **'Schock {count} erfasst'**
-  String schockRecorded(int count);
-
-  /// Bestätigung nach dem Erfassen eines Schocks mit Energie
-  ///
-  /// In de, this message translates to:
-  /// **'Schock {count} erfasst · {energie} J'**
-  String schockRecordedWithEnergy(int count, int energie);
-
-  /// Statusanzeige, während die Druckphase nach einem Schock pausiert
-  ///
-  /// In de, this message translates to:
-  /// **'Schock erfasst'**
-  String get schockRecordedLabel;
-
-  /// Aktion zum Ergänzen der Schockenergie
-  ///
-  /// In de, this message translates to:
-  /// **'Energie'**
-  String get schockEnergyAction;
-
-  /// Aktion zum Rückgängigmachen des letzten Schocks
-  ///
-  /// In de, this message translates to:
-  /// **'Rückgängig'**
-  String get schockUndoAction;
-
-  /// Titel des Dialogs für die Schockenergie
-  ///
-  /// In de, this message translates to:
-  /// **'Schockenergie'**
-  String get schockEnergyTitle;
-
-  /// Beschriftung des Energie-Eingabefelds
-  ///
-  /// In de, this message translates to:
-  /// **'Energie (J)'**
-  String get schockEnergyLabel;
-
-  /// Fehlermeldung bei einer ungültigen Schockenergie
-  ///
-  /// In de, this message translates to:
-  /// **'Bitte eine ganze Zahl größer als 0 eingeben.'**
-  String get schockEnergyInvalid;
 
   /// Beschriftung des Adrenalin-Zeitfensters
   ///
@@ -820,12 +694,6 @@ abstract class AppLocalizations {
   /// **'Schock {count} · {energie} J'**
   String eventSchockWithEnergy(int count, int energie);
 
-  /// Ereignis: Rückgängigmachung eines Schocks
-  ///
-  /// In de, this message translates to:
-  /// **'Schock {count} zurückgenommen'**
-  String eventSchockUndone(int count);
-
   /// Ereignis: Adrenalin-Gabe
   ///
   /// In de, this message translates to:
@@ -855,12 +723,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Druckphase neu gestartet'**
   String get eventDruckphaseRestarted;
-
-  /// Ereignis: Rhythmusanalyse mit Grund übersprungen
-  ///
-  /// In de, this message translates to:
-  /// **'Rhythmusanalyse übersprungen: {grund}'**
-  String eventRhythmusanalyseSkippedWithReason(String grund);
 
   /// Ereignis: Wiedererlangung eines Spontankreislaufs
   ///
@@ -1167,24 +1029,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Notiz: {text}'**
   String eventNotiz(String text);
-
-  /// Ereignis: korrigierte Schockenergie
-  ///
-  /// In de, this message translates to:
-  /// **'Schock {count} korrigiert: {energie} J'**
-  String eventSchockEnergyCorrected(int count, int energie);
-
-  /// Ereignis: korrigierte Rhythmusanalyse-Notiz
-  ///
-  /// In de, this message translates to:
-  /// **'Notiz korrigiert: {text}'**
-  String eventNoteCorrected(String text);
-
-  /// Ereignis: entfernte Rhythmusanalyse-Notiz
-  ///
-  /// In de, this message translates to:
-  /// **'Notiz entfernt'**
-  String get eventNoteRemoved;
 
   /// Version mit Buildnummer
   ///

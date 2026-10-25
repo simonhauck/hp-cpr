@@ -132,7 +132,6 @@ class Reanimationsfall {
     _analysephaseStartOffset = analysephaseStart == null
         ? null
         : _monotonicStartOffset + analysephaseStart;
-    _rhythmusanalyseErgebnis = state.rhythmusanalyseErgebnis;
     _adrenalinAusloesendesErgebnis = state.adrenalinAusloesendesErgebnis;
     _ende = state.ende;
     _verworfenAm = state.verworfenAm;
@@ -193,7 +192,6 @@ class Reanimationsfall {
   Duration _compressionRemainingAtPause = Duration.zero;
   Duration? _analysephaseStartOffset;
 
-  RhythmusanalyseErgebnis? _rhythmusanalyseErgebnis;
   final List<RhythmusanalyseUeberspringung> _uebersprungeneRhythmusanalysen =
       [];
   final List<DruckphaseNeustart> _druckphaseNeustarts = [];
@@ -230,7 +228,6 @@ class Reanimationsfall {
     final now = _monotonicNow();
     _compressionRemainingAtPause = _remainingInCycle(now);
     _analysephaseStartOffset = now;
-    _rhythmusanalyseErgebnis = null;
     _phase = Reanimationsphase.analysephase;
   }
 
@@ -285,9 +282,6 @@ class Reanimationsfall {
   }) {
     _requireLaufend();
     _requireAnalysephase();
-    if (_rhythmusanalyseErgebnis != null) {
-      throw StateError('a Rhythmusanalyse result is already recorded');
-    }
     if (schockAbgegeben &&
         ergebnis.kategorie != RhythmusanalyseKategorie.schockbar) {
       throw ArgumentError.value(
@@ -297,19 +291,16 @@ class Reanimationsfall {
       );
     }
 
-    _recordRhythmusanalyse(ergebnis);
+    final enteredRosc = _recordRhythmusanalyse(ergebnis);
     if (schockAbgegeben) {
       recordSchock();
     }
+    if (enteredRosc) return;
 
-    if (ergebnis == RhythmusanalyseErgebnis.rosc) {
-      return;
-    }
     _startNextDruckphase();
   }
 
-  void _recordRhythmusanalyse(RhythmusanalyseErgebnis ergebnis) {
-    _rhythmusanalyseErgebnis = ergebnis;
+  bool _recordRhythmusanalyse(RhythmusanalyseErgebnis ergebnis) {
     _adrenalinAusloesendesErgebnis = ergebnis;
     _rhythmusanalyseEintraege.add(
       RhythmusanalyseEintrag(zeitpunkt: _elapsedOffset, ergebnis: ergebnis),
@@ -318,7 +309,9 @@ class Reanimationsfall {
 
     if (ergebnis == RhythmusanalyseErgebnis.rosc) {
       _recordRosc();
+      return true;
     }
+    return false;
   }
 
   /// Resets the current Druckphase to a fresh 2-minute cycle.
@@ -333,6 +326,10 @@ class Reanimationsfall {
     }
 
     _druckphaseNeustarts.add(DruckphaseNeustart(zeitpunkt: _elapsedOffset));
+    _resetCompressionCycle();
+  }
+
+  void _resetCompressionCycle() {
     _compressionCycleStartOffset = _monotonicNow();
     _compressionRemainingAtPause = Duration.zero;
   }
@@ -447,9 +444,6 @@ class Reanimationsfall {
   void skipRhythmusanalyse() {
     _requireLaufend();
     _requireAnalysephase();
-    if (_rhythmusanalyseErgebnis != null) {
-      throw StateError('a Rhythmusanalyse result is already recorded');
-    }
     _uebersprungeneRhythmusanalysen.add(
       RhythmusanalyseUeberspringung(zeitpunkt: _elapsedOffset),
     );
@@ -477,9 +471,7 @@ class Reanimationsfall {
     );
     _zustand = ReanimationsfallZustand.laufend;
     _resetAfterArrest();
-    _compressionCycleStartOffset = now;
-    _compressionRemainingAtPause = Duration.zero;
-    _rhythmusanalyseErgebnis = null;
+    _resetCompressionCycle();
   }
 
   /// Ends the Reanimationsfall with a reason.
@@ -600,7 +592,6 @@ class Reanimationsfall {
       isRhythmusanalyseDue: isRhythmusanalyseDue,
       pauseDuration: pauseDuration,
       isPauseOverdue: isPauseOverdue,
-      rhythmusanalyseErgebnis: _rhythmusanalyseErgebnis,
       rhythmusanalyseEintraege: List.unmodifiable(_rhythmusanalyseEintraege),
       druckphaseNeustarts: List.unmodifiable(_druckphaseNeustarts),
       messwerte: List.unmodifiable(_messwerte),
@@ -688,7 +679,6 @@ class Reanimationsfall {
       analysephaseStartOffset: analysephaseStart == null
           ? null
           : analysephaseStart - _monotonicStartOffset,
-      rhythmusanalyseErgebnis: _rhythmusanalyseErgebnis,
       adrenalinAusloesendesErgebnis: _adrenalinAusloesendesErgebnis,
       schocks: List.unmodifiable(_schocks),
       adrenalinGaben: List.unmodifiable(_adrenalinGaben),
@@ -710,10 +700,8 @@ class Reanimationsfall {
 
   void _startNextDruckphase() {
     _phase = Reanimationsphase.druckphase;
-    _compressionCycleStartOffset = _monotonicNow();
-    _compressionRemainingAtPause = Duration.zero;
+    _resetCompressionCycle();
     _analysephaseStartOffset = null;
-    _rhythmusanalyseErgebnis = null;
   }
 
   static void _requireValidEnergie(int? energieJoule) {
@@ -753,7 +741,6 @@ class ReanimationsfallSnapshot {
     required this.isRhythmusanalyseDue,
     required this.pauseDuration,
     required this.isPauseOverdue,
-    required this.rhythmusanalyseErgebnis,
     required this.rhythmusanalyseEintraege,
     required this.druckphaseNeustarts,
     required this.messwerte,
@@ -809,9 +796,6 @@ class ReanimationsfallSnapshot {
   final Duration pauseDuration;
 
   final bool isPauseOverdue;
-
-  /// The result recorded in the current Analysephase, if any.
-  final RhythmusanalyseErgebnis? rhythmusanalyseErgebnis;
 
   /// Every recorded Rhythmusanalyse result, including previous cycles.
   final List<RhythmusanalyseEintrag> rhythmusanalyseEintraege;
@@ -898,7 +882,6 @@ class ReanimationsfallState {
     required this.compressionCycleStartOffset,
     required this.compressionRemainingAtPause,
     required this.analysephaseStartOffset,
-    required this.rhythmusanalyseErgebnis,
     required this.adrenalinAusloesendesErgebnis,
     required this.schocks,
     required this.adrenalinGaben,
@@ -927,7 +910,6 @@ class ReanimationsfallState {
   final Duration compressionCycleStartOffset;
   final Duration compressionRemainingAtPause;
   final Duration? analysephaseStartOffset;
-  final RhythmusanalyseErgebnis? rhythmusanalyseErgebnis;
   final RhythmusanalyseErgebnis? adrenalinAusloesendesErgebnis;
   final List<SchockEreignis> schocks;
   final List<AdrenalinGabe> adrenalinGaben;

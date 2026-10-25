@@ -38,6 +38,9 @@ void main() {
     );
     clock.advance(const Duration(minutes: 1));
     reanimationsfall.restartDruckphase();
+    clock.advance(const Duration(minutes: 2));
+    reanimationsfall.enterAnalysephase();
+    reanimationsfall.skipRhythmusanalyse();
     clock.advance(const Duration(seconds: 20));
     reanimationsfall.recordRosc();
     clock.advance(const Duration(seconds: 20));
@@ -46,9 +49,33 @@ void main() {
     reanimationsfall.endReanimationsfall(Beendigungsgrund.uebergabe);
 
     final state = reanimationsfall.exportState();
+    final encoded = reanimationsfallStateToJson(state);
+    for (final removed in [
+      'isSchockpause',
+      'schockpauseWasDue',
+      'schockpauseOverdue',
+      'schockpauseOpeningSchockIndex',
+      'rhythmusanalyseNotiz',
+      'schockRueckgaengigkeiten',
+      'schockKorrekturen',
+      'rhythmusanalyseNotizKorrekturen',
+    ]) {
+      expect(encoded.containsKey(removed), isFalse, reason: removed);
+    }
+    expect(
+      ((encoded['uebersprungeneRhythmusanalysen'] as List<dynamic>).first
+              as Map<String, dynamic>)
+          .containsKey('grund'),
+      isFalse,
+    );
+    expect(
+      ((encoded['rhythmusanalyseEintraege'] as List<dynamic>).first
+              as Map<String, dynamic>)
+          .containsKey('notiz'),
+      isFalse,
+    );
     final decoded = reanimationsfallStateFromJson(
-      jsonDecode(jsonEncode(reanimationsfallStateToJson(state)))
-          as Map<String, dynamic>,
+      jsonDecode(jsonEncode(encoded)) as Map<String, dynamic>,
     );
 
     expect(decoded.id, state.id);
