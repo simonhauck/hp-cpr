@@ -2,7 +2,7 @@
 
 Flutter app as a companion for the **High-Performance CPR standard**. The app is intended to support the resuscitation workflow with timing: resuscitation duration, medication administration, rhythm analyses, and further steps.
 
-> **Status:** First feature slice. The Zeitnehmer can start a new Reanimationsfall immediately or with a corrected Startzeit and watch the Druckphase with the 2-minute compression countdown. The Analysephase, medication timers, and the Einsatzlog are still to come.
+> **Status:** The Zeitnehmer can start a Reanimationsfall immediately or with a corrected Startzeit, run the Druckphase countdown, enter the Analysephase, record a Rhythmusanalyse result, skip it, and return to the Druckphase. Medication timers and the Einsatzlog are still to come.
 
 ## Goals
 
@@ -189,10 +189,17 @@ lib/
 ├── features/
 │   ├── reanimationsfall/
 │   │   ├── domain/
-│   │   │   └── reanimationsfall.dart           # Startzeit, Reanimationsphase, read model
+│   │   │   ├── reanimationsfall.dart           # Startzeit, Reanimationsphase, read model
+│   │   │   └── rhythmusanalyse.dart            # Rhythmusanalyse result types
 │   │   └── presentation/
-│   │       ├── reanimationsfall_page.dart      # running Reanimationsfall
 │   │       ├── custom_startzeit_dialog.dart    # custom backdate entry
+│   │       ├── phase_action_bar.dart           # phase actions + result summary
+│   │       ├── reanimationsfall_page.dart      # running Reanimationsfall
+│   │       ├── rhythmusanalyse_dialog.dart     # two-step result flow
+│   │       ├── rhythmusanalyse_format.dart     # result labels
+│   │       ├── rhythmusanalyse_notiz_dialog.dart
+│   │       ├── skip_rhythmusanalyse_dialog.dart
+│   │       ├── start_card.dart                 # shared start-choice card shell
 │   │       ├── start_page.dart                 # new Reanimationsfall + backdated Startzeit
 │   │       └── timer_format.dart               # MM:SS / H:MM:SS formatting
 │   ├── leitlinienprofil/
@@ -200,13 +207,20 @@ lib/
 │   │   └── presentation/
 │   │       └── leitlinienprofil_chip.dart      # read-only Leitlinienprofil chip
 │   └── settings/
-│       └── domain/app_settings.dart            # Leitlinienprofil selection
+│       ├── domain/app_settings.dart            # Leitlinienprofil selection, alerts
+│       └── presentation/settings_page.dart     # settings form
+├── ui/
+│   └── layout/
+│       ├── page_layout.dart                    # breakpoints + density tokens
+│       └── page_scaffold.dart                  # shared page frame
 └── l10n/
     ├── app_de.arb                              # German UI strings
     └── app_localizations*.dart                 # generated
 test/
+├── app_settings_test.dart                      # settings behavior
 ├── app_test.dart                               # start-screen and running-screen flows
 ├── reanimationsfall_test.dart                  # start, backdate, and timer rules
+├── timer_format_test.dart                      # timer and wall-clock formatting
 └── support/                                    # fake clock and wake lock
 android/                                        # Android target
 web/                                            # web target
