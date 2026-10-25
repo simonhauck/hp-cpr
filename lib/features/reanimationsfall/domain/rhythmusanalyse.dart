@@ -22,6 +22,31 @@ enum RhythmusanalyseErgebnis {
   final RhythmusanalyseKategorie kategorie;
 }
 
+/// A Rhythmusanalyse result recorded at a point in the Reanimationsfall.
+class RhythmusanalyseEintrag {
+  const RhythmusanalyseEintrag({
+    required this.zeitpunkt,
+    required this.ergebnis,
+    this.notiz,
+  });
+
+  /// The elapsed time since the Startzeit when the result was recorded.
+  final Duration zeitpunkt;
+
+  final RhythmusanalyseErgebnis ergebnis;
+
+  /// The optional note recorded with the result.
+  final String? notiz;
+
+  RhythmusanalyseEintrag copyWith({String? notiz}) {
+    return RhythmusanalyseEintrag(
+      zeitpunkt: zeitpunkt,
+      ergebnis: ergebnis,
+      notiz: notiz,
+    );
+  }
+}
+
 /// Why the Zeitnehmer skipped the Rhythmusanalyse.
 enum RhythmusanalyseUebersprungenGrund { keineZeit, aedUebernimmt, sonstiges }
 

@@ -2,7 +2,7 @@
 
 Flutter app as a companion for the **High-Performance CPR standard**. The app is intended to support the resuscitation workflow with timing: resuscitation duration, medication administration, rhythm analyses, and further steps.
 
-> **Status:** The Zeitnehmer can start a Reanimationsfall immediately or with a corrected Startzeit, run the Druckphase countdown, enter the Analysephase, record a Rhythmusanalyse result, skip it, and return to the Druckphase. Adrenalin and Amiodaron hints are implemented; the ROSC/end flow and the Einsatzlog are still to come.
+> **Status:** The Zeitnehmer can start a Reanimationsfall immediately or with a corrected Startzeit, run the Druckphase countdown, enter the Analysephase, record a Rhythmusanalyse result, skip it, and return to the Druckphase. Adrenalin and Amiodaron hints are implemented, and the case can be interrupted by ROSC, resumed after a rearrest, and ended with an in-app summary. The Einsatzlog and Messwerte are still to come.
 
 ## Goals
 
@@ -203,8 +203,10 @@ lib/
 │   │       ├── adrenalin_panel.dart            # Adrenalin Zeitfenster bar
 │   │       ├── amiodaron_panel.dart            # Amiodaron hint + last dose
 │   │       ├── custom_startzeit_dialog.dart    # custom backdate entry
+│   │       ├── end_reanimationsfall_dialog.dart # ending reason
 │   │       ├── phase_action_bar.dart           # phase actions + result summary
 │   │       ├── reanimationsfall_page.dart      # running Reanimationsfall
+│   │       ├── reanimationsfall_summary_page.dart # in-app case summary
 │   │       ├── rhythmusanalyse_dialog.dart     # two-step result flow
 │   │       ├── rhythmusanalyse_format.dart     # result labels
 │   │       ├── rhythmusanalyse_notiz_dialog.dart

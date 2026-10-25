@@ -10,7 +10,9 @@ import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/adrenalin_panel.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/amiodaron_panel.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/end_reanimationsfall_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/phase_action_bar.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/reanimationsfall_summary_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_notiz_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/schock_energie_dialog.dart';
@@ -100,6 +102,29 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     setState(() => _amiodaronHinweisAusgeblendet = true);
   }
 
+  void _resumeResuscitation() {
+    setState(widget.reanimationsfall.resumeResuscitation);
+  }
+
+  Future<void> _endReanimationsfall() async {
+    final grund = await showDialog<Beendigungsgrund>(
+      context: context,
+      builder: (_) => const EndReanimationsfallDialog(),
+    );
+    if (grund == null || !mounted) return;
+
+    setState(() => widget.reanimationsfall.endReanimationsfall(grund));
+    final snapshot = widget.reanimationsfall.snapshot();
+    await Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(
+        builder: (_) => ReanimationsfallSummaryPage(
+          snapshot: snapshot,
+          routes: widget.routes,
+        ),
+      ),
+    );
+  }
+
   void _undoLastSchock() {
     if (widget.reanimationsfall.snapshot().schockAnzahl == 0) return;
     setState(() {
@@ -172,8 +197,11 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     return PageScaffold(
       maxWidth: PageLayout.maxContentWidth,
       drawer: AppDrawer(routes: widget.routes),
-      header: (context, layout) =>
-          _ReanimationsfallHeader(snapshot: snapshot, layout: layout),
+      header: (context, layout) => _ReanimationsfallHeader(
+        snapshot: snapshot,
+        layout: layout,
+        onEndCase: _endReanimationsfall,
+      ),
       content: (context, layout) {
         final reanimationsdauerPanel = _ReanimationsdauerPanel(
           snapshot: snapshot,
@@ -228,36 +256,51 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
           ],
         );
       },
-      footer: (context, layout) => PhaseActionBar(
-        snapshot: snapshot,
-        layout: layout,
-        onEnterAnalysephase: _enterAnalysephase,
-        onRecordSchock: _recordSchock,
-        onUndoLastSchock: _undoLastSchock,
-        onEditSchockEnergie: _editLastSchockEnergie,
-        onRecordRhythmusanalyse: _recordRhythmusanalyse,
-        onEditRhythmusanalyseNotiz: _editRhythmusanalyseNotiz,
-        onSkipRhythmusanalyse: _skipRhythmusanalyse,
-        onContinueCpr: _continueCpr,
-      ),
+      footer: (context, layout) => snapshot.istRosc
+          ? _RoscActionBar(
+              layout: layout,
+              onResumeResuscitation: _resumeResuscitation,
+              onEndCase: _endReanimationsfall,
+            )
+          : PhaseActionBar(
+              snapshot: snapshot,
+              layout: layout,
+              onEnterAnalysephase: _enterAnalysephase,
+              onRecordSchock: _recordSchock,
+              onUndoLastSchock: _undoLastSchock,
+              onEditSchockEnergie: _editLastSchockEnergie,
+              onRecordRhythmusanalyse: _recordRhythmusanalyse,
+              onEditRhythmusanalyseNotiz: _editRhythmusanalyseNotiz,
+              onSkipRhythmusanalyse: _skipRhythmusanalyse,
+              onContinueCpr: _continueCpr,
+            ),
     );
   }
 }
 
 class _ReanimationsfallHeader extends StatelessWidget {
-  const _ReanimationsfallHeader({required this.snapshot, required this.layout});
+  const _ReanimationsfallHeader({
+    required this.snapshot,
+    required this.layout,
+    required this.onEndCase,
+  });
 
   final ReanimationsfallSnapshot snapshot;
   final PageLayout layout;
+  final VoidCallback onEndCase;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
-    final phaseLabel = switch (snapshot.phase) {
-      Reanimationsphase.druckphase => l10n.phaseDruckphase,
-      Reanimationsphase.analysephase => l10n.phaseAnalysephase,
+    final phaseLabel = switch (snapshot.zustand) {
+      ReanimationsfallZustand.laufend => switch (snapshot.phase) {
+        Reanimationsphase.druckphase => l10n.phaseDruckphase,
+        Reanimationsphase.analysephase => l10n.phaseAnalysephase,
+      },
+      ReanimationsfallZustand.rosc => l10n.rhythmusanalyseRosc,
+      ReanimationsfallZustand.beendet => l10n.summaryCaseEnded,
     };
 
     return Row(
@@ -283,6 +326,17 @@ class _ReanimationsfallHeader extends StatelessWidget {
         LeitlinienprofilChip(
           leitlinienprofil: snapshot.leitlinienprofil,
           compact: layout.isCompact,
+        ),
+        const SizedBox(width: PageLayout.space8),
+        IconButton(
+          onPressed: onEndCase,
+          tooltip: l10n.endCaseButton,
+          icon: const Icon(Icons.stop_circle_outlined),
+          constraints: const BoxConstraints.tightFor(
+            width: PageLayout.touchTargetSize,
+            height: PageLayout.touchTargetSize,
+          ),
+          padding: EdgeInsets.zero,
         ),
         const SizedBox(width: PageLayout.space8),
         const AppMenuButton(),
@@ -342,6 +396,8 @@ class _PhaseTimerPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (snapshot.istRosc) return _RoscPanel(layout: layout);
+
     return switch (snapshot.phase) {
       Reanimationsphase.druckphase => _DruckphaseTimerPanel(
         snapshot: snapshot,
@@ -352,6 +408,100 @@ class _PhaseTimerPanel extends StatelessWidget {
         layout: layout,
       ),
     };
+  }
+}
+
+class _RoscPanel extends StatelessWidget {
+  const _RoscPanel({required this.layout});
+
+  final PageLayout layout;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    return _PhasePanel(
+      isAlert: false,
+      layout: layout,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              l10n.rhythmusanalyseRosc,
+              style:
+                  (layout.isCompact
+                          ? theme.textTheme.headlineMedium
+                          : theme.textTheme.displaySmall)
+                      ?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w800,
+                      ),
+            ),
+          ),
+          const SizedBox(height: PageLayout.space8),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              l10n.roscDescription,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RoscActionBar extends StatelessWidget {
+  const _RoscActionBar({
+    required this.layout,
+    required this.onResumeResuscitation,
+    required this.onEndCase,
+  });
+
+  final PageLayout layout;
+  final VoidCallback onResumeResuscitation;
+  final VoidCallback onEndCase;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final resume = PhaseActionButton(
+      layout: layout,
+      label: l10n.resumeResuscitationButton,
+      icon: Icons.replay,
+      onPressed: onResumeResuscitation,
+    );
+    final end = PhaseActionButton(
+      layout: layout,
+      label: l10n.endCaseButton,
+      icon: Icons.stop_circle_outlined,
+      onPressed: onEndCase,
+      emphasis: PhaseActionEmphasis.outlined,
+    );
+
+    if (layout.isCompact) {
+      return Row(
+        children: [
+          Expanded(child: resume),
+          SizedBox(width: layout.compactActionGap),
+          Expanded(child: end),
+        ],
+      );
+    }
+
+    return Wrap(
+      alignment: WrapAlignment.end,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: layout.actionWrapSpacing,
+      runSpacing: layout.actionWrapRunSpacing,
+      children: [end, resume],
+    );
   }
 }
 

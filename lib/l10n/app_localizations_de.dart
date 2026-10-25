@@ -340,4 +340,110 @@ class AppLocalizationsDe extends AppLocalizations {
   String amiodaronLastDose(String time) {
     return 'Letzte Gabe $time';
   }
+
+  @override
+  String get roscDescription => 'Kreislauf zurückgekehrt';
+
+  @override
+  String get resumeResuscitationButton => 'Reanimation wieder aufnehmen';
+
+  @override
+  String get endCaseButton => 'Fall beenden';
+
+  @override
+  String get endCaseTitle => 'Fall beenden';
+
+  @override
+  String get endCaseReasonLabel => 'Grund';
+
+  @override
+  String get endReasonHandover => 'Übergabe';
+
+  @override
+  String get endReasonAbort => 'Abbruch';
+
+  @override
+  String get endReasonOther => 'Sonstiges';
+
+  @override
+  String get summaryTitle => 'Zusammenfassung';
+
+  @override
+  String get summaryCaseEnded => 'Reanimationsfall beendet';
+
+  @override
+  String get summaryCprDuration => 'CPR-Dauer';
+
+  @override
+  String get summaryStartzeit => 'Startzeit';
+
+  @override
+  String get summaryEndzeit => 'Endzeit';
+
+  @override
+  String get summaryEndReason => 'Grund';
+
+  @override
+  String get summaryShocks => 'Schocks';
+
+  @override
+  String get summaryEvents => 'Ereignisse';
+
+  @override
+  String get summaryNotes => 'Notizen';
+
+  @override
+  String get summaryNoNotes => 'Keine Notizen';
+
+  @override
+  String get eventCaseStart => 'Reanimationsfall gestartet';
+
+  @override
+  String eventSchock(int count) {
+    return 'Schock $count';
+  }
+
+  @override
+  String eventSchockWithEnergy(int count, int energie) {
+    return 'Schock $count · $energie J';
+  }
+
+  @override
+  String eventSchockUndone(int count) {
+    return 'Schock $count zurückgenommen';
+  }
+
+  @override
+  String eventAdrenalin(int dosis) {
+    return 'Adrenalin $dosis mg';
+  }
+
+  @override
+  String eventAmiodaron(int dosis) {
+    return 'Amiodaron $dosis mg';
+  }
+
+  @override
+  String eventRhythmusanalyse(String ergebnis) {
+    return 'Rhythmusanalyse: $ergebnis';
+  }
+
+  @override
+  String get eventRhythmusanalyseSkipped => 'Rhythmusanalyse übersprungen';
+
+  @override
+  String eventRhythmusanalyseSkippedWithReason(String grund) {
+    return 'Rhythmusanalyse übersprungen: $grund';
+  }
+
+  @override
+  String get eventRosc => 'ROSC';
+
+  @override
+  String get eventResuscitationResumed => 'Reanimationswiederbeginn';
+
+  @override
+  String eventCaseEnded(String grund) {
+    return 'Fall beendet: $grund';
+  }
 }

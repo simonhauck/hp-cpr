@@ -872,6 +872,156 @@ void main() {
     expect(snapshot.amiodaronGaben, isEmpty);
   });
 
+  test('keeps the Rhythmusanalyse history across cycles and updates the '
+      'latest note', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    reanimationsfall.enterAnalysephase();
+    reanimationsfall.recordRhythmusanalyse(
+      RhythmusanalyseErgebnis.kammerflimmern,
+      notiz: 'VF',
+    );
+    reanimationsfall.setRhythmusanalyseNotiz('VF seit zwei Minuten');
+    reanimationsfall.continueCpr();
+
+    clock.advance(const Duration(minutes: 2));
+    reanimationsfall.enterAnalysephase();
+    reanimationsfall.recordRhythmusanalyse(RhythmusanalyseErgebnis.asystolie);
+
+    final entries = reanimationsfall.snapshot().rhythmusanalyseEintraege;
+    expect(entries, hasLength(2));
+    expect(entries.first.ergebnis, RhythmusanalyseErgebnis.kammerflimmern);
+    expect(entries.first.notiz, 'VF seit zwei Minuten');
+    expect(entries.last.ergebnis, RhythmusanalyseErgebnis.asystolie);
+    expect(entries.last.notiz, isNull);
+  });
+
+  test(
+    'records ROSC, ends the Reanimationsabschnitt, and keeps the case open',
+    () {
+      final clock = FakeClock();
+      final reanimationsfall = Reanimationsfall.start(clock: clock);
+      reanimationsfall.recordAdrenalin();
+
+      clock.advance(const Duration(seconds: 60));
+      reanimationsfall.recordRosc();
+
+      final rosc = reanimationsfall.snapshot();
+      expect(rosc.zustand, ReanimationsfallZustand.rosc);
+      expect(rosc.istRosc, isTrue);
+      expect(rosc.istBeendet, isFalse);
+      expect(rosc.abschnitte, hasLength(1));
+      expect(rosc.abschnitte.single.ende, const Duration(seconds: 60));
+      expect(rosc.cprDauer, const Duration(seconds: 60));
+      expect(rosc.roscEreignisse.single.zeitpunkt, const Duration(seconds: 60));
+      expect(rosc.ende, isNull);
+      expect(rosc.isRhythmusanalyseDue, isFalse);
+      expect(rosc.isPauseOverdue, isFalse);
+      expect(rosc.amiodaronHinweis, AmiodaronHinweis.keine);
+
+      expect(reanimationsfall.recordSchock, throwsStateError);
+      expect(reanimationsfall.enterAnalysephase, throwsStateError);
+      expect(reanimationsfall.recordAdrenalin, throwsStateError);
+      expect(reanimationsfall.recordRosc, throwsStateError);
+
+      clock.advance(const Duration(minutes: 1));
+      final later = reanimationsfall.snapshot();
+      expect(later.reanimationsdauer, const Duration(minutes: 2));
+      expect(later.cprDauer, const Duration(seconds: 60));
+      expect(later.adrenalinSeitLetzterGabe, const Duration(minutes: 2));
+      expect(later.letzteAdrenalinGabe, isNotNull);
+    },
+  );
+
+  test('a Reanimationswiederbeginn starts a new segment and a fresh '
+      'Druckphase', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    clock.advance(const Duration(seconds: 60));
+    reanimationsfall.recordRosc();
+    clock.advance(const Duration(seconds: 30));
+    reanimationsfall.resumeResuscitation();
+
+    final resumed = reanimationsfall.snapshot();
+    expect(resumed.zustand, ReanimationsfallZustand.laufend);
+    expect(resumed.phase, Reanimationsphase.druckphase);
+    expect(resumed.compressionRemaining, const Duration(minutes: 2));
+    expect(resumed.cprDauer, const Duration(seconds: 60));
+    expect(resumed.abschnitte, hasLength(2));
+    expect(resumed.abschnitte.last.start, const Duration(seconds: 90));
+    expect(resumed.abschnitte.last.ende, isNull);
+    expect(
+      resumed.wiederbeginnEreignisse.single.zeitpunkt,
+      const Duration(seconds: 90),
+    );
+
+    clock.advance(const Duration(seconds: 10));
+    final running = reanimationsfall.snapshot();
+    expect(running.cprDauer, const Duration(seconds: 70));
+    expect(running.compressionRemaining, const Duration(seconds: 110));
+    expect(reanimationsfall.resumeResuscitation, throwsStateError);
+  });
+
+  test('records ROSC from the Analysephase and keeps the result history', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    clock.advance(const Duration(seconds: 10));
+    reanimationsfall.enterAnalysephase();
+    clock.advance(const Duration(seconds: 5));
+    reanimationsfall.recordRhythmusanalyse(RhythmusanalyseErgebnis.rosc);
+
+    final rosc = reanimationsfall.snapshot();
+    expect(rosc.zustand, ReanimationsfallZustand.rosc);
+    expect(
+      rosc.rhythmusanalyseEintraege.single.ergebnis,
+      RhythmusanalyseErgebnis.rosc,
+    );
+    expect(rosc.abschnitte.single.ende, const Duration(seconds: 15));
+    expect(reanimationsfall.continueCpr, throwsStateError);
+  });
+
+  test('ends the Reanimationsfall with a reason and freezes the timers', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    clock.advance(const Duration(seconds: 60));
+    reanimationsfall.recordRosc();
+    clock.advance(const Duration(seconds: 30));
+    reanimationsfall.endReanimationsfall(Beendigungsgrund.uebergabe);
+
+    final ended = reanimationsfall.snapshot();
+    expect(ended.zustand, ReanimationsfallZustand.beendet);
+    expect(ended.istBeendet, isTrue);
+    expect(ended.ende!.grund, Beendigungsgrund.uebergabe);
+    expect(ended.ende!.zeitpunkt, const Duration(seconds: 90));
+    expect(ended.reanimationsdauer, const Duration(seconds: 90));
+    expect(ended.cprDauer, const Duration(seconds: 60));
+    expect(ended.abschnitte.single.ende, const Duration(seconds: 60));
+
+    expect(reanimationsfall.recordSchock, throwsStateError);
+    expect(reanimationsfall.resumeResuscitation, throwsStateError);
+    expect(
+      () => reanimationsfall.endReanimationsfall(Beendigungsgrund.abbruch),
+      throwsStateError,
+    );
+  });
+
+  test('ends the Reanimationsfall from the running Druckphase', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    clock.advance(const Duration(seconds: 30));
+    reanimationsfall.endReanimationsfall(Beendigungsgrund.abbruch);
+
+    final ended = reanimationsfall.snapshot();
+    expect(ended.ende!.grund, Beendigungsgrund.abbruch);
+    expect(ended.abschnitte.single.ende, const Duration(seconds: 30));
+    expect(ended.cprDauer, const Duration(seconds: 30));
+  });
+
   test('undoing a Schock below the trigger removes the Amiodaron hint', () {
     final clock = FakeClock();
     final reanimationsfall = Reanimationsfall.start(clock: clock);

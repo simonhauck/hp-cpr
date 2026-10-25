@@ -8,6 +8,61 @@ import 'package:hp_cpr/features/reanimationsfall/domain/schock.dart';
 /// The current part of a Reanimationsfall.
 enum Reanimationsphase { druckphase, analysephase }
 
+/// The lifecycle state of a Reanimationsfall.
+enum ReanimationsfallZustand { laufend, rosc, beendet }
+
+/// Why the Zeitnehmer ended the Reanimationsfall.
+enum Beendigungsgrund { uebergabe, abbruch, sonstiges }
+
+/// One continuous resuscitation segment of a Reanimationsfall.
+///
+/// A segment starts with the first compression or a Reanimationswiederbeginn
+/// and ends with ROSC or the end of the Reanimationsfall.
+class Reanimationsabschnitt {
+  const Reanimationsabschnitt({
+    required this.index,
+    required this.start,
+    this.ende,
+  });
+
+  final int index;
+
+  /// The elapsed time since the Startzeit when the segment started.
+  final Duration start;
+
+  /// The elapsed time since the Startzeit when the segment ended, if it did.
+  final Duration? ende;
+
+  Reanimationsabschnitt copyWith({Duration? ende}) {
+    return Reanimationsabschnitt(index: index, start: start, ende: ende);
+  }
+
+  /// The segment duration up to [now] for an open segment.
+  Duration dauerBis(Duration now) => (ende ?? now) - start;
+}
+
+/// A recorded ROSC event.
+class RoscEreignis {
+  const RoscEreignis({required this.zeitpunkt});
+
+  final Duration zeitpunkt;
+}
+
+/// A recorded Reanimationswiederbeginn after ROSC.
+class Reanimationswiederbeginn {
+  const Reanimationswiederbeginn({required this.zeitpunkt});
+
+  final Duration zeitpunkt;
+}
+
+/// The end of a Reanimationsfall, including its reason.
+class ReanimationsfallEnde {
+  const ReanimationsfallEnde({required this.zeitpunkt, required this.grund});
+
+  final Duration zeitpunkt;
+  final Beendigungsgrund grund;
+}
+
 /// A Reanimationsfall, from the Startzeit onwards.
 ///
 /// Time zero is the first compression. The Reanimationsdauer is derived from
@@ -27,6 +82,9 @@ class Reanimationsfall {
       throw ArgumentError.value(backdate, 'backdate', 'must not be negative');
     }
     _compressionCycleStartOffset = _monotonicStartOffset;
+    _abschnitte.add(
+      const Reanimationsabschnitt(index: 0, start: Duration.zero),
+    );
   }
 
   final AppClock _clock;
@@ -45,6 +103,13 @@ class Reanimationsfall {
 
   /// The corrected time zero of the Reanimationsfall.
   final DateTime startzeit;
+
+  ReanimationsfallZustand _zustand = ReanimationsfallZustand.laufend;
+  final List<Reanimationsabschnitt> _abschnitte = [];
+  final List<RoscEreignis> _roscEreignisse = [];
+  final List<Reanimationswiederbeginn> _wiederbeginnEreignisse = [];
+  ReanimationsfallEnde? _ende;
+  final List<RhythmusanalyseEintrag> _rhythmusanalyseEintraege = [];
 
   Reanimationsphase _phase = Reanimationsphase.druckphase;
   late Duration _compressionCycleStartOffset;
@@ -85,6 +150,7 @@ class Reanimationsfall {
 
   /// Pauses the compression timer and starts the Analysephase.
   void enterAnalysephase() {
+    _requireLaufend();
     if (_phase != Reanimationsphase.druckphase) {
       throw StateError('already in the Analysephase');
     }
@@ -110,6 +176,7 @@ class Reanimationsfall {
   /// continues CPR explicitly. A Schock in the Analysephase leaves the paused
   /// phase and the result requirement unchanged.
   void recordSchock({int? energieJoule}) {
+    _requireLaufend();
     _requireValidEnergie(energieJoule);
 
     final now = _monotonicNow();
@@ -137,6 +204,7 @@ class Reanimationsfall {
 
   /// Records an Adrenalin dose and starts a new Zeitfenster.
   void recordAdrenalin() {
+    _requireLaufend();
     _adrenalinGaben.add(
       AdrenalinGabe(zeitpunkt: _monotonicNow() - _monotonicStartOffset),
     );
@@ -148,6 +216,7 @@ class Reanimationsfall {
   /// The first dose is 300 mg and the second 150 mg. The app never records a
   /// dose on its own; this command is only called when one was actually given.
   void recordAmiodaron() {
+    _requireLaufend();
     if (_amiodaronGaben.length >= 2) {
       throw StateError('at most two Amiodaron doses are supported');
     }
@@ -162,6 +231,7 @@ class Reanimationsfall {
 
   /// Marks the most recent active Schock as undone.
   void undoLastSchock() {
+    _requireLaufend();
     final index = _lastActiveSchockIndex;
     if (index == -1) {
       throw StateError('no active Schock to undo');
@@ -194,6 +264,7 @@ class Reanimationsfall {
 
   /// Adds or replaces the energy of the most recent active Schock.
   void setLastSchockEnergie(int energieJoule) {
+    _requireLaufend();
     _requireValidEnergie(energieJoule);
 
     final index = _lastActiveSchockIndex;
@@ -244,27 +315,49 @@ class Reanimationsfall {
     RhythmusanalyseErgebnis ergebnis, {
     String? notiz,
   }) {
+    _requireLaufend();
     _requireAnalysephase();
     if (_rhythmusanalyseErgebnis != null) {
       throw StateError('a Rhythmusanalyse result is already recorded');
     }
+
+    final normalizedNotiz = _normalizeNotiz(notiz);
     _rhythmusanalyseErgebnis = ergebnis;
-    _rhythmusanalyseNotiz = _normalizeNotiz(notiz);
+    _rhythmusanalyseNotiz = normalizedNotiz;
     _adrenalinAusloesendesErgebnis = ergebnis;
+    _rhythmusanalyseEintraege.add(
+      RhythmusanalyseEintrag(
+        zeitpunkt: _monotonicNow() - _monotonicStartOffset,
+        ergebnis: ergebnis,
+        notiz: normalizedNotiz,
+      ),
+    );
     _updateAdrenalinGabeFaelligkeit();
+
+    if (ergebnis == RhythmusanalyseErgebnis.rosc) {
+      _recordRosc();
+    }
   }
 
   /// Adds or replaces the optional note of the recorded result.
   void setRhythmusanalyseNotiz(String? notiz) {
+    _requireLaufend();
     _requireAnalysephase();
     if (_rhythmusanalyseErgebnis == null) {
       throw StateError('no Rhythmusanalyse result recorded');
     }
-    _rhythmusanalyseNotiz = _normalizeNotiz(notiz);
+
+    final normalizedNotiz = _normalizeNotiz(notiz);
+    _rhythmusanalyseNotiz = normalizedNotiz;
+    if (_rhythmusanalyseEintraege.isNotEmpty) {
+      _rhythmusanalyseEintraege[_rhythmusanalyseEintraege.length - 1] =
+          _rhythmusanalyseEintraege.last.copyWith(notiz: normalizedNotiz);
+    }
   }
 
   /// Records a skipped Rhythmusanalyse and starts a fresh Druckphase.
   void skipRhythmusanalyse([RhythmusanalyseUebersprungenGrund? grund]) {
+    _requireLaufend();
     _requireAnalysephase();
     if (_rhythmusanalyseErgebnis != null) {
       throw StateError('a Rhythmusanalyse result is already recorded');
@@ -285,6 +378,7 @@ class Reanimationsfall {
   /// required first. A Schock recorded in the Druckphase can be continued
   /// without a result.
   void continueCpr() {
+    _requireLaufend();
     if (_phase == Reanimationsphase.analysephase) {
       if (_rhythmusanalyseErgebnis == null) {
         throw StateError('a Rhythmusanalyse result is required');
@@ -301,17 +395,94 @@ class Reanimationsfall {
     throw StateError('CPR is already running');
   }
 
+  /// Records ROSC, ends the current Reanimationsabschnitt, and stops the
+  /// arrest timers without closing the Reanimationsfall.
+  void recordRosc() {
+    _requireLaufend();
+    _recordRosc();
+  }
+
+  /// Records a Reanimationswiederbeginn and starts a fresh Druckphase.
+  void resumeResuscitation() {
+    if (_zustand != ReanimationsfallZustand.rosc) {
+      throw StateError('not in the ROSC state');
+    }
+
+    final now = _monotonicNow();
+    final offset = now - _monotonicStartOffset;
+    _wiederbeginnEreignisse.add(Reanimationswiederbeginn(zeitpunkt: offset));
+    _abschnitte.add(
+      Reanimationsabschnitt(index: _abschnitte.length, start: offset),
+    );
+    _zustand = ReanimationsfallZustand.laufend;
+    _phase = Reanimationsphase.druckphase;
+    _compressionCycleStartOffset = now;
+    _compressionRemainingAtPause = Duration.zero;
+    _analysephaseStartOffset = null;
+    _rhythmusanalyseErgebnis = null;
+    _rhythmusanalyseNotiz = null;
+    _isSchockpause = false;
+    _schockpauseWasDue = false;
+    _schockpauseOverdue = Duration.zero;
+    _schockpauseOpeningSchockIndex = null;
+  }
+
+  /// Ends the Reanimationsfall with a reason.
+  void endReanimationsfall(Beendigungsgrund grund) {
+    if (_zustand == ReanimationsfallZustand.beendet) {
+      throw StateError('the Reanimationsfall has already ended');
+    }
+
+    final offset = _monotonicNow() - _monotonicStartOffset;
+    if (_zustand == ReanimationsfallZustand.laufend) {
+      _closeCurrentAbschnitt(offset);
+    }
+    _ende = ReanimationsfallEnde(zeitpunkt: offset, grund: grund);
+    _zustand = ReanimationsfallZustand.beendet;
+    _phase = Reanimationsphase.druckphase;
+    _isSchockpause = false;
+    _schockpauseWasDue = false;
+    _schockpauseOverdue = Duration.zero;
+    _schockpauseOpeningSchockIndex = null;
+    _analysephaseStartOffset = null;
+    _ersteAdrenalinGabeFaellig = false;
+  }
+
+  void _recordRosc() {
+    final offset = _monotonicNow() - _monotonicStartOffset;
+    _roscEreignisse.add(RoscEreignis(zeitpunkt: offset));
+    _closeCurrentAbschnitt(offset);
+    _zustand = ReanimationsfallZustand.rosc;
+    _phase = Reanimationsphase.druckphase;
+    _isSchockpause = false;
+    _schockpauseWasDue = false;
+    _schockpauseOverdue = Duration.zero;
+    _schockpauseOpeningSchockIndex = null;
+    _analysephaseStartOffset = null;
+    _ersteAdrenalinGabeFaellig = false;
+  }
+
+  void _closeCurrentAbschnitt(Duration offset) {
+    if (_abschnitte.isEmpty) return;
+    final current = _abschnitte.last;
+    if (current.ende != null) return;
+    _abschnitte[_abschnitte.length - 1] = current.copyWith(ende: offset);
+  }
+
   ReanimationsfallSnapshot snapshot() {
     final now = _monotonicNow();
     final elapsed = now - _monotonicStartOffset;
     final cycle = leitlinienprofil.compressionCycle;
-    final isDruckphase = _phase == Reanimationsphase.druckphase;
+    final isLaufend = _zustand == ReanimationsfallZustand.laufend;
+    final isDruckphase = isLaufend && _phase == Reanimationsphase.druckphase;
     final isSchockpause = isDruckphase && _isSchockpause;
     final cycleElapsed = now - _compressionCycleStartOffset;
     final isRhythmusanalyseDue =
         isDruckphase &&
         (isSchockpause ? _schockpauseWasDue : cycleElapsed >= cycle);
-    final compressionRemaining = isDruckphase
+    final compressionRemaining = !isLaufend
+        ? Duration.zero
+        : isDruckphase
         ? (isSchockpause
               ? _compressionRemainingAtPause
               : (isRhythmusanalyseDue ? Duration.zero : cycle - cycleElapsed))
@@ -321,11 +492,18 @@ class Reanimationsfall {
         : (isRhythmusanalyseDue ? cycleElapsed - cycle : Duration.zero);
 
     final analysephaseStart = _analysephaseStartOffset;
-    final pauseDuration = analysephaseStart == null
-        ? Duration.zero
-        : now - analysephaseStart;
+    final pauseDuration =
+        isLaufend &&
+            _phase == Reanimationsphase.analysephase &&
+            analysephaseStart != null
+        ? now - analysephaseStart
+        : Duration.zero;
     final pauseTarget = leitlinienprofil.pauseTarget;
-    final isPauseOverdue = pauseDuration > pauseTarget;
+    final isPauseOverdue = isLaufend && pauseDuration > pauseTarget;
+    final cprDauer = _abschnitte.fold(
+      Duration.zero,
+      (sum, abschnitt) => sum + abschnitt.dauerBis(elapsed),
+    );
 
     final schocks = [
       for (var index = 0; index < _schocks.length; index++)
@@ -351,12 +529,18 @@ class Reanimationsfall {
         : _amiodaronGaben.last;
 
     return ReanimationsfallSnapshot(
+      zustand: _zustand,
       phase: _phase,
       leitlinienprofil: leitlinienprofil,
       vibrationEnabled: vibrationEnabled,
       soundEnabled: soundEnabled,
       startzeit: startzeit,
       reanimationsdauer: elapsed,
+      cprDauer: cprDauer,
+      abschnitte: List.unmodifiable(_abschnitte),
+      roscEreignisse: List.unmodifiable(_roscEreignisse),
+      wiederbeginnEreignisse: List.unmodifiable(_wiederbeginnEreignisse),
+      ende: _ende,
       compressionRemaining: compressionRemaining,
       rhythmusanalyseOverdue: rhythmusanalyseOverdue,
       isRhythmusanalyseDue: isRhythmusanalyseDue,
@@ -365,6 +549,7 @@ class Reanimationsfall {
       isPauseOverdue: isPauseOverdue,
       rhythmusanalyseErgebnis: _rhythmusanalyseErgebnis,
       rhythmusanalyseNotiz: _rhythmusanalyseNotiz,
+      rhythmusanalyseEintraege: List.unmodifiable(_rhythmusanalyseEintraege),
       uebersprungeneRhythmusanalysen: List.unmodifiable(
         _uebersprungeneRhythmusanalysen,
       ),
@@ -373,10 +558,12 @@ class Reanimationsfall {
       adrenalinGaben: List.unmodifiable(_adrenalinGaben),
       adrenalinSeitLetzterGabe: adrenalinSeitLetzterGabe,
       adrenalinZeitfensterZustand: adrenalinZeitfensterZustand,
-      istErsteAdrenalinGabeFaellig: _ersteAdrenalinGabeFaellig,
+      istErsteAdrenalinGabeFaellig: isLaufend && _ersteAdrenalinGabeFaellig,
       amiodaronGaben: List.unmodifiable(_amiodaronGaben),
       letzteAmiodaronGabe: letzteAmiodaronGabe,
-      amiodaronHinweis: _amiodaronHinweis(),
+      amiodaronHinweis: isLaufend
+          ? _amiodaronHinweis()
+          : AmiodaronHinweis.keine,
     );
   }
 
@@ -412,6 +599,12 @@ class Reanimationsfall {
     }
   }
 
+  void _requireLaufend() {
+    if (_zustand != ReanimationsfallZustand.laufend) {
+      throw StateError('the Reanimationsfall is not running');
+    }
+  }
+
   void _startNextDruckphase() {
     _phase = Reanimationsphase.druckphase;
     _compressionCycleStartOffset = _monotonicNow();
@@ -442,12 +635,18 @@ class Reanimationsfall {
 /// A read-only snapshot of a [Reanimationsfall].
 class ReanimationsfallSnapshot {
   const ReanimationsfallSnapshot({
+    required this.zustand,
     required this.phase,
     required this.leitlinienprofil,
     required this.vibrationEnabled,
     required this.soundEnabled,
     required this.startzeit,
     required this.reanimationsdauer,
+    required this.cprDauer,
+    required this.abschnitte,
+    required this.roscEreignisse,
+    required this.wiederbeginnEreignisse,
+    required this.ende,
     required this.compressionRemaining,
     required this.rhythmusanalyseOverdue,
     required this.isRhythmusanalyseDue,
@@ -456,6 +655,7 @@ class ReanimationsfallSnapshot {
     required this.isPauseOverdue,
     required this.rhythmusanalyseErgebnis,
     required this.rhythmusanalyseNotiz,
+    required this.rhythmusanalyseEintraege,
     required this.uebersprungeneRhythmusanalysen,
     required this.schocks,
     required this.schockRueckgaengigkeiten,
@@ -468,12 +668,33 @@ class ReanimationsfallSnapshot {
     required this.amiodaronHinweis,
   });
 
+  /// Whether the case is running, interrupted by ROSC, or ended.
+  final ReanimationsfallZustand zustand;
+
   final Reanimationsphase phase;
   final Leitlinienprofil leitlinienprofil;
   final bool vibrationEnabled;
   final bool soundEnabled;
   final DateTime startzeit;
+
+  /// The time since the Startzeit, including ROSC pauses.
   final Duration reanimationsdauer;
+
+  /// The total CPR time across all Reanimationsabschnitte.
+  final Duration cprDauer;
+
+  /// Every Reanimationsabschnitt, including the current one.
+  final List<Reanimationsabschnitt> abschnitte;
+
+  /// Every recorded ROSC event.
+  final List<RoscEreignis> roscEreignisse;
+
+  /// Every recorded Reanimationswiederbeginn.
+  final List<Reanimationswiederbeginn> wiederbeginnEreignisse;
+
+  /// The end of the Reanimationsfall, if it has ended.
+  final ReanimationsfallEnde? ende;
+
   final Duration compressionRemaining;
 
   /// How long the Rhythmusanalyse has been due; zero before 0:00.
@@ -491,6 +712,9 @@ class ReanimationsfallSnapshot {
   /// The result recorded in the current Analysephase, if any.
   final RhythmusanalyseErgebnis? rhythmusanalyseErgebnis;
   final String? rhythmusanalyseNotiz;
+
+  /// Every recorded Rhythmusanalyse result, including previous cycles.
+  final List<RhythmusanalyseEintrag> rhythmusanalyseEintraege;
 
   /// Every skipped Rhythmusanalyse, including skips without a reason.
   final List<RhythmusanalyseUeberspringung> uebersprungeneRhythmusanalysen;
@@ -521,6 +745,15 @@ class ReanimationsfallSnapshot {
 
   /// The contextual Amiodaron hint, or `keine` when no dose is suggested.
   final AmiodaronHinweis amiodaronHinweis;
+
+  /// Whether the case is still running.
+  bool get istLaufend => zustand == ReanimationsfallZustand.laufend;
+
+  /// Whether the case is interrupted by ROSC.
+  bool get istRosc => zustand == ReanimationsfallZustand.rosc;
+
+  /// Whether the case has ended.
+  bool get istBeendet => zustand == ReanimationsfallZustand.beendet;
 
   /// The most recent Adrenalin dose, if any.
   AdrenalinGabe? get letzteAdrenalinGabe {
