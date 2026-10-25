@@ -16,9 +16,6 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/end_reanimationsfa
 import 'package:hp_cpr/features/reanimationsfall/presentation/phase_action_bar.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/reanimationsfall_summary_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_dialog.dart';
-import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_notiz_dialog.dart';
-import 'package:hp_cpr/features/reanimationsfall/presentation/schock_energie_dialog.dart';
-import 'package:hp_cpr/features/reanimationsfall/presentation/skip_rhythmusanalyse_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
@@ -83,10 +80,6 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
 
   void _enterAnalysephase() {
     _mutate(widget.reanimationsfall.enterAnalysephase);
-  }
-
-  void _continueCpr() {
-    _mutate(widget.reanimationsfall.continueCpr);
   }
 
   void _recordSchock() {
@@ -186,28 +179,6 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     Navigator.of(context).pop();
   }
 
-  void _undoLastSchock() {
-    if (widget.reanimationsfall.snapshot().schockAnzahl == 0) return;
-    _mutate(() {
-      widget.reanimationsfall.undoLastSchock();
-      _amiodaronHinweisAusgeblendet = false;
-    });
-  }
-
-  Future<void> _editLastSchockEnergie() async {
-    final lastSchock = widget.reanimationsfall.snapshot().letzterAktiverSchock;
-    if (lastSchock == null) return;
-
-    final energie = await showDialog<int>(
-      context: context,
-      builder: (_) =>
-          SchockEnergieDialog(initialEnergie: lastSchock.energieJoule),
-    );
-    if (energie == null || !mounted) return;
-
-    _mutate(() => widget.reanimationsfall.setLastSchockEnergie(energie));
-  }
-
   Future<void> _recordRhythmusanalyse() async {
     final ergebnis = await showDialog<RhythmusanalyseErgebnis>(
       context: context,
@@ -215,34 +186,11 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     );
     if (ergebnis == null || !mounted) return;
 
-    _mutate(() => widget.reanimationsfall.recordRhythmusanalyse(ergebnis));
-
-    if (ergebnis == RhythmusanalyseErgebnis.unklar) {
-      await _editRhythmusanalyseNotiz();
-    }
+    _mutate(() => widget.reanimationsfall.completeRhythmusanalyse(ergebnis));
   }
 
-  Future<void> _editRhythmusanalyseNotiz() async {
-    final snapshot = widget.reanimationsfall.snapshot();
-    final edit = await showDialog<RhythmusanalyseNotizEdit>(
-      context: context,
-      builder: (_) => RhythmusanalyseNotizDialog(
-        initialNotiz: snapshot.rhythmusanalyseNotiz,
-      ),
-    );
-    if (edit == null || !mounted) return;
-
-    _mutate(() => widget.reanimationsfall.setRhythmusanalyseNotiz(edit.notiz));
-  }
-
-  Future<void> _skipRhythmusanalyse() async {
-    final choice = await showDialog<SkipRhythmusanalyseChoice>(
-      context: context,
-      builder: (_) => const SkipRhythmusanalyseDialog(),
-    );
-    if (choice == null || !mounted) return;
-
-    _mutate(() => widget.reanimationsfall.skipRhythmusanalyse(choice.grund));
+  void _skipRhythmusanalyse() {
+    _mutate(widget.reanimationsfall.skipRhythmusanalyse);
   }
 
   @override
@@ -323,12 +271,8 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
               layout: layout,
               onEnterAnalysephase: _enterAnalysephase,
               onRecordSchock: _recordSchock,
-              onUndoLastSchock: _undoLastSchock,
-              onEditSchockEnergie: _editLastSchockEnergie,
               onRecordRhythmusanalyse: _recordRhythmusanalyse,
-              onEditRhythmusanalyseNotiz: _editRhythmusanalyseNotiz,
               onSkipRhythmusanalyse: _skipRhythmusanalyse,
-              onContinueCpr: _continueCpr,
             ),
     );
   }
@@ -606,18 +550,11 @@ class _DruckphaseTimerPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final isPaused = snapshot.isSchockpause;
     final isDue = snapshot.isRhythmusanalyseDue;
     final foreground = isDue
         ? theme.colorScheme.onErrorContainer
-        : isPaused
-        ? theme.colorScheme.onSurfaceVariant
         : theme.colorScheme.onSurface;
-    final label = isDue
-        ? l10n.analysisDue
-        : isPaused
-        ? l10n.schockRecordedLabel
-        : l10n.nextAnalysisLabel;
+    final label = isDue ? l10n.analysisDue : l10n.nextAnalysisLabel;
 
     return _PhasePanel(
       isAlert: isDue,
@@ -630,11 +567,8 @@ class _DruckphaseTimerPanel extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (isDue || isPaused) ...[
-                  Icon(
-                    isDue ? Icons.priority_high_rounded : Icons.bolt_outlined,
-                    color: foreground,
-                  ),
+                if (isDue) ...[
+                  Icon(Icons.priority_high_rounded, color: foreground),
                   const SizedBox(width: PageLayout.space4),
                 ],
                 Text(

@@ -56,6 +56,14 @@ class Reanimationswiederbeginn {
   final Duration zeitpunkt;
 }
 
+/// A manual reset of the current Druckphase to a fresh 2-minute cycle.
+class DruckphaseNeustart {
+  const DruckphaseNeustart({required this.zeitpunkt});
+
+  /// The elapsed time since the Startzeit when the cycle was reset.
+  final Duration zeitpunkt;
+}
+
 /// The end of a Reanimationsfall, including its reason.
 class ReanimationsfallEnde {
   const ReanimationsfallEnde({required this.zeitpunkt, required this.grund});
@@ -124,27 +132,18 @@ class Reanimationsfall {
     _analysephaseStartOffset = analysephaseStart == null
         ? null
         : _monotonicStartOffset + analysephaseStart;
-    _isSchockpause = state.isSchockpause;
-    _schockpauseWasDue = state.schockpauseWasDue;
-    _schockpauseOverdue = state.schockpauseOverdue;
-    _schockpauseOpeningSchockIndex = state.schockpauseOpeningSchockIndex;
     _rhythmusanalyseErgebnis = state.rhythmusanalyseErgebnis;
-    _rhythmusanalyseNotiz = state.rhythmusanalyseNotiz;
     _adrenalinAusloesendesErgebnis = state.adrenalinAusloesendesErgebnis;
     _ende = state.ende;
     _verworfenAm = state.verworfenAm;
     _schocks.addAll(state.schocks);
-    _schockRueckgaengigkeiten.addAll(state.schockRueckgaengigkeiten);
-    _schockKorrekturen.addAll(state.schockKorrekturen);
     _adrenalinGaben.addAll(state.adrenalinGaben);
     _amiodaronGaben.addAll(state.amiodaronGaben);
     _uebersprungeneRhythmusanalysen.addAll(
       state.uebersprungeneRhythmusanalysen,
     );
     _rhythmusanalyseEintraege.addAll(state.rhythmusanalyseEintraege);
-    _rhythmusanalyseNotizKorrekturen.addAll(
-      state.rhythmusanalyseNotizKorrekturen,
-    );
+    _druckphaseNeustarts.addAll(state.druckphaseNeustarts);
     _messwerte.addAll(state.messwerte);
     _notizen.addAll(state.notizen);
     _roscEreignisse.addAll(state.roscEreignisse);
@@ -186,8 +185,6 @@ class Reanimationsfall {
   ReanimationsfallEnde? _ende;
   Duration? _verworfenAm;
   final List<RhythmusanalyseEintrag> _rhythmusanalyseEintraege = [];
-  final List<RhythmusanalyseNotizKorrektur> _rhythmusanalyseNotizKorrekturen =
-      [];
   final List<Messwert> _messwerte = [];
   final List<ReanimationsfallNotiz> _notizen = [];
 
@@ -195,18 +192,12 @@ class Reanimationsfall {
   late Duration _compressionCycleStartOffset;
   Duration _compressionRemainingAtPause = Duration.zero;
   Duration? _analysephaseStartOffset;
-  bool _isSchockpause = false;
-  bool _schockpauseWasDue = false;
-  Duration _schockpauseOverdue = Duration.zero;
-  int? _schockpauseOpeningSchockIndex;
 
   RhythmusanalyseErgebnis? _rhythmusanalyseErgebnis;
-  String? _rhythmusanalyseNotiz;
   final List<RhythmusanalyseUeberspringung> _uebersprungeneRhythmusanalysen =
       [];
+  final List<DruckphaseNeustart> _druckphaseNeustarts = [];
   final List<SchockEreignis> _schocks = [];
-  final List<SchockRueckgaengig> _schockRueckgaengigkeiten = [];
-  final List<SchockKorrektur> _schockKorrekturen = [];
   final List<AdrenalinGabe> _adrenalinGaben = [];
   final List<AmiodaronGabe> _amiodaronGaben = [];
   RhythmusanalyseErgebnis? _adrenalinAusloesendesErgebnis;
@@ -237,49 +228,23 @@ class Reanimationsfall {
     }
 
     final now = _monotonicNow();
-    if (!_isSchockpause) {
-      _compressionRemainingAtPause = _remainingInCycle(now);
-    }
-
+    _compressionRemainingAtPause = _remainingInCycle(now);
     _analysephaseStartOffset = now;
     _rhythmusanalyseErgebnis = null;
-    _rhythmusanalyseNotiz = null;
-    _isSchockpause = false;
-    _schockpauseWasDue = false;
-    _schockpauseOverdue = Duration.zero;
-    _schockpauseOpeningSchockIndex = null;
     _phase = Reanimationsphase.analysephase;
   }
 
   /// Records a Schock with optional energy.
   ///
-  /// A Schock in the Druckphase pauses the compression timer; the Zeitnehmer
-  /// continues CPR explicitly. A Schock in the Analysephase leaves the paused
-  /// phase and the result requirement unchanged.
+  /// A Schock is a record-only event: it never pauses the compression timer
+  /// and never changes the current phase.
   void recordSchock({int? energieJoule}) {
     _requireLaufend();
     _requireValidEnergie(energieJoule);
 
-    final now = _monotonicNow();
     _schocks.add(
-      SchockEreignis(
-        zeitpunkt: now - _monotonicStartOffset,
-        energieJoule: energieJoule,
-      ),
+      SchockEreignis(zeitpunkt: _elapsedOffset, energieJoule: energieJoule),
     );
-
-    if (_phase == Reanimationsphase.druckphase && !_isSchockpause) {
-      final cycleElapsed = now - _compressionCycleStartOffset;
-      final cycle = leitlinienprofil.compressionCycle;
-      _schockpauseWasDue = cycleElapsed >= cycle;
-      _schockpauseOverdue = _schockpauseWasDue
-          ? cycleElapsed - cycle
-          : Duration.zero;
-      _compressionRemainingAtPause = _remainingInCycle(now);
-      _schockpauseOpeningSchockIndex = _schocks.length - 1;
-      _isSchockpause = true;
-    }
-
     _updateAdrenalinGabeFaelligkeit();
   }
 
@@ -312,80 +277,64 @@ class Reanimationsfall {
     );
   }
 
-  /// Marks the most recent active Schock as undone.
-  void undoLastSchock() {
+  /// Records the Rhythmusanalyse result, optionally records a Schock, and
+  /// starts the next Druckphase or enters ROSC.
+  void completeRhythmusanalyse(
+    RhythmusanalyseErgebnis ergebnis, {
+    bool schockAbgegeben = false,
+  }) {
     _requireLaufend();
-    final index = _lastActiveSchockIndex;
-    if (index == -1) {
-      throw StateError('no active Schock to undo');
+    _requireAnalysephase();
+    if (_rhythmusanalyseErgebnis != null) {
+      throw StateError('a Rhythmusanalyse result is already recorded');
     }
-
-    final now = _monotonicNow();
-    _schockRueckgaengigkeiten.add(
-      SchockRueckgaengig(
-        schockIndex: index,
-        zeitpunkt: now - _monotonicStartOffset,
-      ),
-    );
-
-    if (_phase == Reanimationsphase.druckphase &&
-        _isSchockpause &&
-        index == _schockpauseOpeningSchockIndex) {
-      final cycle = leitlinienprofil.compressionCycle;
-      final remaining = _compressionRemainingAtPause;
-      _compressionCycleStartOffset =
-          now - (cycle - remaining) - _schockpauseOverdue;
-      _compressionRemainingAtPause = Duration.zero;
-      _isSchockpause = false;
-      _schockpauseWasDue = false;
-      _schockpauseOverdue = Duration.zero;
-      _schockpauseOpeningSchockIndex = null;
-    }
-
-    _updateAdrenalinGabeFaelligkeit();
-  }
-
-  /// Adds or replaces the energy of the most recent active Schock.
-  ///
-  /// The original Schock is retained; the new energy is an append-only
-  /// correction entry.
-  void setLastSchockEnergie(int energieJoule) {
-    _requireLaufend();
-    _requireValidEnergie(energieJoule);
-
-    final index = _lastActiveSchockIndex;
-    if (index == -1) {
-      throw StateError('no active Schock');
-    }
-    _schockKorrekturen.add(
-      SchockKorrektur(
-        schockIndex: index,
-        zeitpunkt: _elapsedOffset,
-        energieJoule: energieJoule,
-      ),
-    );
-  }
-
-  int get _lastActiveSchockIndex {
-    for (var index = _schocks.length - 1; index >= 0; index--) {
-      final undone = _schockRueckgaengigkeiten.any(
-        (entry) => entry.schockIndex == index,
+    if (schockAbgegeben &&
+        ergebnis.kategorie != RhythmusanalyseKategorie.schockbar) {
+      throw ArgumentError.value(
+        schockAbgegeben,
+        'schockAbgegeben',
+        'a Schock can only accompany a shockable result',
       );
-      if (!undone) return index;
     }
-    return -1;
+
+    _recordRhythmusanalyse(ergebnis);
+    if (schockAbgegeben) {
+      recordSchock();
+    }
+
+    if (ergebnis == RhythmusanalyseErgebnis.rosc) {
+      return;
+    }
+    _startNextDruckphase();
   }
 
-  int get _aktiveSchockAnzahl =>
-      _schocks.length - _schockRueckgaengigkeiten.length;
+  void _recordRhythmusanalyse(RhythmusanalyseErgebnis ergebnis) {
+    _rhythmusanalyseErgebnis = ergebnis;
+    _adrenalinAusloesendesErgebnis = ergebnis;
+    _rhythmusanalyseEintraege.add(
+      RhythmusanalyseEintrag(zeitpunkt: _elapsedOffset, ergebnis: ergebnis),
+    );
+    _updateAdrenalinGabeFaelligkeit();
 
-  int? _korrigierteEnergie(int schockIndex) {
-    for (final correction in _schockKorrekturen.reversed) {
-      if (correction.schockIndex == schockIndex) {
-        return correction.energieJoule;
-      }
+    if (ergebnis == RhythmusanalyseErgebnis.rosc) {
+      _recordRosc();
     }
-    return null;
+  }
+
+  /// Resets the current Druckphase to a fresh 2-minute cycle.
+  ///
+  /// This is a manual timing correction. It records an append-only
+  /// [DruckphaseNeustart] event, starts no new Reanimationsabschnitt, and
+  /// leaves the medication Zeitfenster untouched.
+  void restartDruckphase() {
+    _requireLaufend();
+    if (_phase != Reanimationsphase.druckphase) {
+      throw StateError('only the Druckphase can be restarted');
+    }
+
+    _druckphaseNeustarts.add(DruckphaseNeustart(zeitpunkt: _elapsedOffset));
+    _compressionCycleStartOffset = _monotonicNow();
+    _compressionRemainingAtPause = Duration.zero;
   }
 
   void _updateAdrenalinGabeFaelligkeit() {
@@ -398,7 +347,7 @@ class Reanimationsfall {
     _ersteAdrenalinGabeFaellig = switch (ergebnis?.kategorie) {
       RhythmusanalyseKategorie.nichtSchockbar => true,
       RhythmusanalyseKategorie.schockbar =>
-        _aktiveSchockAnzahl >= leitlinienprofil.adrenalinErsteGabeNachSchock,
+        _schocks.length >= leitlinienprofil.adrenalinErsteGabeNachSchock,
       RhythmusanalyseKategorie.rosc ||
       RhythmusanalyseKategorie.unklar ||
       null => false,
@@ -409,58 +358,6 @@ class Reanimationsfall {
     final cycle = leitlinienprofil.compressionCycle;
     final cycleElapsed = now - _compressionCycleStartOffset;
     return cycleElapsed >= cycle ? Duration.zero : cycle - cycleElapsed;
-  }
-
-  /// Records the Rhythmusanalyse result with an optional note.
-  void recordRhythmusanalyse(
-    RhythmusanalyseErgebnis ergebnis, {
-    String? notiz,
-  }) {
-    _requireLaufend();
-    _requireAnalysephase();
-    if (_rhythmusanalyseErgebnis != null) {
-      throw StateError('a Rhythmusanalyse result is already recorded');
-    }
-
-    final normalizedNotiz = _normalizeNotiz(notiz);
-    _rhythmusanalyseErgebnis = ergebnis;
-    _rhythmusanalyseNotiz = normalizedNotiz;
-    _adrenalinAusloesendesErgebnis = ergebnis;
-    _rhythmusanalyseEintraege.add(
-      RhythmusanalyseEintrag(
-        zeitpunkt: _monotonicNow() - _monotonicStartOffset,
-        ergebnis: ergebnis,
-        notiz: normalizedNotiz,
-      ),
-    );
-    _updateAdrenalinGabeFaelligkeit();
-
-    if (ergebnis == RhythmusanalyseErgebnis.rosc) {
-      _recordRosc();
-    }
-  }
-
-  /// Adds or replaces the optional note of the recorded result.
-  ///
-  /// The original entry is retained; the new note is an append-only correction.
-  void setRhythmusanalyseNotiz(String? notiz) {
-    _requireLaufend();
-    _requireAnalysephase();
-    if (_rhythmusanalyseErgebnis == null) {
-      throw StateError('no Rhythmusanalyse result recorded');
-    }
-
-    final normalizedNotiz = _normalizeNotiz(notiz);
-    _rhythmusanalyseNotiz = normalizedNotiz;
-    if (_rhythmusanalyseEintraege.isNotEmpty) {
-      _rhythmusanalyseNotizKorrekturen.add(
-        RhythmusanalyseNotizKorrektur(
-          eintragIndex: _rhythmusanalyseEintraege.length - 1,
-          zeitpunkt: _elapsedOffset,
-          notiz: normalizedNotiz,
-        ),
-      );
-    }
   }
 
   /// Records a temperature in degrees Celsius.
@@ -547,43 +444,16 @@ class Reanimationsfall {
   }
 
   /// Records a skipped Rhythmusanalyse and starts a fresh Druckphase.
-  void skipRhythmusanalyse([RhythmusanalyseUebersprungenGrund? grund]) {
+  void skipRhythmusanalyse() {
     _requireLaufend();
     _requireAnalysephase();
     if (_rhythmusanalyseErgebnis != null) {
       throw StateError('a Rhythmusanalyse result is already recorded');
     }
     _uebersprungeneRhythmusanalysen.add(
-      RhythmusanalyseUeberspringung(
-        zeitpunkt: _monotonicNow() - _monotonicStartOffset,
-        grund: grund,
-      ),
+      RhythmusanalyseUeberspringung(zeitpunkt: _elapsedOffset),
     );
     _startNextDruckphase();
-  }
-
-  /// Ends the Analysephase or a Schock pause and starts a fresh 2-minute
-  /// Druckphase.
-  ///
-  /// In the Analysephase, a recorded result or an explicit `unklar` is
-  /// required first. A Schock recorded in the Druckphase can be continued
-  /// without a result.
-  void continueCpr() {
-    _requireLaufend();
-    if (_phase == Reanimationsphase.analysephase) {
-      if (_rhythmusanalyseErgebnis == null) {
-        throw StateError('a Rhythmusanalyse result is required');
-      }
-      _startNextDruckphase();
-      return;
-    }
-
-    if (_isSchockpause) {
-      _startNextDruckphase();
-      return;
-    }
-
-    throw StateError('CPR is already running');
   }
 
   /// Records ROSC, ends the current Reanimationsabschnitt, and stops the
@@ -610,7 +480,6 @@ class Reanimationsfall {
     _compressionCycleStartOffset = now;
     _compressionRemainingAtPause = Duration.zero;
     _rhythmusanalyseErgebnis = null;
-    _rhythmusanalyseNotiz = null;
   }
 
   /// Ends the Reanimationsfall with a reason.
@@ -657,10 +526,6 @@ class Reanimationsfall {
 
   void _resetAfterArrest() {
     _phase = Reanimationsphase.druckphase;
-    _isSchockpause = false;
-    _schockpauseWasDue = false;
-    _schockpauseOverdue = Duration.zero;
-    _schockpauseOpeningSchockIndex = null;
     _analysephaseStartOffset = null;
     _ersteAdrenalinGabeFaellig = false;
   }
@@ -678,21 +543,16 @@ class Reanimationsfall {
     final cycle = leitlinienprofil.compressionCycle;
     final isLaufend = _zustand == ReanimationsfallZustand.laufend;
     final isDruckphase = isLaufend && _phase == Reanimationsphase.druckphase;
-    final isSchockpause = isDruckphase && _isSchockpause;
     final cycleElapsed = now - _compressionCycleStartOffset;
-    final isRhythmusanalyseDue =
-        isDruckphase &&
-        (isSchockpause ? _schockpauseWasDue : cycleElapsed >= cycle);
+    final isRhythmusanalyseDue = isDruckphase && cycleElapsed >= cycle;
     final compressionRemaining = !isLaufend
         ? Duration.zero
         : isDruckphase
-        ? (isSchockpause
-              ? _compressionRemainingAtPause
-              : (isRhythmusanalyseDue ? Duration.zero : cycle - cycleElapsed))
+        ? (isRhythmusanalyseDue ? Duration.zero : cycle - cycleElapsed)
         : _compressionRemainingAtPause;
-    final rhythmusanalyseOverdue = isSchockpause
-        ? _schockpauseOverdue
-        : (isRhythmusanalyseDue ? cycleElapsed - cycle : Duration.zero);
+    final rhythmusanalyseOverdue = isRhythmusanalyseDue
+        ? cycleElapsed - cycle
+        : Duration.zero;
 
     final analysephaseStart = _analysephaseStartOffset;
     final pauseDuration =
@@ -707,17 +567,6 @@ class Reanimationsfall {
       Duration.zero,
       (sum, abschnitt) => sum + abschnitt.dauerBis(elapsed),
     );
-
-    final schocks = [
-      for (var index = 0; index < _schocks.length; index++)
-        SchockEintrag(
-          ereignis: _schocks[index],
-          rueckgaengig: _schockRueckgaengigkeiten.any(
-            (entry) => entry.schockIndex == index,
-          ),
-          korrigierteEnergieJoule: _korrigierteEnergie(index),
-        ),
-    ];
 
     final letzteAdrenalinGabe = _adrenalinGaben.isEmpty
         ? null
@@ -749,23 +598,17 @@ class Reanimationsfall {
       compressionRemaining: compressionRemaining,
       rhythmusanalyseOverdue: rhythmusanalyseOverdue,
       isRhythmusanalyseDue: isRhythmusanalyseDue,
-      isSchockpause: isSchockpause,
       pauseDuration: pauseDuration,
       isPauseOverdue: isPauseOverdue,
       rhythmusanalyseErgebnis: _rhythmusanalyseErgebnis,
-      rhythmusanalyseNotiz: _rhythmusanalyseNotiz,
       rhythmusanalyseEintraege: List.unmodifiable(_rhythmusanalyseEintraege),
-      rhythmusanalyseNotizKorrekturen: List.unmodifiable(
-        _rhythmusanalyseNotizKorrekturen,
-      ),
+      druckphaseNeustarts: List.unmodifiable(_druckphaseNeustarts),
       messwerte: List.unmodifiable(_messwerte),
       notizen: List.unmodifiable(_notizen),
       uebersprungeneRhythmusanalysen: List.unmodifiable(
         _uebersprungeneRhythmusanalysen,
       ),
-      schocks: List.unmodifiable(schocks),
-      schockRueckgaengigkeiten: List.unmodifiable(_schockRueckgaengigkeiten),
-      schockKorrekturen: List.unmodifiable(_schockKorrekturen),
+      schocks: List.unmodifiable(_schocks),
       adrenalinGaben: List.unmodifiable(_adrenalinGaben),
       adrenalinSeitLetzterGabe: adrenalinSeitLetzterGabe,
       adrenalinZeitfensterZustand: adrenalinZeitfensterZustand,
@@ -782,7 +625,7 @@ class Reanimationsfall {
   AmiodaronHinweis _amiodaronHinweis() {
     if (_amiodaronGaben.length >= 2) return AmiodaronHinweis.keine;
 
-    final schockAnzahl = _aktiveSchockAnzahl;
+    final schockAnzahl = _schocks.length;
     if (_amiodaronGaben.isEmpty) {
       return schockAnzahl >= leitlinienprofil.amiodaronErsteGabeNachSchock
           ? AmiodaronHinweis.ersteGabe
@@ -845,25 +688,16 @@ class Reanimationsfall {
       analysephaseStartOffset: analysephaseStart == null
           ? null
           : analysephaseStart - _monotonicStartOffset,
-      isSchockpause: _isSchockpause,
-      schockpauseWasDue: _schockpauseWasDue,
-      schockpauseOverdue: _schockpauseOverdue,
-      schockpauseOpeningSchockIndex: _schockpauseOpeningSchockIndex,
       rhythmusanalyseErgebnis: _rhythmusanalyseErgebnis,
-      rhythmusanalyseNotiz: _rhythmusanalyseNotiz,
       adrenalinAusloesendesErgebnis: _adrenalinAusloesendesErgebnis,
       schocks: List.unmodifiable(_schocks),
-      schockRueckgaengigkeiten: List.unmodifiable(_schockRueckgaengigkeiten),
-      schockKorrekturen: List.unmodifiable(_schockKorrekturen),
       adrenalinGaben: List.unmodifiable(_adrenalinGaben),
       amiodaronGaben: List.unmodifiable(_amiodaronGaben),
       uebersprungeneRhythmusanalysen: List.unmodifiable(
         _uebersprungeneRhythmusanalysen,
       ),
       rhythmusanalyseEintraege: List.unmodifiable(_rhythmusanalyseEintraege),
-      rhythmusanalyseNotizKorrekturen: List.unmodifiable(
-        _rhythmusanalyseNotizKorrekturen,
-      ),
+      druckphaseNeustarts: List.unmodifiable(_druckphaseNeustarts),
       messwerte: List.unmodifiable(_messwerte),
       notizen: List.unmodifiable(_notizen),
       roscEreignisse: List.unmodifiable(_roscEreignisse),
@@ -879,10 +713,7 @@ class Reanimationsfall {
     _compressionCycleStartOffset = _monotonicNow();
     _compressionRemainingAtPause = Duration.zero;
     _analysephaseStartOffset = null;
-    _isSchockpause = false;
-    _schockpauseWasDue = false;
-    _schockpauseOverdue = Duration.zero;
-    _schockpauseOpeningSchockIndex = null;
+    _rhythmusanalyseErgebnis = null;
   }
 
   static void _requireValidEnergie(int? energieJoule) {
@@ -920,19 +751,15 @@ class ReanimationsfallSnapshot {
     required this.compressionRemaining,
     required this.rhythmusanalyseOverdue,
     required this.isRhythmusanalyseDue,
-    required this.isSchockpause,
     required this.pauseDuration,
     required this.isPauseOverdue,
     required this.rhythmusanalyseErgebnis,
-    required this.rhythmusanalyseNotiz,
     required this.rhythmusanalyseEintraege,
-    required this.rhythmusanalyseNotizKorrekturen,
+    required this.druckphaseNeustarts,
     required this.messwerte,
     required this.notizen,
     required this.uebersprungeneRhythmusanalysen,
     required this.schocks,
-    required this.schockRueckgaengigkeiten,
-    required this.schockKorrekturen,
     required this.adrenalinGaben,
     required this.adrenalinSeitLetzterGabe,
     required this.adrenalinZeitfensterZustand,
@@ -978,9 +805,6 @@ class ReanimationsfallSnapshot {
   final Duration rhythmusanalyseOverdue;
   final bool isRhythmusanalyseDue;
 
-  /// Whether a Schock recorded in the Druckphase paused the compression timer.
-  final bool isSchockpause;
-
   /// How long the Analysephase has paused the compression timer.
   final Duration pauseDuration;
 
@@ -988,13 +812,12 @@ class ReanimationsfallSnapshot {
 
   /// The result recorded in the current Analysephase, if any.
   final RhythmusanalyseErgebnis? rhythmusanalyseErgebnis;
-  final String? rhythmusanalyseNotiz;
 
   /// Every recorded Rhythmusanalyse result, including previous cycles.
   final List<RhythmusanalyseEintrag> rhythmusanalyseEintraege;
 
-  /// Every append-only correction of a Rhythmusanalyse note.
-  final List<RhythmusanalyseNotizKorrektur> rhythmusanalyseNotizKorrekturen;
+  /// Every manual reset of the Druckphase.
+  final List<DruckphaseNeustart> druckphaseNeustarts;
 
   /// Every recorded Messwert.
   final List<Messwert> messwerte;
@@ -1002,17 +825,11 @@ class ReanimationsfallSnapshot {
   /// Every recorded free-text note.
   final List<ReanimationsfallNotiz> notizen;
 
-  /// Every skipped Rhythmusanalyse, including skips without a reason.
+  /// Every skipped Rhythmusanalyse.
   final List<RhythmusanalyseUeberspringung> uebersprungeneRhythmusanalysen;
 
-  /// Every recorded Schock, including the ones marked as undone.
-  final List<SchockEintrag> schocks;
-
-  /// Every undo entry for a Schock, kept as its own log record.
-  final List<SchockRueckgaengig> schockRueckgaengigkeiten;
-
-  /// Every append-only correction of a Schock energy.
-  final List<SchockKorrektur> schockKorrekturen;
+  /// Every recorded Schock.
+  final List<SchockEreignis> schocks;
 
   /// Every recorded Adrenalin dose.
   final List<AdrenalinGabe> adrenalinGaben;
@@ -1053,17 +870,8 @@ class ReanimationsfallSnapshot {
     return adrenalinGaben.last;
   }
 
-  /// The number of Schocks that have not been undone.
-  int get schockAnzahl =>
-      schocks.where((schock) => !schock.rueckgaengig).length;
-
-  /// The most recent Schock that has not been undone, if any.
-  SchockEintrag? get letzterAktiverSchock {
-    for (final schock in schocks.reversed) {
-      if (!schock.rueckgaengig) return schock;
-    }
-    return null;
-  }
+  /// The number of recorded Schocks.
+  int get schockAnzahl => schocks.length;
 
   /// The most recently skipped Rhythmusanalyse, if any.
   RhythmusanalyseUeberspringung? get letzteRhythmusanalyseUeberspringung {
@@ -1090,21 +898,14 @@ class ReanimationsfallState {
     required this.compressionCycleStartOffset,
     required this.compressionRemainingAtPause,
     required this.analysephaseStartOffset,
-    required this.isSchockpause,
-    required this.schockpauseWasDue,
-    required this.schockpauseOverdue,
-    required this.schockpauseOpeningSchockIndex,
     required this.rhythmusanalyseErgebnis,
-    required this.rhythmusanalyseNotiz,
     required this.adrenalinAusloesendesErgebnis,
     required this.schocks,
-    required this.schockRueckgaengigkeiten,
-    required this.schockKorrekturen,
     required this.adrenalinGaben,
     required this.amiodaronGaben,
     required this.uebersprungeneRhythmusanalysen,
     required this.rhythmusanalyseEintraege,
-    required this.rhythmusanalyseNotizKorrekturen,
+    required this.druckphaseNeustarts,
     required this.messwerte,
     required this.notizen,
     required this.roscEreignisse,
@@ -1126,21 +927,14 @@ class ReanimationsfallState {
   final Duration compressionCycleStartOffset;
   final Duration compressionRemainingAtPause;
   final Duration? analysephaseStartOffset;
-  final bool isSchockpause;
-  final bool schockpauseWasDue;
-  final Duration schockpauseOverdue;
-  final int? schockpauseOpeningSchockIndex;
   final RhythmusanalyseErgebnis? rhythmusanalyseErgebnis;
-  final String? rhythmusanalyseNotiz;
   final RhythmusanalyseErgebnis? adrenalinAusloesendesErgebnis;
   final List<SchockEreignis> schocks;
-  final List<SchockRueckgaengig> schockRueckgaengigkeiten;
-  final List<SchockKorrektur> schockKorrekturen;
   final List<AdrenalinGabe> adrenalinGaben;
   final List<AmiodaronGabe> amiodaronGaben;
   final List<RhythmusanalyseUeberspringung> uebersprungeneRhythmusanalysen;
   final List<RhythmusanalyseEintrag> rhythmusanalyseEintraege;
-  final List<RhythmusanalyseNotizKorrektur> rhythmusanalyseNotizKorrekturen;
+  final List<DruckphaseNeustart> druckphaseNeustarts;
   final List<Messwert> messwerte;
   final List<ReanimationsfallNotiz> notizen;
   final List<RoscEreignis> roscEreignisse;

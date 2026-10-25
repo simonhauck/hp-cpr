@@ -30,16 +30,15 @@ void main() {
     for (var i = 0; i < 3; i++) {
       reanimationsfall.recordSchock();
     }
-    reanimationsfall.setLastSchockEnergie(200);
     clock.advance(const Duration(seconds: 5));
     reanimationsfall.enterAnalysephase();
-    reanimationsfall.recordRhythmusanalyse(
+    reanimationsfall.completeRhythmusanalyse(
       RhythmusanalyseErgebnis.kammerflimmern,
-      notiz: 'VF',
+      schockAbgegeben: true,
     );
-    reanimationsfall.setRhythmusanalyseNotiz('VF bestätigt');
-    reanimationsfall.continueCpr();
     clock.advance(const Duration(minutes: 1));
+    reanimationsfall.restartDruckphase();
+    clock.advance(const Duration(seconds: 20));
     reanimationsfall.recordRosc();
     clock.advance(const Duration(seconds: 20));
     reanimationsfall.resumeResuscitation();
@@ -61,15 +60,13 @@ void main() {
     expect(decoded.soundEnabled, isTrue);
     expect(decoded.zustand, ReanimationsfallZustand.beendet);
     expect(decoded.ende!.grund, Beendigungsgrund.uebergabe);
-    expect(decoded.schocks, hasLength(3));
+    expect(decoded.schocks, hasLength(4));
     expect(decoded.adrenalinGaben, hasLength(1));
-    expect(decoded.rhythmusanalyseEintraege.single.notiz, 'VF');
-    expect(decoded.schockKorrekturen.single.schockIndex, 2);
-    expect(decoded.schockKorrekturen.single.energieJoule, 200);
     expect(
-      decoded.rhythmusanalyseNotizKorrekturen.single.notiz,
-      'VF bestätigt',
+      decoded.rhythmusanalyseEintraege.single.ergebnis,
+      RhythmusanalyseErgebnis.kammerflimmern,
     );
+    expect(decoded.druckphaseNeustarts, hasLength(1));
     expect(decoded.messwerte, hasLength(4));
     expect(decoded.messwerte[0], isA<TemperaturMesswert>());
     expect((decoded.messwerte[0] as TemperaturMesswert).notiz, 'rektal');
@@ -90,16 +87,13 @@ void main() {
 
     expect(snapshot.zustand, ReanimationsfallZustand.beendet);
     expect(snapshot.cprDauer, reanimationsfall.snapshot().cprDauer);
-    expect(snapshot.schockAnzahl, 3);
-    expect(snapshot.schocks.first.ereignis.energieJoule, isNull);
-    expect(snapshot.schocks.last.energieJoule, 200);
-    expect(snapshot.schockKorrekturen, hasLength(1));
-    expect(snapshot.rhythmusanalyseEintraege.single.notiz, 'VF');
-    expect(snapshot.rhythmusanalyseNotizKorrekturen, hasLength(1));
+    expect(snapshot.schockAnzahl, 4);
+    expect(snapshot.schocks.last.energieJoule, isNull);
+    expect(snapshot.druckphaseNeustarts, hasLength(1));
+    expect(snapshot.rhythmusanalyseEintraege, hasLength(1));
     expect(snapshot.adrenalinGaben, hasLength(1));
     expect(snapshot.roscEreignisse, hasLength(1));
     expect(snapshot.wiederbeginnEreignisse, hasLength(1));
-    expect(snapshot.rhythmusanalyseEintraege.single.notiz, 'VF');
     expect(snapshot.messwerte, hasLength(4));
     expect(snapshot.notizen.single.text, 'Nach ROSC');
     expect(snapshot.startzeit, state.startzeit);

@@ -598,7 +598,11 @@
   },
   "eventRhythmusanalyseSkipped": "Rhythmusanalyse übersprungen",
   "@eventRhythmusanalyseSkipped": {
-    "description": "Ereignis: Rhythmusanalyse ohne Grund übersprungen"
+    "description": "Ereignis: Rhythmusanalyse übersprungen"
+  },
+  "eventDruckphaseRestarted": "Druckphase neu gestartet",
+  "@eventDruckphaseRestarted": {
+    "description": "Ereignis: Manueller Neustart der Druckphase"
   },
   "eventRhythmusanalyseSkippedWithReason": "Rhythmusanalyse übersprungen: {grund}",
   "@eventRhythmusanalyseSkippedWithReason": {

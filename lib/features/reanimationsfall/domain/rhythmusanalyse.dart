@@ -27,56 +27,18 @@ class RhythmusanalyseEintrag {
   const RhythmusanalyseEintrag({
     required this.zeitpunkt,
     required this.ergebnis,
-    this.notiz,
   });
 
   /// The elapsed time since the Startzeit when the result was recorded.
   final Duration zeitpunkt;
 
   final RhythmusanalyseErgebnis ergebnis;
-
-  /// The optional note recorded with the result.
-  final String? notiz;
-
-  RhythmusanalyseEintrag copyWith({String? notiz}) {
-    return RhythmusanalyseEintrag(
-      zeitpunkt: zeitpunkt,
-      ergebnis: ergebnis,
-      notiz: notiz,
-    );
-  }
 }
 
-/// A later correction of a recorded Rhythmusanalyse note.
-///
-/// The original [RhythmusanalyseEintrag] keeps its note; this entry is the
-/// append-only log record that supersedes it.
-class RhythmusanalyseNotizKorrektur {
-  const RhythmusanalyseNotizKorrektur({
-    required this.eintragIndex,
-    required this.zeitpunkt,
-    this.notiz,
-  });
-
-  /// The index of the corrected entry in the result history.
-  final int eintragIndex;
-
-  /// The elapsed time since the Startzeit when the correction was recorded.
-  final Duration zeitpunkt;
-
-  final String? notiz;
-}
-
-/// Why the Zeitnehmer skipped the Rhythmusanalyse.
-enum RhythmusanalyseUebersprungenGrund { keineZeit, aedUebernimmt, sonstiges }
-
-/// A skipped Rhythmusanalyse, recorded even when no reason was given.
+/// A skipped Rhythmusanalyse.
 class RhythmusanalyseUeberspringung {
-  const RhythmusanalyseUeberspringung({required this.zeitpunkt, this.grund});
+  const RhythmusanalyseUeberspringung({required this.zeitpunkt});
 
   /// The elapsed time since the Startzeit when the analysis was skipped.
   final Duration zeitpunkt;
-
-  /// The optional reason selected by the Zeitnehmer.
-  final RhythmusanalyseUebersprungenGrund? grund;
 }

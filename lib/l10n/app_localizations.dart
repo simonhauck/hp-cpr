@@ -844,11 +844,17 @@ abstract class AppLocalizations {
   /// **'Rhythmusanalyse: {ergebnis}'**
   String eventRhythmusanalyse(String ergebnis);
 
-  /// Ereignis: Rhythmusanalyse ohne Grund übersprungen
+  /// Ereignis: Rhythmusanalyse übersprungen
   ///
   /// In de, this message translates to:
   /// **'Rhythmusanalyse übersprungen'**
   String get eventRhythmusanalyseSkipped;
+
+  /// Ereignis: Manueller Neustart der Druckphase
+  ///
+  /// In de, this message translates to:
+  /// **'Druckphase neu gestartet'**
+  String get eventDruckphaseRestarted;
 
   /// Ereignis: Rhythmusanalyse mit Grund übersprungen
   ///

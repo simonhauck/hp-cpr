@@ -23,15 +23,3 @@ String rhythmusanalyseErgebnisLabel(
     RhythmusanalyseErgebnis.unklar => l10n.rhythmusanalyseUnklar,
   };
 }
-
-/// The German label shown for a skipped Rhythmusanalyse reason.
-String rhythmusanalyseUebersprungenGrundLabel(
-  AppLocalizations l10n,
-  RhythmusanalyseUebersprungenGrund grund,
-) {
-  return switch (grund) {
-    RhythmusanalyseUebersprungenGrund.keineZeit => l10n.skipReasonNoTime,
-    RhythmusanalyseUebersprungenGrund.aedUebernimmt => l10n.skipReasonAed,
-    RhythmusanalyseUebersprungenGrund.sonstiges => l10n.skipReasonOther,
-  };
-}

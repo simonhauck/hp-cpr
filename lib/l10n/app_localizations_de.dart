@@ -432,6 +432,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get eventRhythmusanalyseSkipped => 'Rhythmusanalyse übersprungen';
 
   @override
+  String get eventDruckphaseRestarted => 'Druckphase neu gestartet';
+
+  @override
   String eventRhythmusanalyseSkippedWithReason(String grund) {
     return 'Rhythmusanalyse übersprungen: $grund';
   }
