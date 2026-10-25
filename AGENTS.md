@@ -81,6 +81,7 @@ All commits follow [Conventional Commits](https://www.conventionalcommits.org/):
 ## Architecture
 
 - Feature-first structure under `lib/features/<feature>/presentation/`.
+- Cross-feature UI infrastructure lives under `lib/ui/`; feature-specific UI stays under `lib/features/<feature>/presentation/`.
 - Do not invent CPR domain logic; the concrete HP-CPR workflow is still being agreed on.
 - Implement new features only after the domain requirements have been agreed.
 
