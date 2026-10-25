@@ -135,12 +135,16 @@ class Reanimationsfall {
     _verworfenAm = state.verworfenAm;
     _schocks.addAll(state.schocks);
     _schockRueckgaengigkeiten.addAll(state.schockRueckgaengigkeiten);
+    _schockKorrekturen.addAll(state.schockKorrekturen);
     _adrenalinGaben.addAll(state.adrenalinGaben);
     _amiodaronGaben.addAll(state.amiodaronGaben);
     _uebersprungeneRhythmusanalysen.addAll(
       state.uebersprungeneRhythmusanalysen,
     );
     _rhythmusanalyseEintraege.addAll(state.rhythmusanalyseEintraege);
+    _rhythmusanalyseNotizKorrekturen.addAll(
+      state.rhythmusanalyseNotizKorrekturen,
+    );
     _messwerte.addAll(state.messwerte);
     _notizen.addAll(state.notizen);
     _roscEreignisse.addAll(state.roscEreignisse);
@@ -182,6 +186,8 @@ class Reanimationsfall {
   ReanimationsfallEnde? _ende;
   Duration? _verworfenAm;
   final List<RhythmusanalyseEintrag> _rhythmusanalyseEintraege = [];
+  final List<RhythmusanalyseNotizKorrektur> _rhythmusanalyseNotizKorrekturen =
+      [];
   final List<Messwert> _messwerte = [];
   final List<ReanimationsfallNotiz> _notizen = [];
 
@@ -200,6 +206,7 @@ class Reanimationsfall {
       [];
   final List<SchockEreignis> _schocks = [];
   final List<SchockRueckgaengig> _schockRueckgaengigkeiten = [];
+  final List<SchockKorrektur> _schockKorrekturen = [];
   final List<AdrenalinGabe> _adrenalinGaben = [];
   final List<AmiodaronGabe> _amiodaronGaben = [];
   RhythmusanalyseErgebnis? _adrenalinAusloesendesErgebnis;
@@ -298,7 +305,9 @@ class Reanimationsfall {
     _amiodaronGaben.add(
       AmiodaronGabe(
         zeitpunkt: _monotonicNow() - _monotonicStartOffset,
-        dosisMg: _amiodaronGaben.isEmpty ? 300 : 150,
+        dosisMg: _amiodaronGaben.isEmpty
+            ? AmiodaronHinweis.ersteGabe.dosisMg!
+            : AmiodaronHinweis.zweiteGabe.dosisMg!,
       ),
     );
   }
@@ -337,6 +346,9 @@ class Reanimationsfall {
   }
 
   /// Adds or replaces the energy of the most recent active Schock.
+  ///
+  /// The original Schock is retained; the new energy is an append-only
+  /// correction entry.
   void setLastSchockEnergie(int energieJoule) {
     _requireLaufend();
     _requireValidEnergie(energieJoule);
@@ -345,7 +357,13 @@ class Reanimationsfall {
     if (index == -1) {
       throw StateError('no active Schock');
     }
-    _schocks[index] = _schocks[index].copyWith(energieJoule: energieJoule);
+    _schockKorrekturen.add(
+      SchockKorrektur(
+        schockIndex: index,
+        zeitpunkt: _elapsedOffset,
+        energieJoule: energieJoule,
+      ),
+    );
   }
 
   int get _lastActiveSchockIndex {
@@ -360,6 +378,15 @@ class Reanimationsfall {
 
   int get _aktiveSchockAnzahl =>
       _schocks.length - _schockRueckgaengigkeiten.length;
+
+  int? _korrigierteEnergie(int schockIndex) {
+    for (final correction in _schockKorrekturen.reversed) {
+      if (correction.schockIndex == schockIndex) {
+        return correction.energieJoule;
+      }
+    }
+    return null;
+  }
 
   void _updateAdrenalinGabeFaelligkeit() {
     if (_adrenalinGaben.isNotEmpty) {
@@ -414,6 +441,8 @@ class Reanimationsfall {
   }
 
   /// Adds or replaces the optional note of the recorded result.
+  ///
+  /// The original entry is retained; the new note is an append-only correction.
   void setRhythmusanalyseNotiz(String? notiz) {
     _requireLaufend();
     _requireAnalysephase();
@@ -424,8 +453,13 @@ class Reanimationsfall {
     final normalizedNotiz = _normalizeNotiz(notiz);
     _rhythmusanalyseNotiz = normalizedNotiz;
     if (_rhythmusanalyseEintraege.isNotEmpty) {
-      _rhythmusanalyseEintraege[_rhythmusanalyseEintraege.length - 1] =
-          _rhythmusanalyseEintraege.last.copyWith(notiz: normalizedNotiz);
+      _rhythmusanalyseNotizKorrekturen.add(
+        RhythmusanalyseNotizKorrektur(
+          eintragIndex: _rhythmusanalyseEintraege.length - 1,
+          zeitpunkt: _elapsedOffset,
+          notiz: normalizedNotiz,
+        ),
+      );
     }
   }
 
@@ -572,16 +606,11 @@ class Reanimationsfall {
       Reanimationsabschnitt(index: _abschnitte.length, start: offset),
     );
     _zustand = ReanimationsfallZustand.laufend;
-    _phase = Reanimationsphase.druckphase;
+    _resetAfterArrest();
     _compressionCycleStartOffset = now;
     _compressionRemainingAtPause = Duration.zero;
-    _analysephaseStartOffset = null;
     _rhythmusanalyseErgebnis = null;
     _rhythmusanalyseNotiz = null;
-    _isSchockpause = false;
-    _schockpauseWasDue = false;
-    _schockpauseOverdue = Duration.zero;
-    _schockpauseOpeningSchockIndex = null;
   }
 
   /// Ends the Reanimationsfall with a reason.
@@ -597,13 +626,7 @@ class Reanimationsfall {
     }
     _ende = ReanimationsfallEnde(zeitpunkt: offset, grund: grund);
     _zustand = ReanimationsfallZustand.beendet;
-    _phase = Reanimationsphase.druckphase;
-    _isSchockpause = false;
-    _schockpauseWasDue = false;
-    _schockpauseOverdue = Duration.zero;
-    _schockpauseOpeningSchockIndex = null;
-    _analysephaseStartOffset = null;
-    _ersteAdrenalinGabeFaellig = false;
+    _resetAfterArrest();
   }
 
   /// Marks the Reanimationsfall as Verworfen and stops the arrest timers.
@@ -621,13 +644,7 @@ class Reanimationsfall {
     }
     _verworfenAm = offset;
     _zustand = ReanimationsfallZustand.verworfen;
-    _phase = Reanimationsphase.druckphase;
-    _isSchockpause = false;
-    _schockpauseWasDue = false;
-    _schockpauseOverdue = Duration.zero;
-    _schockpauseOpeningSchockIndex = null;
-    _analysephaseStartOffset = null;
-    _ersteAdrenalinGabeFaellig = false;
+    _resetAfterArrest();
   }
 
   void _recordRosc() {
@@ -635,6 +652,10 @@ class Reanimationsfall {
     _roscEreignisse.add(RoscEreignis(zeitpunkt: offset));
     _closeCurrentAbschnitt(offset);
     _zustand = ReanimationsfallZustand.rosc;
+    _resetAfterArrest();
+  }
+
+  void _resetAfterArrest() {
     _phase = Reanimationsphase.druckphase;
     _isSchockpause = false;
     _schockpauseWasDue = false;
@@ -694,6 +715,7 @@ class Reanimationsfall {
           rueckgaengig: _schockRueckgaengigkeiten.any(
             (entry) => entry.schockIndex == index,
           ),
+          korrigierteEnergieJoule: _korrigierteEnergie(index),
         ),
     ];
 
@@ -733,6 +755,9 @@ class Reanimationsfall {
       rhythmusanalyseErgebnis: _rhythmusanalyseErgebnis,
       rhythmusanalyseNotiz: _rhythmusanalyseNotiz,
       rhythmusanalyseEintraege: List.unmodifiable(_rhythmusanalyseEintraege),
+      rhythmusanalyseNotizKorrekturen: List.unmodifiable(
+        _rhythmusanalyseNotizKorrekturen,
+      ),
       messwerte: List.unmodifiable(_messwerte),
       notizen: List.unmodifiable(_notizen),
       uebersprungeneRhythmusanalysen: List.unmodifiable(
@@ -740,6 +765,7 @@ class Reanimationsfall {
       ),
       schocks: List.unmodifiable(schocks),
       schockRueckgaengigkeiten: List.unmodifiable(_schockRueckgaengigkeiten),
+      schockKorrekturen: List.unmodifiable(_schockKorrekturen),
       adrenalinGaben: List.unmodifiable(_adrenalinGaben),
       adrenalinSeitLetzterGabe: adrenalinSeitLetzterGabe,
       adrenalinZeitfensterZustand: adrenalinZeitfensterZustand,
@@ -828,12 +854,16 @@ class Reanimationsfall {
       adrenalinAusloesendesErgebnis: _adrenalinAusloesendesErgebnis,
       schocks: List.unmodifiable(_schocks),
       schockRueckgaengigkeiten: List.unmodifiable(_schockRueckgaengigkeiten),
+      schockKorrekturen: List.unmodifiable(_schockKorrekturen),
       adrenalinGaben: List.unmodifiable(_adrenalinGaben),
       amiodaronGaben: List.unmodifiable(_amiodaronGaben),
       uebersprungeneRhythmusanalysen: List.unmodifiable(
         _uebersprungeneRhythmusanalysen,
       ),
       rhythmusanalyseEintraege: List.unmodifiable(_rhythmusanalyseEintraege),
+      rhythmusanalyseNotizKorrekturen: List.unmodifiable(
+        _rhythmusanalyseNotizKorrekturen,
+      ),
       messwerte: List.unmodifiable(_messwerte),
       notizen: List.unmodifiable(_notizen),
       roscEreignisse: List.unmodifiable(_roscEreignisse),
@@ -896,11 +926,13 @@ class ReanimationsfallSnapshot {
     required this.rhythmusanalyseErgebnis,
     required this.rhythmusanalyseNotiz,
     required this.rhythmusanalyseEintraege,
+    required this.rhythmusanalyseNotizKorrekturen,
     required this.messwerte,
     required this.notizen,
     required this.uebersprungeneRhythmusanalysen,
     required this.schocks,
     required this.schockRueckgaengigkeiten,
+    required this.schockKorrekturen,
     required this.adrenalinGaben,
     required this.adrenalinSeitLetzterGabe,
     required this.adrenalinZeitfensterZustand,
@@ -961,6 +993,9 @@ class ReanimationsfallSnapshot {
   /// Every recorded Rhythmusanalyse result, including previous cycles.
   final List<RhythmusanalyseEintrag> rhythmusanalyseEintraege;
 
+  /// Every append-only correction of a Rhythmusanalyse note.
+  final List<RhythmusanalyseNotizKorrektur> rhythmusanalyseNotizKorrekturen;
+
   /// Every recorded Messwert.
   final List<Messwert> messwerte;
 
@@ -975,6 +1010,9 @@ class ReanimationsfallSnapshot {
 
   /// Every undo entry for a Schock, kept as its own log record.
   final List<SchockRueckgaengig> schockRueckgaengigkeiten;
+
+  /// Every append-only correction of a Schock energy.
+  final List<SchockKorrektur> schockKorrekturen;
 
   /// Every recorded Adrenalin dose.
   final List<AdrenalinGabe> adrenalinGaben;
@@ -1061,10 +1099,12 @@ class ReanimationsfallState {
     required this.adrenalinAusloesendesErgebnis,
     required this.schocks,
     required this.schockRueckgaengigkeiten,
+    required this.schockKorrekturen,
     required this.adrenalinGaben,
     required this.amiodaronGaben,
     required this.uebersprungeneRhythmusanalysen,
     required this.rhythmusanalyseEintraege,
+    required this.rhythmusanalyseNotizKorrekturen,
     required this.messwerte,
     required this.notizen,
     required this.roscEreignisse,
@@ -1095,10 +1135,12 @@ class ReanimationsfallState {
   final RhythmusanalyseErgebnis? adrenalinAusloesendesErgebnis;
   final List<SchockEreignis> schocks;
   final List<SchockRueckgaengig> schockRueckgaengigkeiten;
+  final List<SchockKorrektur> schockKorrekturen;
   final List<AdrenalinGabe> adrenalinGaben;
   final List<AmiodaronGabe> amiodaronGaben;
   final List<RhythmusanalyseUeberspringung> uebersprungeneRhythmusanalysen;
   final List<RhythmusanalyseEintrag> rhythmusanalyseEintraege;
+  final List<RhythmusanalyseNotizKorrektur> rhythmusanalyseNotizKorrekturen;
   final List<Messwert> messwerte;
   final List<ReanimationsfallNotiz> notizen;
   final List<RoscEreignis> roscEreignisse;

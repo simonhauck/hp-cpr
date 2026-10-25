@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_chip.dart';
 import 'package:hp_cpr/features/messwerte/presentation/messwert_format.dart';
+import 'package:hp_cpr/features/messwerte/presentation/messwert_tile.dart';
 import 'package:hp_cpr/features/messwerte/presentation/messwerte_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/end_reanimationsfall_dialog.dart';
@@ -29,12 +30,21 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
     final theme = Theme.of(context);
     final ende = snapshot.ende;
     final endZeitpunkt = ende?.zeitpunkt ?? snapshot.verworfenAm;
+
+    String? effectiveRhythmusanalyseNotiz(int index) {
+      for (final correction
+          in snapshot.rhythmusanalyseNotizKorrekturen.reversed) {
+        if (correction.eintragIndex == index) return correction.notiz;
+      }
+      return snapshot.rhythmusanalyseEintraege[index].notiz;
+    }
+
     final notes = <_SummaryNote>[
-      for (final eintrag in snapshot.rhythmusanalyseEintraege)
-        if (eintrag.notiz != null)
+      for (final (index, eintrag) in snapshot.rhythmusanalyseEintraege.indexed)
+        if (effectiveRhythmusanalyseNotiz(index) != null)
           _SummaryNote(
             zeitpunkt: eintrag.zeitpunkt,
-            text: eintrag.notiz!,
+            text: effectiveRhythmusanalyseNotiz(index)!,
             detail: rhythmusanalyseErgebnisLabel(l10n, eintrag.ergebnis),
           ),
       for (final notiz in snapshot.notizen)
@@ -83,7 +93,6 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
                       children: [
                         LeitlinienprofilChip(
                           leitlinienprofil: snapshot.leitlinienprofil,
-                          compact: true,
                         ),
                         const SizedBox(height: PageLayout.space12),
                         _SummaryRow(
@@ -140,7 +149,8 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         for (final (index, event) in _events(l10n).indexed) ...[
-                          if (index > 0) const Divider(height: 1),
+                          if (index > 0)
+                            const Divider(height: PageLayout.dividerHeight),
                           _TimelineRow(event: event),
                         ],
                       ],
@@ -168,18 +178,9 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
                       children: [
                         for (final (index, messwert)
                             in snapshot.messwerte.indexed) ...[
-                          if (index > 0) const Divider(height: 1),
-                          ListTile(
-                            leading: Icon(messwertIcon(messwert.typ)),
-                            title: Text(formatMesswert(l10n, messwert)),
-                            subtitle: Text(
-                              [
-                                messwertTypLabel(l10n, messwert.typ),
-                                formatReanimationsdauer(messwert.zeitpunkt),
-                                ?messwert.notiz,
-                              ].join(' · '),
-                            ),
-                          ),
+                          if (index > 0)
+                            const Divider(height: PageLayout.dividerHeight),
+                          MesswertTile(messwert: messwert),
                         ],
                       ],
                     ),
@@ -259,7 +260,7 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
     for (var index = 0; index < snapshot.schocks.length; index++) {
       final schock = snapshot.schocks[index];
       final count = index + 1;
-      final energie = schock.energieJoule;
+      final energie = schock.ereignis.energieJoule;
       add(
         schock.zeitpunkt,
         Icons.bolt_outlined,
@@ -274,6 +275,17 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
         rueckgaengig.zeitpunkt,
         Icons.undo,
         l10n.eventSchockUndone(rueckgaengig.schockIndex + 1),
+      );
+    }
+
+    for (final correction in snapshot.schockKorrekturen) {
+      add(
+        correction.zeitpunkt,
+        Icons.edit_outlined,
+        l10n.eventSchockEnergyCorrected(
+          correction.schockIndex + 1,
+          correction.energieJoule,
+        ),
       );
     }
 
@@ -301,6 +313,15 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
           rhythmusanalyseErgebnisLabel(l10n, eintrag.ergebnis),
         ),
         detail: eintrag.notiz,
+      );
+    }
+
+    for (final correction in snapshot.rhythmusanalyseNotizKorrekturen) {
+      final notiz = correction.notiz;
+      add(
+        correction.zeitpunkt,
+        Icons.edit_note,
+        notiz == null ? l10n.eventNoteRemoved : l10n.eventNoteCorrected(notiz),
       );
     }
 
@@ -449,7 +470,7 @@ class _TimelineRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: PageLayout.space40 + PageLayout.space24,
+            width: PageLayout.timelineTimeWidth,
             child: Text(
               formatReanimationsdauer(event.zeitpunkt),
               style: theme.textTheme.labelLarge?.copyWith(

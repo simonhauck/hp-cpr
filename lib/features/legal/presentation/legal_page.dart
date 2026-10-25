@@ -27,8 +27,8 @@ class _LegalPageState extends State<LegalPage> {
     final l10n = AppLocalizations.of(context);
     showLicensePage(
       context: context,
-      applicationName: 'HP-CPR',
-      applicationVersion: info?.versionLabel,
+      applicationName: l10n.appTitle,
+      applicationVersion: info?.versionLabel(l10n.versionWithBuild),
       applicationLegalese: l10n.licensesLegalese,
     );
   }

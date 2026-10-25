@@ -42,6 +42,14 @@ Map<String, dynamic> reanimationsfallStateToJson(ReanimationsfallState state) {
           'zeitpunkt': _millis(entry.zeitpunkt),
         },
     ],
+    'schockKorrekturen': [
+      for (final entry in state.schockKorrekturen)
+        {
+          'schockIndex': entry.schockIndex,
+          'zeitpunkt': _millis(entry.zeitpunkt),
+          'energieJoule': entry.energieJoule,
+        },
+    ],
     'adrenalinGaben': [
       for (final gabe in state.adrenalinGaben)
         {'zeitpunkt': _millis(gabe.zeitpunkt), 'dosisMg': gabe.dosisMg},
@@ -59,6 +67,14 @@ Map<String, dynamic> reanimationsfallStateToJson(ReanimationsfallState state) {
         {
           'zeitpunkt': _millis(entry.zeitpunkt),
           'ergebnis': entry.ergebnis.name,
+          'notiz': entry.notiz,
+        },
+    ],
+    'rhythmusanalyseNotizKorrekturen': [
+      for (final entry in state.rhythmusanalyseNotizKorrekturen)
+        {
+          'eintragIndex': entry.eintragIndex,
+          'zeitpunkt': _millis(entry.zeitpunkt),
           'notiz': entry.notiz,
         },
     ],
@@ -142,6 +158,15 @@ ReanimationsfallState reanimationsfallStateFromJson(Map<String, dynamic> json) {
           zeitpunkt: _duration(map(item)['zeitpunkt']),
         ),
     ],
+    schockKorrekturen: [
+      for (final item
+          in (json['schockKorrekturen'] as List<dynamic>? ?? const []))
+        SchockKorrektur(
+          schockIndex: map(item)['schockIndex'] as int,
+          zeitpunkt: _duration(map(item)['zeitpunkt']),
+          energieJoule: map(item)['energieJoule'] as int,
+        ),
+    ],
     adrenalinGaben: [
       for (final item in (json['adrenalinGaben'] as List<dynamic>? ?? const []))
         AdrenalinGabe(
@@ -173,6 +198,16 @@ ReanimationsfallState reanimationsfallStateFromJson(Map<String, dynamic> json) {
           ergebnis: RhythmusanalyseErgebnis.values.byName(
             map(item)['ergebnis'] as String,
           ),
+          notiz: map(item)['notiz'] as String?,
+        ),
+    ],
+    rhythmusanalyseNotizKorrekturen: [
+      for (final item
+          in (json['rhythmusanalyseNotizKorrekturen'] as List<dynamic>? ??
+              const []))
+        RhythmusanalyseNotizKorrektur(
+          eintragIndex: map(item)['eintragIndex'] as int,
+          zeitpunkt: _duration(map(item)['zeitpunkt']),
           notiz: map(item)['notiz'] as String?,
         ),
     ],

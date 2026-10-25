@@ -284,6 +284,14 @@ flutter build ios
 
 Commits follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, …) and commit messages are written in English. PRs link the issues they fully resolve with `Closes #<number>` (one keyword per issue) so GitHub closes them on merge. Specs use GitHub sub-issues for their tickets, and dependencies use the native blocked-by relation (`gh issue edit <child> --add-blocked-by <blocker>`). See `AGENTS.md` for the full issue, commit, and PR rules.
 
+## Clinical review
+
+The AHA 2025 profile gives no explicit shock-count trigger for the second
+Amiodaron dose. The app therefore suggests it in the next CPR block after the
+first dose (after Schock 4 when the first dose followed Schock 3). This
+operational choice, the medication behavior across ROSC, and any local HP-CPR
+deviations need clinical review before release.
+
 ## License
 
 HP-CPR is released under the [MIT License](LICENSE).

@@ -560,7 +560,18 @@ void main() {
     expect(reanimationsfall.snapshot().schocks.single.energieJoule, isNull);
 
     reanimationsfall.setLastSchockEnergie(200);
-    expect(reanimationsfall.snapshot().schocks.single.energieJoule, 200);
+    var snapshot = reanimationsfall.snapshot();
+    expect(snapshot.schocks.single.energieJoule, 200);
+    expect(snapshot.schocks.single.ereignis.energieJoule, isNull);
+    expect(snapshot.schockKorrekturen, hasLength(1));
+    expect(snapshot.schockKorrekturen.single.schockIndex, 0);
+    expect(snapshot.schockKorrekturen.single.energieJoule, 200);
+
+    reanimationsfall.setLastSchockEnergie(250);
+    snapshot = reanimationsfall.snapshot();
+    expect(snapshot.schocks.single.ereignis.energieJoule, isNull);
+    expect(snapshot.schocks.single.energieJoule, 250);
+    expect(snapshot.schockKorrekturen, hasLength(2));
 
     expect(() => reanimationsfall.setLastSchockEnergie(0), throwsArgumentError);
     expect(
@@ -873,8 +884,7 @@ void main() {
     expect(snapshot.amiodaronGaben, isEmpty);
   });
 
-  test('keeps the Rhythmusanalyse history across cycles and updates the '
-      'latest note', () {
+  test('keeps the Rhythmusanalyse history and appends note corrections', () {
     final clock = FakeClock();
     final reanimationsfall = Reanimationsfall.start(clock: clock);
 
@@ -890,12 +900,20 @@ void main() {
     reanimationsfall.enterAnalysephase();
     reanimationsfall.recordRhythmusanalyse(RhythmusanalyseErgebnis.asystolie);
 
-    final entries = reanimationsfall.snapshot().rhythmusanalyseEintraege;
+    final snapshot = reanimationsfall.snapshot();
+    final entries = snapshot.rhythmusanalyseEintraege;
     expect(entries, hasLength(2));
     expect(entries.first.ergebnis, RhythmusanalyseErgebnis.kammerflimmern);
-    expect(entries.first.notiz, 'VF seit zwei Minuten');
+    expect(entries.first.notiz, 'VF');
     expect(entries.last.ergebnis, RhythmusanalyseErgebnis.asystolie);
     expect(entries.last.notiz, isNull);
+
+    expect(snapshot.rhythmusanalyseNotizKorrekturen, hasLength(1));
+    expect(snapshot.rhythmusanalyseNotizKorrekturen.single.eintragIndex, 0);
+    expect(
+      snapshot.rhythmusanalyseNotizKorrekturen.single.notiz,
+      'VF seit zwei Minuten',
+    );
   });
 
   test(

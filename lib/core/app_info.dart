@@ -12,9 +12,10 @@ class AppInfo {
   /// The build number of the installed build, for example `1`.
   final String buildNumber;
 
-  /// The version formatted for display, for example `0.1.0 (Build 1)`.
-  String get versionLabel =>
-      buildNumber.isEmpty ? version : '$version (Build $buildNumber)';
+  /// Formats the version with the build number when one is available.
+  String versionLabel(String Function(String version, String build) format) {
+    return buildNumber.isEmpty ? version : format(version, buildNumber);
+  }
 
   /// Loads the installed build's metadata, or null when it is unavailable.
   static Future<AppInfo?> load() async {

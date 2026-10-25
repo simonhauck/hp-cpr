@@ -866,5 +866,42 @@
         "type": "String"
       }
     }
+  },
+  "eventSchockEnergyCorrected": "Schock {count} korrigiert: {energie} J",
+  "@eventSchockEnergyCorrected": {
+    "description": "Ereignis: korrigierte Schockenergie",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "energie": {
+        "type": "int"
+      }
+    }
+  },
+  "eventNoteCorrected": "Notiz korrigiert: {text}",
+  "@eventNoteCorrected": {
+    "description": "Ereignis: korrigierte Rhythmusanalyse-Notiz",
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "eventNoteRemoved": "Notiz entfernt",
+  "@eventNoteRemoved": {
+    "description": "Ereignis: entfernte Rhythmusanalyse-Notiz"
+  },
+  "versionWithBuild": "{version} (Build {build})",
+  "@versionWithBuild": {
+    "description": "Version mit Buildnummer",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      },
+      "build": {
+        "type": "String"
+      }
+    }
   }
 }
