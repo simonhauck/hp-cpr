@@ -59,7 +59,7 @@ class AppDrawer extends StatelessWidget {
                 ],
               ),
             ),
-            const Divider(height: 1),
+            const Divider(height: PageLayout.dividerHeight),
             _destination(
               context,
               AppDestination.einsatzlog,

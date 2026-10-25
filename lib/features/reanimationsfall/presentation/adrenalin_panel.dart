@@ -13,11 +13,15 @@ class AdrenalinPanel extends StatelessWidget {
     required this.snapshot,
     required this.layout,
     required this.onRecordAdrenalin,
+    this.isRecordingEnabled = true,
   });
 
   final ReanimationsfallSnapshot snapshot;
   final PageLayout layout;
   final VoidCallback onRecordAdrenalin;
+
+  /// Recording is disabled while the case is interrupted by ROSC.
+  final bool isRecordingEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -161,7 +165,7 @@ class AdrenalinPanel extends StatelessWidget {
           ),
           const SizedBox(width: PageLayout.space8),
           FilledButton.tonalIcon(
-            onPressed: onRecordAdrenalin,
+            onPressed: isRecordingEnabled ? onRecordAdrenalin : null,
             icon: const Icon(Icons.medication_outlined),
             label: Text(l10n.adrenalinRecordButton),
             style: FilledButton.styleFrom(

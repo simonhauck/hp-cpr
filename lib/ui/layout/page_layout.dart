@@ -49,6 +49,9 @@ class PageLayout {
   // Icon and control sizes.
   static const double iconSmall = 18;
   static const double iconLarge = 36;
+  static const double activeCaseMaxWidth = 520;
+  static const double dividerHeight = 1;
+  static const double timelineTimeWidth = 64;
   static const double dialogActionWidth = 200;
   static const double dialogActionHeight = 56;
   static const double dialogOptionHeight = 52;

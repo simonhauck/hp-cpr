@@ -297,6 +297,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
               snapshot: snapshot,
               layout: layout,
               onRecordAdrenalin: _recordAdrenalin,
+              isRecordingEnabled: snapshot.istLaufend,
             ),
             if (showAmiodaron) ...[
               SizedBox(height: layout.contentGap),

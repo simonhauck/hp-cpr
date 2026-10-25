@@ -112,7 +112,9 @@ class _StartPageState extends State<StartPage> {
         if (activeFall != null) {
           return Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
+              constraints: const BoxConstraints(
+                maxWidth: PageLayout.activeCaseMaxWidth,
+              ),
               child: _ActiveReanimationsfallCard(
                 layout: layout,
                 reanimationsfall: activeFall,

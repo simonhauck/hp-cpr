@@ -47,6 +47,26 @@ class RhythmusanalyseEintrag {
   }
 }
 
+/// A later correction of a recorded Rhythmusanalyse note.
+///
+/// The original [RhythmusanalyseEintrag] keeps its note; this entry is the
+/// append-only log record that supersedes it.
+class RhythmusanalyseNotizKorrektur {
+  const RhythmusanalyseNotizKorrektur({
+    required this.eintragIndex,
+    required this.zeitpunkt,
+    this.notiz,
+  });
+
+  /// The index of the corrected entry in the result history.
+  final int eintragIndex;
+
+  /// The elapsed time since the Startzeit when the correction was recorded.
+  final Duration zeitpunkt;
+
+  final String? notiz;
+}
+
 /// Why the Zeitnehmer skipped the Rhythmusanalyse.
 enum RhythmusanalyseUebersprungenGrund { keineZeit, aedUebernimmt, sonstiges }
 

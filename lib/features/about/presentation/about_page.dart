@@ -75,7 +75,9 @@ class _AboutPageState extends State<AboutPage> {
                     final info = snapshot.data;
                     if (info == null) return const SizedBox.shrink();
                     return Text(
-                      l10n.aboutVersion(info.versionLabel),
+                      l10n.aboutVersion(
+                        info.versionLabel(l10n.versionWithBuild),
+                      ),
                       style: theme.textTheme.titleMedium,
                     );
                   },

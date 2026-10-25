@@ -133,7 +133,8 @@ class _EinsatzlogPageState extends State<EinsatzlogPage> {
                     PageLayout.space24,
                   ),
                   itemCount: states.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
+                  separatorBuilder: (_, _) =>
+                      const Divider(height: PageLayout.dividerHeight),
                   itemBuilder: (context, index) {
                     return _EinsatzlogTile(
                       state: states[index],

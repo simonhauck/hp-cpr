@@ -39,6 +39,8 @@ jobs:
         run: |
           base_href="/${GITHUB_REPOSITORY#*/}/"
           nix develop .#ci --command flutter build web --release --base-href "$base_href"
+      - name: Verify app license is bundled
+        run: grep -q '^hp_cpr$' build/web/assets/NOTICES
       - name: Upload web build
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:

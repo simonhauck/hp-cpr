@@ -610,4 +610,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String eventNotiz(String text) {
     return 'Notiz: $text';
   }
+
+  @override
+  String eventSchockEnergyCorrected(int count, int energie) {
+    return 'Schock $count korrigiert: $energie J';
+  }
+
+  @override
+  String eventNoteCorrected(String text) {
+    return 'Notiz korrigiert: $text';
+  }
+
+  @override
+  String get eventNoteRemoved => 'Notiz entfernt';
+
+  @override
+  String versionWithBuild(String version, String build) {
+    return '$version (Build $build)';
+  }
 }

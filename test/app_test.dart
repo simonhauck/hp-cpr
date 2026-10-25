@@ -1003,6 +1003,12 @@ void main() {
     expect(find.text('ROSC'), findsWidgets);
     expect(find.text('Reanimation wieder aufnehmen'), findsOneWidget);
     expect(find.text('Letzte Gabe 00:00'), findsOneWidget);
+    expect(
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Gabe'))
+          .onPressed,
+      isNull,
+    );
     expect(find.text('Zusammenfassung'), findsNothing);
 
     clock.advance(const Duration(minutes: 2));
@@ -1036,6 +1042,12 @@ void main() {
     expect(find.text('Druckphase'), findsOneWidget);
     expect(find.text('02:00'), findsOneWidget);
     expect(find.text('ROSC'), findsNothing);
+    expect(
+      tester
+          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Gabe'))
+          .onPressed,
+      isNotNull,
+    );
 
     clock.advance(const Duration(seconds: 10));
     await tester.pump(const Duration(milliseconds: 250));
@@ -1126,9 +1138,18 @@ void main() {
     await tester.scrollUntilVisible(find.text('Rhythmusanalyse: Unklar'), 200);
     expect(find.text('Rhythmusanalyse: Unklar'), findsOneWidget);
 
+    await tester.scrollUntilVisible(
+      find.text('Notiz korrigiert: Rhythmus nicht beurteilbar'),
+      200,
+    );
+    expect(
+      find.text('Notiz korrigiert: Rhythmus nicht beurteilbar'),
+      findsOneWidget,
+    );
+
     await tester.scrollUntilVisible(find.text('Notizen'), 200);
     expect(find.text('Notizen'), findsOneWidget);
-    expect(find.text('Rhythmus nicht beurteilbar'), findsNWidgets(2));
+    expect(find.text('Rhythmus nicht beurteilbar'), findsOneWidget);
   });
 
   testWidgets('restores an active Reanimationsfall after an app restart', (
@@ -1537,6 +1558,69 @@ void main() {
 
     await tester.scrollUntilVisible(find.text('Nach der Übergabe'), 300);
     expect(find.text('Nach der Übergabe'), findsOneWidget);
+  });
+
+  testWidgets('keeps original values when the Schock energy and the note are '
+      'corrected', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await tester.tap(find.text('Schock (0)'));
+    await tester.pump();
+    await tester.tap(find.text('Energie'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField), '200');
+    await tester.tap(find.text('Speichern'));
+    await tester.pumpAndSettle();
+    expect(find.text('Schock 1 erfasst · 200 J'), findsOneWidget);
+
+    await tester.tap(find.text('Analyse'));
+    await tester.pump();
+    await tester.tap(find.text('Ergebnis erfassen'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Unklar'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'alt');
+    await tester.tap(find.text('Speichern'));
+    await tester.pumpAndSettle();
+    expect(find.text('alt'), findsOneWidget);
+
+    await tester.tap(find.text('Notiz bearbeiten'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'neu');
+    await tester.tap(find.text('Speichern'));
+    await tester.pumpAndSettle();
+    expect(find.text('neu'), findsOneWidget);
+
+    await tester.tap(find.text('CPR fortsetzen'));
+    await tester.pump();
+    await tester.tap(find.byTooltip('Fall beenden'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Abbruch'));
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(find.text('Schock 1'), 200);
+    expect(find.text('Schock 1'), findsOneWidget);
+
+    await tester.scrollUntilVisible(
+      find.text('Schock 1 korrigiert: 200 J'),
+      200,
+    );
+    expect(find.text('Schock 1 korrigiert: 200 J'), findsOneWidget);
+
+    await tester.scrollUntilVisible(find.text('Notiz korrigiert: neu'), 200);
+    expect(find.text('Notiz korrigiert: neu'), findsOneWidget);
+
+    await tester.scrollUntilVisible(find.text('Notizen'), 200);
+    expect(find.text('neu'), findsOneWidget);
+
+    final stored = (await store.load()).single;
+    expect(stored.schocks.single.energieJoule, isNull);
+    expect(stored.schockKorrekturen.single.energieJoule, 200);
+    expect(stored.rhythmusanalyseEintraege.single.notiz, isNull);
+    expect(stored.rhythmusanalyseNotizKorrekturen, hasLength(2));
+    expect(stored.rhythmusanalyseNotizKorrekturen.first.notiz, 'alt');
+    expect(stored.rhythmusanalyseNotizKorrekturen.last.notiz, 'neu');
   });
 
   testWidgets('opens the app menu and closes it on the current destination', (

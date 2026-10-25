@@ -1161,6 +1161,30 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Notiz: {text}'**
   String eventNotiz(String text);
+
+  /// Ereignis: korrigierte Schockenergie
+  ///
+  /// In de, this message translates to:
+  /// **'Schock {count} korrigiert: {energie} J'**
+  String eventSchockEnergyCorrected(int count, int energie);
+
+  /// Ereignis: korrigierte Rhythmusanalyse-Notiz
+  ///
+  /// In de, this message translates to:
+  /// **'Notiz korrigiert: {text}'**
+  String eventNoteCorrected(String text);
+
+  /// Ereignis: entfernte Rhythmusanalyse-Notiz
+  ///
+  /// In de, this message translates to:
+  /// **'Notiz entfernt'**
+  String get eventNoteRemoved;
+
+  /// Version mit Buildnummer
+  ///
+  /// In de, this message translates to:
+  /// **'{version} (Build {build})'**
+  String versionWithBuild(String version, String build);
 }
 
 class _AppLocalizationsDelegate

@@ -3,10 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/features/messwerte/presentation/messwert_erfassen_dialog.dart';
-import 'package:hp_cpr/features/messwerte/presentation/messwert_format.dart';
+import 'package:hp_cpr/features/messwerte/presentation/messwert_tile.dart';
 import 'package:hp_cpr/features/messwerte/presentation/notiz_erfassen_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
-import 'package:hp_cpr/features/reanimationsfall/domain/messwert.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
@@ -160,8 +159,9 @@ class _MesswertePageState extends State<MesswertePage> {
                       children: [
                         for (final (index, messwert)
                             in _snapshot.messwerte.indexed) ...[
-                          if (index > 0) const Divider(height: 1),
-                          _MesswertTile(messwert: messwert, l10n: l10n),
+                          if (index > 0)
+                            const Divider(height: PageLayout.dividerHeight),
+                          MesswertTile(messwert: messwert),
                         ],
                       ],
                     ),
@@ -188,7 +188,8 @@ class _MesswertePageState extends State<MesswertePage> {
                       children: [
                         for (final (index, notiz)
                             in _snapshot.notizen.indexed) ...[
-                          if (index > 0) const Divider(height: 1),
+                          if (index > 0)
+                            const Divider(height: PageLayout.dividerHeight),
                           ListTile(
                             leading: const Icon(Icons.notes),
                             title: Text(notiz.text),
@@ -204,30 +205,6 @@ class _MesswertePageState extends State<MesswertePage> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _MesswertTile extends StatelessWidget {
-  const _MesswertTile({required this.messwert, required this.l10n});
-
-  final Messwert messwert;
-  final AppLocalizations l10n;
-
-  @override
-  Widget build(BuildContext context) {
-    final note = messwert.notiz;
-
-    return ListTile(
-      leading: Icon(messwertIcon(messwert.typ)),
-      title: Text(formatMesswert(l10n, messwert)),
-      subtitle: Text(
-        [
-          messwertTypLabel(l10n, messwert.typ),
-          formatReanimationsdauer(messwert.zeitpunkt),
-          ?note,
-        ].join(' · '),
       ),
     );
   }
