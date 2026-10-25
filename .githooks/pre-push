@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Fast local guardrail. Bypass with `git push --no-verify`.
+set -euo pipefail
+
+if ! command -v flutter >/dev/null 2>&1; then
+  echo "pre-push: flutter not found; run this inside 'nix develop'." >&2
+  exit 1
+fi
+
+dart format --output=none --set-exit-if-changed lib test
+flutter analyze
+flutter test

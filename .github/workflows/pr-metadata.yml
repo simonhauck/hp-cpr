@@ -1,0 +1,72 @@
+name: PR metadata
+
+on:
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - labeled
+      - unlabeled
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  pr-metadata:
+    name: PR metadata
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check conventional title
+        uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          requireScope: false
+      - name: Check type label
+        env:
+          EVENT_PATH: ${{ github.event_path }}
+        run: |
+          set -euo pipefail
+          title=$(jq -r '.pull_request.title' "$EVENT_PATH")
+          labels=$(jq -r '[.pull_request.labels[].name] | join(",")' "$EVENT_PATH")
+          branch=$(jq -r '.pull_request.head.ref' "$EVENT_PATH")
+
+          if [[ "$labels" == *"autorelease: pending"* || "$branch" == release-please--* ]]; then
+            echo "Release-please PR: skipping type-label check."
+            exit 0
+          fi
+
+          case "$title" in
+            fix*:*) expected=bug ;;
+            feat*:*) expected=feature ;;
+            docs*:*) expected=documentation ;;
+            chore*:*|refactor*:*|perf*:*|test*:*|ci*:*|build*:*|style*:*|revert*:*) expected=maintenance ;;
+            *) echo "::error::Unsupported conventional PR title: $title"; exit 1 ;;
+          esac
+
+          present=()
+          for label in bug feature documentation maintenance; do
+            if [[ ",$labels," == *",$label,"* ]]; then
+              present+=("$label")
+            fi
+          done
+
+          if [[ ${#present[@]} -ne 1 || "${present[0]}" != "$expected" ]]; then
+            echo "::error::Expected exactly one type label '$expected' for title '$title'; found: ${labels:-none}"
+            exit 1
+          fi

@@ -15,8 +15,10 @@ nix develop --command flutter <command>
 Quality checks before wrapping up:
 
 ```bash
+dart format --output=none --set-exit-if-changed lib test
 flutter analyze
 flutter test
+flutter test --platform chrome
 ```
 
 Builds:
@@ -24,6 +26,7 @@ Builds:
 ```bash
 flutter build web --release
 flutter build apk --debug
+flutter build apk --release
 ```
 
 ## Issues
@@ -53,9 +56,19 @@ All commits follow [Conventional Commits](https://www.conventionalcommits.org/):
 ## Pull requests
 
 - PR titles use the same Conventional Commits format, since a squash merge turns the title into the commit message.
+- Apply exactly one PR type label: `bug`, `feature`, `documentation`, or `maintenance`. Derive it from the title: `fix` → `bug`, `feat` → `feature`, `docs` → `documentation`, everything else → `maintenance`. release-please PRs (`autorelease: pending`) are exempt.
 - In the PR body, link every issue the PR fully resolves with its own closing keyword: `Closes #12`, `Fixes #34`, `Resolves #56`. GitHub closes these issues automatically when the PR merges into the default branch.
 - Use `Part of #12` when the PR only contributes to an issue; this does not auto-close it.
 - In addition to the `/pr` skill template, end the body with a `## Related issues` section containing those links.
+
+## Delivery
+
+- The public web app is the latest GitHub Release at <https://simonhauck.github.io/hp-cpr/>. `main` is a checked development state, not the published site.
+- CI runs on pull requests and on `main`. Direct pushes to `main` are allowed; force pushes and deletions are blocked. Releases and Pages deployments are gated by the CI checks.
+- Releases are batched by release-please. Merge the release PR manually; do not auto-merge it. `GITHUB_TOKEN` is used deliberately, so the generated release PR does not run CI; the merged release commit is checked before tagging or deploying.
+- The APK attached to a release is release-mode but debug-signed. It is a test artifact, not a Play Store upload.
+- Google Play publishing is out of scope until a developer account exists.
+- `nix develop` points the local git hooks at `.githooks`; the pre-push hook runs format, analyze, and VM tests. Bypass it only deliberately with `git push --no-verify`.
 
 ## UI language
 

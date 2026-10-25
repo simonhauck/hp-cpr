@@ -1,6 +1,6 @@
 # HP-CPR Companion
 
-Private Flutter app as a companion for the **High-Performance CPR standard**. The app is intended to support the resuscitation workflow with timing: resuscitation duration, medication administration, rhythm analyses, and further steps.
+Flutter app as a companion for the **High-Performance CPR standard**. The app is intended to support the resuscitation workflow with timing: resuscitation duration, medication administration, rhythm analyses, and further steps.
 
 > **Status:** The Zeitnehmer can start a Reanimationsfall immediately or with a corrected Startzeit, run the Druckphase countdown, enter the Analysephase, record a Rhythmusanalyse result, skip it, and return to the Druckphase. Medication timers and the Einsatzlog are still to come.
 
@@ -73,12 +73,15 @@ flutter run -d <device-id>
 # Web release, output under build/web
 flutter build web --release
 
-# Android debug APK, output under build/app/outputs/flutter-apk/
+# Android APKs, output under build/app/outputs/flutter-apk/
 flutter build apk --debug
+flutter build apk --release # release-mode, debug-signed by the current signing config
 
 # Quality checks
+dart format --output=none --set-exit-if-changed lib test
 flutter analyze
 flutter test
+flutter test --platform chrome
 ```
 
 ### Android device on NixOS
@@ -124,6 +127,55 @@ opencode mcp list
 ```
 
 The server provides, among other things, analysis, tests, pub, hot reload/restart, the widget inspector, and the connection to the running app via the Dart Tooling Daemon (DTD).
+
+## Delivery
+
+The public web app is available at <https://simonhauck.github.io/hp-cpr/>. It serves the latest GitHub Release, not `main`.
+
+### Pull requests
+
+Every pull request runs the same checks in CI:
+
+- `dart format --output=none --set-exit-if-changed lib test`
+- `flutter analyze`
+- `flutter test`
+- `flutter test --platform chrome`
+- `flutter gen-l10n` plus a diff check on `lib/l10n`
+- `flutter build web --release`
+- `flutter build apk --release`
+- Conventional PR title and exactly one type label
+
+The type label follows the PR title:
+
+| Title type | Label |
+| --- | --- |
+| `fix` | `bug` |
+| `feat` | `feature` |
+| `docs` | `documentation` |
+| everything else | `maintenance` |
+
+release-please PRs are exempt from the label check.
+
+### Releases
+
+release-please keeps one release PR open. Merge it when you want to cut a release. Merging it bumps `pubspec.yaml` (including the `+build` number) and `CHANGELOG.md`; the delivery workflow then checks the merged commit, creates the `vX.Y.Z` tag and GitHub Release, deploys the release build to Pages, and attaches:
+
+- `hp-cpr-<version>-debug-signed.apk` — release-mode, debug-signed, for testing only
+- `hp-cpr-web-<version>.zip`
+
+The release PR itself does not run CI because release-please uses `GITHUB_TOKEN`. The merged release commit is checked before anything is tagged or deployed.
+
+Direct pushes to `main` are allowed, but they are not checked before they land. Force pushes and deletions are blocked. To catch problems early, enable the local hook once:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+`nix develop` does this automatically when `.githooks` exists.
+
+### Rollback
+
+Revert the bad commit on `main` and merge a new release PR. The live page stays on the previous release until the new release is published. For the APK, use the previous GitHub Release asset. Play Store rollback will be documented with the Play workflow.
 
 ## Project structure
 
@@ -204,4 +256,4 @@ Commits follow [Conventional Commits](https://www.conventionalcommits.org/) (`fe
 - Flutter project name: `hp_cpr`
 - Android `applicationId` and namespace: `de.simonhauck.hp_cpr`
 - Web app title: `HP-CPR`
-- Repository: [simonhauck/hp-cpr](https://github.com/simonhauck/hp-cpr) (private)
+- Repository: [simonhauck/hp-cpr](https://github.com/simonhauck/hp-cpr) (public)
