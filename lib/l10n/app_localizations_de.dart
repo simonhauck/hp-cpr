@@ -284,4 +284,41 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsSoundDescription => 'Ton bei fälligen Aktionen';
+
+  @override
+  String get menuTitle => 'Menü';
+
+  @override
+  String get menuOpenTooltip => 'Menü öffnen';
+
+  @override
+  String get legalTitle => 'Rechtliches';
+
+  @override
+  String get legalDescription => 'Rechtliche Informationen zu HP-CPR.';
+
+  @override
+  String get legalLicensesTile => 'Lizenzen';
+
+  @override
+  String get legalLicensesDescription =>
+      'Lizenztexte der App und ihrer Bibliotheken';
+
+  @override
+  String get licensesLegalese => 'MIT-Lizenz · © 2026 Simon Hauck';
+
+  @override
+  String get aboutTitle => 'Über';
+
+  @override
+  String aboutVersion(String version) {
+    return 'Version $version';
+  }
+
+  @override
+  String get aboutDescription =>
+      'Begleit-App für den High-Performance-CPR-Standard';
+
+  @override
+  String get aboutCopyright => '© 2026 Simon Hauck';
 }

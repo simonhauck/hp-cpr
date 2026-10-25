@@ -184,9 +184,14 @@ lib/
 ├── app.dart                                    # MaterialApp, theme, localization, dependencies
 ├── main.dart                                   # entry point
 ├── core/
+│   ├── app_info.dart                           # installed version via package_info_plus
 │   ├── clock.dart                              # wall-clock + monotonic time source
 │   └── wake_lock.dart                          # keeps the screen awake during a case
 ├── features/
+│   ├── about/
+│   │   └── presentation/about_page.dart         # app name, version, copyright
+│   ├── legal/
+│   │   └── presentation/legal_page.dart         # Rechtliches and the license page
 │   ├── reanimationsfall/
 │   │   ├── domain/
 │   │   │   ├── adrenalin.dart                   # Adrenalin doses + Zeitfenster state
@@ -214,9 +219,13 @@ lib/
 │       ├── domain/app_settings.dart            # Leitlinienprofil selection, alerts
 │       └── presentation/settings_page.dart     # settings form
 ├── ui/
-│   └── layout/
-│       ├── page_layout.dart                    # breakpoints + density tokens
-│       └── page_scaffold.dart                  # shared page frame
+│   ├── layout/
+│   │   ├── page_layout.dart                    # breakpoints + density tokens
+│   │   └── page_scaffold.dart                  # shared page frame
+│   └── navigation/
+│       ├── app_destination.dart                # menu destinations
+│       ├── app_drawer.dart                     # drawer + menu button
+│       └── app_routes.dart                     # destination builders
 └── l10n/
     ├── app_de.arb                              # German UI strings
     └── app_localizations*.dart                 # generated
@@ -229,6 +238,7 @@ test/
 android/                                        # Android target
 web/                                            # web target
 flake.nix                                       # Nix dev shell
+LICENSE                                         # MIT license
 opencode.json                                   # OpenCode/MCP configuration
 ```
 
@@ -254,6 +264,10 @@ flutter build ios
 ## Contributing
 
 Commits follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, …) and commit messages are written in English. PRs link the issues they fully resolve with `Closes #<number>` (one keyword per issue) so GitHub closes them on merge. Specs use GitHub sub-issues for their tickets, and dependencies use the native blocked-by relation (`gh issue edit <child> --add-blocked-by <blocker>`). See `AGENTS.md` for the full issue, commit, and PR rules.
+
+## License
+
+HP-CPR is released under the [MIT License](LICENSE).
 
 ## Project metadata
 

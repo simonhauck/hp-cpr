@@ -17,6 +17,8 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart'
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 import 'package:hp_cpr/ui/layout/page_scaffold.dart';
+import 'package:hp_cpr/ui/navigation/app_drawer.dart';
+import 'package:hp_cpr/ui/navigation/app_routes.dart';
 
 /// The running Reanimationsfall in its current Reanimationsphase.
 class ReanimationsfallPage extends StatefulWidget {
@@ -24,10 +26,12 @@ class ReanimationsfallPage extends StatefulWidget {
     super.key,
     required this.reanimationsfall,
     required this.wakeLock,
+    required this.routes,
   });
 
   final Reanimationsfall reanimationsfall;
   final WakeLock wakeLock;
+  final AppRoutes routes;
 
   @override
   State<ReanimationsfallPage> createState() => _ReanimationsfallPageState();
@@ -147,6 +151,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
 
     return PageScaffold(
       maxWidth: PageLayout.maxContentWidth,
+      drawer: AppDrawer(routes: widget.routes),
       header: (context, layout) =>
           _ReanimationsfallHeader(snapshot: snapshot, layout: layout),
       content: (context, layout) {
@@ -244,6 +249,8 @@ class _ReanimationsfallHeader extends StatelessWidget {
           leitlinienprofil: snapshot.leitlinienprofil,
           compact: layout.isCompact,
         ),
+        const SizedBox(width: PageLayout.space8),
+        const AppMenuButton(),
       ],
     );
   }

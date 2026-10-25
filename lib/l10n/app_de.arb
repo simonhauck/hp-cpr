@@ -383,5 +383,54 @@
   "settingsSoundDescription": "Ton bei fälligen Aktionen",
   "@settingsSoundDescription": {
     "description": "Erklärung der Toneinstellung"
+  },
+  "menuTitle": "Menü",
+  "@menuTitle": {
+    "description": "Überschrift im App-Menü"
+  },
+  "menuOpenTooltip": "Menü öffnen",
+  "@menuOpenTooltip": {
+    "description": "Tooltip der Menü-Schaltfläche"
+  },
+  "legalTitle": "Rechtliches",
+  "@legalTitle": {
+    "description": "Titel der Seite mit rechtlichen Informationen"
+  },
+  "legalDescription": "Rechtliche Informationen zu HP-CPR.",
+  "@legalDescription": {
+    "description": "Einleitung auf der Rechtliches-Seite"
+  },
+  "legalLicensesTile": "Lizenzen",
+  "@legalLicensesTile": {
+    "description": "Eintrag zu den Lizenztexten"
+  },
+  "legalLicensesDescription": "Lizenztexte der App und ihrer Bibliotheken",
+  "@legalLicensesDescription": {
+    "description": "Erklärung des Lizenzen-Eintrags"
+  },
+  "licensesLegalese": "MIT-Lizenz · © 2026 Simon Hauck",
+  "@licensesLegalese": {
+    "description": "Copyright-Hinweis auf der Lizenzseite"
+  },
+  "aboutTitle": "Über",
+  "@aboutTitle": {
+    "description": "Titel der Über-Seite"
+  },
+  "aboutVersion": "Version {version}",
+  "@aboutVersion": {
+    "description": "Anzeige der installierten Version",
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutDescription": "Begleit-App für den High-Performance-CPR-Standard",
+  "@aboutDescription": {
+    "description": "Kurzbeschreibung der App auf der Über-Seite"
+  },
+  "aboutCopyright": "© 2026 Simon Hauck",
+  "@aboutCopyright": {
+    "description": "Copyright-Hinweis auf der Über-Seite"
   }
 }
