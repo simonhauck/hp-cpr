@@ -2,6 +2,7 @@ import 'package:hp_cpr/core/clock.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/adrenalin.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/amiodaron.dart';
+import 'package:hp_cpr/features/reanimationsfall/domain/messwert.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/schock.dart';
 
@@ -140,6 +141,8 @@ class Reanimationsfall {
       state.uebersprungeneRhythmusanalysen,
     );
     _rhythmusanalyseEintraege.addAll(state.rhythmusanalyseEintraege);
+    _messwerte.addAll(state.messwerte);
+    _notizen.addAll(state.notizen);
     _roscEreignisse.addAll(state.roscEreignisse);
     _wiederbeginnEreignisse.addAll(state.wiederbeginnEreignisse);
     _abschnitte.addAll(state.abschnitte);
@@ -179,6 +182,8 @@ class Reanimationsfall {
   ReanimationsfallEnde? _ende;
   Duration? _verworfenAm;
   final List<RhythmusanalyseEintrag> _rhythmusanalyseEintraege = [];
+  final List<Messwert> _messwerte = [];
+  final List<ReanimationsfallNotiz> _notizen = [];
 
   Reanimationsphase _phase = Reanimationsphase.druckphase;
   late Duration _compressionCycleStartOffset;
@@ -424,6 +429,89 @@ class Reanimationsfall {
     }
   }
 
+  /// Records a temperature in degrees Celsius.
+  void recordTemperatur(double celsius, {String? notiz}) {
+    _requireOpen();
+    if (!celsius.isFinite || celsius <= 0) {
+      throw ArgumentError.value(celsius, 'celsius', 'must be greater than 0');
+    }
+    _messwerte.add(
+      TemperaturMesswert(
+        zeitpunkt: _elapsedOffset,
+        celsius: celsius,
+        notiz: _normalizeNotiz(notiz),
+      ),
+    );
+  }
+
+  /// Records a blood sugar value in mg/dL.
+  void recordBlutzucker(int mgDl, {String? notiz}) {
+    _requireOpen();
+    if (mgDl <= 0) {
+      throw ArgumentError.value(mgDl, 'mgDl', 'must be greater than 0');
+    }
+    _messwerte.add(
+      BlutzuckerMesswert(
+        zeitpunkt: _elapsedOffset,
+        mgDl: mgDl,
+        notiz: _normalizeNotiz(notiz),
+      ),
+    );
+  }
+
+  /// Records a blood pressure in mmHg.
+  void recordBlutdruck({
+    required int systolisch,
+    required int diastolisch,
+    String? notiz,
+  }) {
+    _requireOpen();
+    if (systolisch <= 0 || diastolisch <= 0 || systolisch <= diastolisch) {
+      throw ArgumentError(
+        'systolisch must be greater than diastolisch and both must be positive',
+      );
+    }
+    _messwerte.add(
+      BlutdruckMesswert(
+        zeitpunkt: _elapsedOffset,
+        systolisch: systolisch,
+        diastolisch: diastolisch,
+        notiz: _normalizeNotiz(notiz),
+      ),
+    );
+  }
+
+  /// Records a heart rate in beats per minute.
+  void recordHerzfrequenz(int proMinute, {String? notiz}) {
+    _requireOpen();
+    if (proMinute <= 0) {
+      throw ArgumentError.value(
+        proMinute,
+        'proMinute',
+        'must be greater than 0',
+      );
+    }
+    _messwerte.add(
+      HerzfrequenzMesswert(
+        zeitpunkt: _elapsedOffset,
+        proMinute: proMinute,
+        notiz: _normalizeNotiz(notiz),
+      ),
+    );
+  }
+
+  /// Records a free-text note.
+  void recordNotiz(String text) {
+    _requireOpen();
+    final normalized = text.trim();
+    if (normalized.isEmpty) {
+      throw ArgumentError.value(text, 'text', 'must not be empty');
+    }
+    _notizen.add(
+      ReanimationsfallNotiz(zeitpunkt: _elapsedOffset, text: normalized),
+    );
+  }
+
   /// Records a skipped Rhythmusanalyse and starts a fresh Druckphase.
   void skipRhythmusanalyse([RhythmusanalyseUebersprungenGrund? grund]) {
     _requireLaufend();
@@ -645,6 +733,8 @@ class Reanimationsfall {
       rhythmusanalyseErgebnis: _rhythmusanalyseErgebnis,
       rhythmusanalyseNotiz: _rhythmusanalyseNotiz,
       rhythmusanalyseEintraege: List.unmodifiable(_rhythmusanalyseEintraege),
+      messwerte: List.unmodifiable(_messwerte),
+      notizen: List.unmodifiable(_notizen),
       uebersprungeneRhythmusanalysen: List.unmodifiable(
         _uebersprungeneRhythmusanalysen,
       ),
@@ -700,6 +790,15 @@ class Reanimationsfall {
     }
   }
 
+  void _requireOpen() {
+    if (_zustand == ReanimationsfallZustand.beendet ||
+        _zustand == ReanimationsfallZustand.verworfen) {
+      throw StateError('the Reanimationsfall is closed');
+    }
+  }
+
+  Duration get _elapsedOffset => _monotonicNow() - _monotonicStartOffset;
+
   /// The serializable state used by the local store.
   ReanimationsfallState exportState() {
     final analysephaseStart = _analysephaseStartOffset;
@@ -735,6 +834,8 @@ class Reanimationsfall {
         _uebersprungeneRhythmusanalysen,
       ),
       rhythmusanalyseEintraege: List.unmodifiable(_rhythmusanalyseEintraege),
+      messwerte: List.unmodifiable(_messwerte),
+      notizen: List.unmodifiable(_notizen),
       roscEreignisse: List.unmodifiable(_roscEreignisse),
       wiederbeginnEreignisse: List.unmodifiable(_wiederbeginnEreignisse),
       abschnitte: List.unmodifiable(_abschnitte),
@@ -795,6 +896,8 @@ class ReanimationsfallSnapshot {
     required this.rhythmusanalyseErgebnis,
     required this.rhythmusanalyseNotiz,
     required this.rhythmusanalyseEintraege,
+    required this.messwerte,
+    required this.notizen,
     required this.uebersprungeneRhythmusanalysen,
     required this.schocks,
     required this.schockRueckgaengigkeiten,
@@ -857,6 +960,12 @@ class ReanimationsfallSnapshot {
 
   /// Every recorded Rhythmusanalyse result, including previous cycles.
   final List<RhythmusanalyseEintrag> rhythmusanalyseEintraege;
+
+  /// Every recorded Messwert.
+  final List<Messwert> messwerte;
+
+  /// Every recorded free-text note.
+  final List<ReanimationsfallNotiz> notizen;
 
   /// Every skipped Rhythmusanalyse, including skips without a reason.
   final List<RhythmusanalyseUeberspringung> uebersprungeneRhythmusanalysen;
@@ -956,6 +1065,8 @@ class ReanimationsfallState {
     required this.amiodaronGaben,
     required this.uebersprungeneRhythmusanalysen,
     required this.rhythmusanalyseEintraege,
+    required this.messwerte,
+    required this.notizen,
     required this.roscEreignisse,
     required this.wiederbeginnEreignisse,
     required this.abschnitte,
@@ -988,6 +1099,8 @@ class ReanimationsfallState {
   final List<AmiodaronGabe> amiodaronGaben;
   final List<RhythmusanalyseUeberspringung> uebersprungeneRhythmusanalysen;
   final List<RhythmusanalyseEintrag> rhythmusanalyseEintraege;
+  final List<Messwert> messwerte;
+  final List<ReanimationsfallNotiz> notizen;
   final List<RoscEreignis> roscEreignisse;
   final List<Reanimationswiederbeginn> wiederbeginnEreignisse;
   final List<Reanimationsabschnitt> abschnitte;

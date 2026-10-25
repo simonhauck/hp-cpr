@@ -1364,6 +1364,181 @@ void main() {
     expect(stored.schocks.single.energieJoule, isNull);
   });
 
+  Future<void> openMesswerte(WidgetTester tester) async {
+    await openDrawer(tester);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(Drawer),
+        matching: find.text('Messwerte'),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 400));
+  }
+
+  Future<void> openMesswertDialog(WidgetTester tester) async {
+    await tester.tap(find.text('Messwert erfassen'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+  }
+
+  Future<void> selectMesswertTyp(WidgetTester tester, String label) async {
+    await tester.tap(
+      find.descendant(of: find.byType(AlertDialog), matching: find.text(label)),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+  }
+
+  Future<void> saveMesswert(WidgetTester tester) async {
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.text('Speichern'),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+  }
+
+  testWidgets('records all four Messwerte and a note from the active case', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    clock.advance(const Duration(seconds: 10));
+    await tester.pump(const Duration(milliseconds: 250));
+    await openMesswerte(tester);
+
+    expect(find.text('Noch keine Messwerte'), findsOneWidget);
+    expect(find.text('Noch keine Notizen'), findsOneWidget);
+
+    await openMesswertDialog(tester);
+    await selectMesswertTyp(tester, 'Temperatur');
+    await tester.enterText(find.byType(TextFormField).at(0), '36,5');
+    await tester.enterText(find.byType(TextFormField).at(1), 'rektal');
+    await saveMesswert(tester);
+
+    expect(find.text('36,5 °C'), findsOneWidget);
+    expect(find.textContaining('rektal'), findsOneWidget);
+
+    await openMesswertDialog(tester);
+    await selectMesswertTyp(tester, 'Blutdruck');
+    await tester.enterText(find.byType(TextFormField).at(0), '120');
+    await tester.enterText(find.byType(TextFormField).at(1), '80');
+    await saveMesswert(tester);
+
+    expect(find.text('120/80 mmHg'), findsOneWidget);
+
+    await openMesswertDialog(tester);
+    await selectMesswertTyp(tester, 'Blutzucker');
+    await tester.enterText(find.byType(TextFormField).at(0), '100');
+    await saveMesswert(tester);
+
+    expect(find.text('100 mg/dL'), findsOneWidget);
+
+    await openMesswertDialog(tester);
+    await selectMesswertTyp(tester, 'Herzfrequenz');
+    await tester.enterText(find.byType(TextFormField).at(0), '88');
+    await saveMesswert(tester);
+
+    expect(find.text('88 /min'), findsOneWidget);
+
+    await tester.tap(find.text('Notiz erfassen'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.enterText(find.byType(TextFormField), 'Patient kalt');
+    await tester.tap(find.text('Speichern'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Patient kalt'), findsOneWidget);
+  });
+
+  testWidgets('persists Messwerte with the active case across a restart', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+    await openMesswerte(tester);
+
+    await openMesswertDialog(tester);
+    await selectMesswertTyp(tester, 'Herzfrequenz');
+    await tester.enterText(find.byType(TextFormField).at(0), '90');
+    await saveMesswert(tester);
+
+    await pumpApp(tester);
+    await tester.tap(find.text('Fortsetzen'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await openMesswerte(tester);
+
+    expect(find.text('90 /min'), findsOneWidget);
+  });
+
+  testWidgets('shows Messwerte and notes in the summary and opens the '
+      'read-only view', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+    await openMesswerte(tester);
+
+    await openMesswertDialog(tester);
+    await selectMesswertTyp(tester, 'Temperatur');
+    await tester.enterText(find.byType(TextFormField).at(0), '37,2');
+    await saveMesswert(tester);
+
+    await tester.tap(find.text('Notiz erfassen'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.enterText(find.byType(TextFormField), 'Nach der Übergabe');
+    await tester.tap(find.text('Speichern'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(AppBar),
+            matching: find.byType(BackButton),
+          )
+          .hitTestable(),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    await tester.tap(find.byTooltip('Fall beenden'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Übergabe'));
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(find.text('Messwerte öffnen'), 300);
+    expect(find.text('37,2 °C'), findsOneWidget);
+
+    await tester.tap(find.text('Messwerte öffnen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('37,2 °C'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Nach der Übergabe'), 200);
+    expect(find.text('Nach der Übergabe'), findsOneWidget);
+    expect(find.text('Messwert erfassen'), findsNothing);
+    expect(find.text('Notiz erfassen'), findsNothing);
+
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(AppBar),
+            matching: find.byType(BackButton),
+          )
+          .hitTestable(),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(find.text('Nach der Übergabe'), 300);
+    expect(find.text('Nach der Übergabe'), findsOneWidget);
+  });
+
   testWidgets('opens the app menu and closes it on the current destination', (
     tester,
   ) async {
