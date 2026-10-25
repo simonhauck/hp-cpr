@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
+import 'package:hp_cpr/ui/layout/page_layout.dart';
 
 /// The selected skip choice; a null [grund] means "Ohne Angabe".
 class SkipRhythmusanalyseChoice {
@@ -32,19 +33,19 @@ class SkipRhythmusanalyseDialog extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: PageLayout.space8),
           _reasonButton(
             context,
             label: l10n.skipReasonNoTime,
             grund: RhythmusanalyseUebersprungenGrund.keineZeit,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: PageLayout.space8),
           _reasonButton(
             context,
             label: l10n.skipReasonAed,
             grund: RhythmusanalyseUebersprungenGrund.aedUebernimmt,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: PageLayout.space8),
           _reasonButton(
             context,
             label: l10n.skipReasonOther,
@@ -76,7 +77,9 @@ class SkipRhythmusanalyseDialog extends StatelessWidget {
       child: OutlinedButton(
         onPressed: () =>
             Navigator.of(context).pop(SkipRhythmusanalyseChoice(grund)),
-        style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size.fromHeight(PageLayout.dialogOptionHeight),
+        ),
         child: Text(label),
       ),
     );

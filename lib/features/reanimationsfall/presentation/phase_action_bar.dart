@@ -8,11 +8,6 @@ import 'package:hp_cpr/ui/layout/page_layout.dart';
 
 enum PhaseActionEmphasis { filled, outlined }
 
-const double _statusIconSize = 18;
-const double _statusIconGap = 6;
-const double _statusActionPadding = 8;
-const double _summaryIconGap = 8;
-
 /// The phase-dependent actions, status hint, and result summary.
 class PhaseActionBar extends StatelessWidget {
   const PhaseActionBar({
@@ -206,8 +201,8 @@ class _SchockStatusRow extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final buttonStyle = TextButton.styleFrom(
-      minimumSize: Size(0, layout.touchTarget),
-      padding: const EdgeInsets.symmetric(horizontal: _statusActionPadding),
+      minimumSize: Size(PageLayout.space0, layout.touchTarget),
+      padding: const EdgeInsets.symmetric(horizontal: PageLayout.space8),
     );
     final text = energieJoule == null
         ? l10n.schockRecorded(schockAnzahl)
@@ -217,10 +212,10 @@ class _SchockStatusRow extends StatelessWidget {
       children: [
         Icon(
           Icons.bolt_outlined,
-          size: _statusIconSize,
+          size: PageLayout.iconSmall,
           color: theme.colorScheme.primary,
         ),
-        const SizedBox(width: _statusIconGap),
+        const SizedBox(width: PageLayout.space6),
         Expanded(
           child: Text(
             text,
@@ -350,7 +345,7 @@ class _RhythmusanalyseResultSummary extends StatelessWidget {
       child: Row(
         children: [
           Icon(Icons.check_circle_outline, color: theme.colorScheme.primary),
-          const SizedBox(width: _summaryIconGap),
+          const SizedBox(width: PageLayout.space8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -374,7 +369,7 @@ class _RhythmusanalyseResultSummary extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: _summaryIconGap),
+          const SizedBox(width: PageLayout.space8),
           if (layout.isCompact)
             IconButton(
               onPressed: onEditNotiz,

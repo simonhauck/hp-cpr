@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
+import 'package:hp_cpr/ui/layout/page_layout.dart';
 
 /// The two-step selection of a Rhythmusanalyse result.
 ///
@@ -46,7 +47,7 @@ class _RhythmusanalyseDialogState extends State<RhythmusanalyseDialog> {
               tooltip: l10n.backButton,
               icon: const Icon(Icons.arrow_back),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: PageLayout.space4),
           ],
           Expanded(child: Text(l10n.rhythmusanalyseTitle)),
         ],
@@ -138,10 +139,10 @@ class _RhythmusanalyseDialogState extends State<RhythmusanalyseDialog> {
             fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: PageLayout.space12),
         Wrap(
-          spacing: 12,
-          runSpacing: 12,
+          spacing: PageLayout.space12,
+          runSpacing: PageLayout.space12,
           children: [
             for (final (ergebnis, label) in options)
               _choiceButton(
@@ -161,7 +162,10 @@ class _RhythmusanalyseDialogState extends State<RhythmusanalyseDialog> {
     return FilledButton.tonal(
       onPressed: onPressed,
       style: FilledButton.styleFrom(
-        minimumSize: const Size(200, 56),
+        minimumSize: const Size(
+          PageLayout.dialogActionWidth,
+          PageLayout.dialogActionHeight,
+        ),
         textStyle: Theme.of(context).textTheme.titleSmall,
       ),
       child: Text(label),

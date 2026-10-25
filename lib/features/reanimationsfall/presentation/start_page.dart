@@ -13,11 +13,6 @@ import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 import 'package:hp_cpr/ui/layout/page_scaffold.dart';
 
-const EdgeInsets _backdateChipPadding = EdgeInsets.symmetric(
-  horizontal: 8,
-  vertical: 4,
-);
-
 /// Starts a new Reanimationsfall, either now or with a corrected Startzeit.
 class StartPage extends StatelessWidget {
   const StartPage({
@@ -57,14 +52,14 @@ class StartPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Expanded(child: startNowCard),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: PageLayout.space12),
                   Expanded(child: runningReanimationsfallCard),
                 ],
               )
             : ListView(
                 children: [
                   startNowCard,
-                  const SizedBox(height: 12),
+                  const SizedBox(height: PageLayout.space12),
                   runningReanimationsfallCard,
                 ],
               );
@@ -138,7 +133,7 @@ class _StartHeader extends StatelessWidget {
                             : theme.textTheme.labelLarge)
                         ?.copyWith(
                           color: theme.colorScheme.primary,
-                          letterSpacing: 1.2,
+                          letterSpacing: PageLayout.appTitleLetterSpacing,
                         ),
               ),
               Text(
@@ -182,14 +177,14 @@ class _StartNowCard extends StatelessWidget {
         if (!layout.isCompact) ...[
           Icon(
             Icons.play_circle_outline,
-            size: 36,
+            size: PageLayout.iconLarge,
             color: theme.colorScheme.primary,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: PageLayout.space4),
         ],
         StartCardTitle(l10n.startNowTitle, layout: layout),
         if (!layout.isCompact) ...[
-          const SizedBox(height: 4),
+          const SizedBox(height: PageLayout.space4),
           Text(
             l10n.startNowDescription,
             textAlign: TextAlign.center,
@@ -197,9 +192,9 @@ class _StartNowCard extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: PageLayout.space16),
         ] else
-          const SizedBox(height: 8),
+          const SizedBox(height: PageLayout.space8),
         FilledButton.icon(
           onPressed: onStart,
           icon: const Icon(Icons.play_arrow),
@@ -262,7 +257,10 @@ class _RunningReanimationsfallCard extends StatelessWidget {
               ActionChip(
                 label: Text('${backdate.inMinutes}'),
                 labelStyle: theme.textTheme.titleSmall,
-                padding: _backdateChipPadding,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: PageLayout.space8,
+                  vertical: PageLayout.space4,
+                ),
                 tooltip: l10n.backdateChip(backdate.inMinutes),
                 onPressed: () => onStartBackdated(backdate),
               ),
