@@ -693,6 +693,186 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Letzte Gabe {time}'**
   String amiodaronLastDose(String time);
+
+  /// Erklärung des ROSC-Zustands auf dem laufenden Fall
+  ///
+  /// In de, this message translates to:
+  /// **'Kreislauf zurückgekehrt'**
+  String get roscDescription;
+
+  /// Schaltfläche zum Start eines neuen Reanimationsabschnitts nach ROSC
+  ///
+  /// In de, this message translates to:
+  /// **'Reanimation wieder aufnehmen'**
+  String get resumeResuscitationButton;
+
+  /// Schaltfläche zum Beenden des Reanimationsfalls
+  ///
+  /// In de, this message translates to:
+  /// **'Fall beenden'**
+  String get endCaseButton;
+
+  /// Titel des Dialogs zum Beenden des Reanimationsfalls
+  ///
+  /// In de, this message translates to:
+  /// **'Fall beenden'**
+  String get endCaseTitle;
+
+  /// Beschriftung der Grundauswahl beim Beenden
+  ///
+  /// In de, this message translates to:
+  /// **'Grund'**
+  String get endCaseReasonLabel;
+
+  /// Grund für das Beenden: Übergabe
+  ///
+  /// In de, this message translates to:
+  /// **'Übergabe'**
+  String get endReasonHandover;
+
+  /// Grund für das Beenden: Abbruch
+  ///
+  /// In de, this message translates to:
+  /// **'Abbruch'**
+  String get endReasonAbort;
+
+  /// Sonstiger Grund für das Beenden
+  ///
+  /// In de, this message translates to:
+  /// **'Sonstiges'**
+  String get endReasonOther;
+
+  /// Titel der Zusammenfassung eines beendeten Reanimationsfalls
+  ///
+  /// In de, this message translates to:
+  /// **'Zusammenfassung'**
+  String get summaryTitle;
+
+  /// Überschrift der Zusammenfassung
+  ///
+  /// In de, this message translates to:
+  /// **'Reanimationsfall beendet'**
+  String get summaryCaseEnded;
+
+  /// Beschriftung der gesamten CPR-Dauer
+  ///
+  /// In de, this message translates to:
+  /// **'CPR-Dauer'**
+  String get summaryCprDuration;
+
+  /// Beschriftung der Startzeit in der Zusammenfassung
+  ///
+  /// In de, this message translates to:
+  /// **'Startzeit'**
+  String get summaryStartzeit;
+
+  /// Beschriftung der Endzeit in der Zusammenfassung
+  ///
+  /// In de, this message translates to:
+  /// **'Endzeit'**
+  String get summaryEndzeit;
+
+  /// Beschriftung des Beendigungsgrunds
+  ///
+  /// In de, this message translates to:
+  /// **'Grund'**
+  String get summaryEndReason;
+
+  /// Beschriftung der Schockanzahl in der Zusammenfassung
+  ///
+  /// In de, this message translates to:
+  /// **'Schocks'**
+  String get summaryShocks;
+
+  /// Überschrift der Ereignisliste in der Zusammenfassung
+  ///
+  /// In de, this message translates to:
+  /// **'Ereignisse'**
+  String get summaryEvents;
+
+  /// Überschrift der Notizen in der Zusammenfassung
+  ///
+  /// In de, this message translates to:
+  /// **'Notizen'**
+  String get summaryNotes;
+
+  /// Hinweis, dass keine Notizen erfasst wurden
+  ///
+  /// In de, this message translates to:
+  /// **'Keine Notizen'**
+  String get summaryNoNotes;
+
+  /// Ereignis: Beginn des Reanimationsfalls
+  ///
+  /// In de, this message translates to:
+  /// **'Reanimationsfall gestartet'**
+  String get eventCaseStart;
+
+  /// Ereignis: Schock ohne Energie
+  ///
+  /// In de, this message translates to:
+  /// **'Schock {count}'**
+  String eventSchock(int count);
+
+  /// Ereignis: Schock mit Energie
+  ///
+  /// In de, this message translates to:
+  /// **'Schock {count} · {energie} J'**
+  String eventSchockWithEnergy(int count, int energie);
+
+  /// Ereignis: Rückgängigmachung eines Schocks
+  ///
+  /// In de, this message translates to:
+  /// **'Schock {count} zurückgenommen'**
+  String eventSchockUndone(int count);
+
+  /// Ereignis: Adrenalin-Gabe
+  ///
+  /// In de, this message translates to:
+  /// **'Adrenalin {dosis} mg'**
+  String eventAdrenalin(int dosis);
+
+  /// Ereignis: Amiodaron-Gabe
+  ///
+  /// In de, this message translates to:
+  /// **'Amiodaron {dosis} mg'**
+  String eventAmiodaron(int dosis);
+
+  /// Ereignis: Ergebnis einer Rhythmusanalyse
+  ///
+  /// In de, this message translates to:
+  /// **'Rhythmusanalyse: {ergebnis}'**
+  String eventRhythmusanalyse(String ergebnis);
+
+  /// Ereignis: Rhythmusanalyse ohne Grund übersprungen
+  ///
+  /// In de, this message translates to:
+  /// **'Rhythmusanalyse übersprungen'**
+  String get eventRhythmusanalyseSkipped;
+
+  /// Ereignis: Rhythmusanalyse mit Grund übersprungen
+  ///
+  /// In de, this message translates to:
+  /// **'Rhythmusanalyse übersprungen: {grund}'**
+  String eventRhythmusanalyseSkippedWithReason(String grund);
+
+  /// Ereignis: Wiedererlangung eines Spontankreislaufs
+  ///
+  /// In de, this message translates to:
+  /// **'ROSC'**
+  String get eventRosc;
+
+  /// Ereignis: Wiederbeginn der Reanimation nach ROSC
+  ///
+  /// In de, this message translates to:
+  /// **'Reanimationswiederbeginn'**
+  String get eventResuscitationResumed;
+
+  /// Ereignis: Ende des Reanimationsfalls mit Grund
+  ///
+  /// In de, this message translates to:
+  /// **'Fall beendet: {grund}'**
+  String eventCaseEnded(String grund);
 }
 
 class _AppLocalizationsDelegate

@@ -462,5 +462,168 @@
         "type": "String"
       }
     }
+  },
+  "roscDescription": "Kreislauf zurückgekehrt",
+  "@roscDescription": {
+    "description": "Erklärung des ROSC-Zustands auf dem laufenden Fall"
+  },
+  "resumeResuscitationButton": "Reanimation wieder aufnehmen",
+  "@resumeResuscitationButton": {
+    "description": "Schaltfläche zum Start eines neuen Reanimationsabschnitts nach ROSC"
+  },
+  "endCaseButton": "Fall beenden",
+  "@endCaseButton": {
+    "description": "Schaltfläche zum Beenden des Reanimationsfalls"
+  },
+  "endCaseTitle": "Fall beenden",
+  "@endCaseTitle": {
+    "description": "Titel des Dialogs zum Beenden des Reanimationsfalls"
+  },
+  "endCaseReasonLabel": "Grund",
+  "@endCaseReasonLabel": {
+    "description": "Beschriftung der Grundauswahl beim Beenden"
+  },
+  "endReasonHandover": "Übergabe",
+  "@endReasonHandover": {
+    "description": "Grund für das Beenden: Übergabe"
+  },
+  "endReasonAbort": "Abbruch",
+  "@endReasonAbort": {
+    "description": "Grund für das Beenden: Abbruch"
+  },
+  "endReasonOther": "Sonstiges",
+  "@endReasonOther": {
+    "description": "Sonstiger Grund für das Beenden"
+  },
+  "summaryTitle": "Zusammenfassung",
+  "@summaryTitle": {
+    "description": "Titel der Zusammenfassung eines beendeten Reanimationsfalls"
+  },
+  "summaryCaseEnded": "Reanimationsfall beendet",
+  "@summaryCaseEnded": {
+    "description": "Überschrift der Zusammenfassung"
+  },
+  "summaryCprDuration": "CPR-Dauer",
+  "@summaryCprDuration": {
+    "description": "Beschriftung der gesamten CPR-Dauer"
+  },
+  "summaryStartzeit": "Startzeit",
+  "@summaryStartzeit": {
+    "description": "Beschriftung der Startzeit in der Zusammenfassung"
+  },
+  "summaryEndzeit": "Endzeit",
+  "@summaryEndzeit": {
+    "description": "Beschriftung der Endzeit in der Zusammenfassung"
+  },
+  "summaryEndReason": "Grund",
+  "@summaryEndReason": {
+    "description": "Beschriftung des Beendigungsgrunds"
+  },
+  "summaryShocks": "Schocks",
+  "@summaryShocks": {
+    "description": "Beschriftung der Schockanzahl in der Zusammenfassung"
+  },
+  "summaryEvents": "Ereignisse",
+  "@summaryEvents": {
+    "description": "Überschrift der Ereignisliste in der Zusammenfassung"
+  },
+  "summaryNotes": "Notizen",
+  "@summaryNotes": {
+    "description": "Überschrift der Notizen in der Zusammenfassung"
+  },
+  "summaryNoNotes": "Keine Notizen",
+  "@summaryNoNotes": {
+    "description": "Hinweis, dass keine Notizen erfasst wurden"
+  },
+  "eventCaseStart": "Reanimationsfall gestartet",
+  "@eventCaseStart": {
+    "description": "Ereignis: Beginn des Reanimationsfalls"
+  },
+  "eventSchock": "Schock {count}",
+  "@eventSchock": {
+    "description": "Ereignis: Schock ohne Energie",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventSchockWithEnergy": "Schock {count} · {energie} J",
+  "@eventSchockWithEnergy": {
+    "description": "Ereignis: Schock mit Energie",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "energie": {
+        "type": "int"
+      }
+    }
+  },
+  "eventSchockUndone": "Schock {count} zurückgenommen",
+  "@eventSchockUndone": {
+    "description": "Ereignis: Rückgängigmachung eines Schocks",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "eventAdrenalin": "Adrenalin {dosis} mg",
+  "@eventAdrenalin": {
+    "description": "Ereignis: Adrenalin-Gabe",
+    "placeholders": {
+      "dosis": {
+        "type": "int"
+      }
+    }
+  },
+  "eventAmiodaron": "Amiodaron {dosis} mg",
+  "@eventAmiodaron": {
+    "description": "Ereignis: Amiodaron-Gabe",
+    "placeholders": {
+      "dosis": {
+        "type": "int"
+      }
+    }
+  },
+  "eventRhythmusanalyse": "Rhythmusanalyse: {ergebnis}",
+  "@eventRhythmusanalyse": {
+    "description": "Ereignis: Ergebnis einer Rhythmusanalyse",
+    "placeholders": {
+      "ergebnis": {
+        "type": "String"
+      }
+    }
+  },
+  "eventRhythmusanalyseSkipped": "Rhythmusanalyse übersprungen",
+  "@eventRhythmusanalyseSkipped": {
+    "description": "Ereignis: Rhythmusanalyse ohne Grund übersprungen"
+  },
+  "eventRhythmusanalyseSkippedWithReason": "Rhythmusanalyse übersprungen: {grund}",
+  "@eventRhythmusanalyseSkippedWithReason": {
+    "description": "Ereignis: Rhythmusanalyse mit Grund übersprungen",
+    "placeholders": {
+      "grund": {
+        "type": "String"
+      }
+    }
+  },
+  "eventRosc": "ROSC",
+  "@eventRosc": {
+    "description": "Ereignis: Wiedererlangung eines Spontankreislaufs"
+  },
+  "eventResuscitationResumed": "Reanimationswiederbeginn",
+  "@eventResuscitationResumed": {
+    "description": "Ereignis: Wiederbeginn der Reanimation nach ROSC"
+  },
+  "eventCaseEnded": "Fall beendet: {grund}",
+  "@eventCaseEnded": {
+    "description": "Ereignis: Ende des Reanimationsfalls mit Grund",
+    "placeholders": {
+      "grund": {
+        "type": "String"
+      }
+    }
   }
 }
