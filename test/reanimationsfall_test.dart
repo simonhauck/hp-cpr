@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:hp_cpr/features/reanimationsfall/domain/adrenalin.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
@@ -563,6 +564,185 @@ void main() {
     expect(
       () => reanimationsfall.recordSchock(energieJoule: -1),
       throwsArgumentError,
+    );
+  });
+
+  test('a non-shockable result makes the first Adrenalin dose due', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    reanimationsfall.enterAnalysephase();
+    reanimationsfall.recordRhythmusanalyse(RhythmusanalyseErgebnis.asystolie);
+
+    final snapshot = reanimationsfall.snapshot();
+    expect(snapshot.istErsteAdrenalinGabeFaellig, isTrue);
+    expect(
+      snapshot.adrenalinZeitfensterZustand,
+      AdrenalinZeitfensterZustand.keine,
+    );
+    expect(snapshot.adrenalinGaben, isEmpty);
+    expect(snapshot.letzteAdrenalinGabe, isNull);
+
+    reanimationsfall.continueCpr();
+    expect(reanimationsfall.snapshot().istErsteAdrenalinGabeFaellig, isTrue);
+  });
+
+  test('a shockable result makes Adrenalin due at the Leitlinienprofil shock '
+      'count', () {
+    for (final (profil, threshold) in [
+      (Leitlinienprofil.aha2025, 2),
+      (Leitlinienprofil.erc2025, 3),
+    ]) {
+      final clock = FakeClock();
+      final reanimationsfall = Reanimationsfall.start(
+        clock: clock,
+        leitlinienprofil: profil,
+      );
+
+      reanimationsfall.enterAnalysephase();
+      reanimationsfall.recordRhythmusanalyse(
+        RhythmusanalyseErgebnis.kammerflimmern,
+      );
+
+      for (var schock = 1; schock < threshold; schock++) {
+        reanimationsfall.recordSchock();
+        expect(
+          reanimationsfall.snapshot().istErsteAdrenalinGabeFaellig,
+          isFalse,
+          reason: '$profil after $schock Schocks',
+        );
+      }
+
+      reanimationsfall.recordSchock();
+      final snapshot = reanimationsfall.snapshot();
+      expect(
+        snapshot.istErsteAdrenalinGabeFaellig,
+        isTrue,
+        reason: '$profil at $threshold Schocks',
+      );
+      expect(snapshot.adrenalinGaben, isEmpty);
+    }
+  });
+
+  test('undo clears the first Adrenalin hint when the shock threshold is no '
+      'longer met', () {
+    for (final (profil, threshold) in [
+      (Leitlinienprofil.aha2025, 2),
+      (Leitlinienprofil.erc2025, 3),
+    ]) {
+      final clock = FakeClock();
+      final reanimationsfall = Reanimationsfall.start(
+        clock: clock,
+        leitlinienprofil: profil,
+      );
+
+      reanimationsfall.enterAnalysephase();
+      reanimationsfall.recordRhythmusanalyse(
+        RhythmusanalyseErgebnis.kammerflimmern,
+      );
+      for (var schock = 0; schock < threshold; schock++) {
+        reanimationsfall.recordSchock();
+      }
+      expect(reanimationsfall.snapshot().istErsteAdrenalinGabeFaellig, isTrue);
+
+      reanimationsfall.undoLastSchock();
+      final snapshot = reanimationsfall.snapshot();
+      expect(
+        snapshot.istErsteAdrenalinGabeFaellig,
+        isFalse,
+        reason: '$profil after undoing one of $threshold Schocks',
+      );
+      expect(snapshot.schockAnzahl, threshold - 1);
+      expect(
+        snapshot.adrenalinZeitfensterZustand,
+        AdrenalinZeitfensterZustand.keine,
+      );
+    }
+  });
+
+  test('recording an Adrenalin dose starts and restarts the 3-5 minute '
+      'window', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    clock.advance(const Duration(seconds: 10));
+    reanimationsfall.recordAdrenalin();
+
+    var snapshot = reanimationsfall.snapshot();
+    expect(snapshot.adrenalinGaben, hasLength(1));
+    expect(
+      snapshot.adrenalinGaben.single.zeitpunkt,
+      const Duration(seconds: 10),
+    );
+    expect(snapshot.adrenalinGaben.single.dosisMg, 1);
+    expect(snapshot.letzteAdrenalinGabe, isNotNull);
+    expect(snapshot.adrenalinSeitLetzterGabe, Duration.zero);
+    expect(
+      snapshot.adrenalinZeitfensterZustand,
+      AdrenalinZeitfensterZustand.wartet,
+    );
+
+    clock.advance(const Duration(minutes: 2, seconds: 59));
+    expect(
+      reanimationsfall.snapshot().adrenalinZeitfensterZustand,
+      AdrenalinZeitfensterZustand.wartet,
+    );
+
+    clock.advance(const Duration(seconds: 1));
+    snapshot = reanimationsfall.snapshot();
+    expect(snapshot.adrenalinSeitLetzterGabe, const Duration(minutes: 3));
+    expect(
+      snapshot.adrenalinZeitfensterZustand,
+      AdrenalinZeitfensterZustand.faellig,
+    );
+
+    clock.advance(const Duration(minutes: 2));
+    expect(
+      reanimationsfall.snapshot().adrenalinZeitfensterZustand,
+      AdrenalinZeitfensterZustand.faellig,
+    );
+
+    clock.advance(const Duration(seconds: 1));
+    expect(
+      reanimationsfall.snapshot().adrenalinZeitfensterZustand,
+      AdrenalinZeitfensterZustand.ueberfaellig,
+    );
+
+    reanimationsfall.recordAdrenalin();
+    snapshot = reanimationsfall.snapshot();
+    expect(snapshot.adrenalinGaben, hasLength(2));
+    expect(
+      snapshot.letzteAdrenalinGabe!.zeitpunkt,
+      const Duration(minutes: 5, seconds: 11),
+    );
+    expect(snapshot.adrenalinSeitLetzterGabe, Duration.zero);
+    expect(
+      snapshot.adrenalinZeitfensterZustand,
+      AdrenalinZeitfensterZustand.wartet,
+    );
+
+    clock.advance(const Duration(minutes: 3));
+    expect(
+      reanimationsfall.snapshot().adrenalinZeitfensterZustand,
+      AdrenalinZeitfensterZustand.faellig,
+    );
+  });
+
+  test('the Adrenalin Zeitfenster continues during the Analysephase', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    reanimationsfall.recordAdrenalin();
+    clock.advance(const Duration(minutes: 1));
+    reanimationsfall.enterAnalysephase();
+    clock.advance(const Duration(minutes: 2));
+
+    final snapshot = reanimationsfall.snapshot();
+    expect(snapshot.pauseDuration, const Duration(minutes: 2));
+    expect(snapshot.adrenalinSeitLetzterGabe, const Duration(minutes: 3));
+    expect(
+      snapshot.adrenalinZeitfensterZustand,
+      AdrenalinZeitfensterZustand.faellig,
     );
   });
 }

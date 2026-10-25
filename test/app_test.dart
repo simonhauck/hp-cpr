@@ -555,6 +555,139 @@ void main() {
     expect(find.widgetWithText(OutlinedButton, 'Schock (1)'), findsOneWidget);
   });
 
+  testWidgets('shows the Adrenalin hint after a non-shockable result', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    expect(find.textContaining('Letzte Gabe'), findsNothing);
+
+    await tester.tap(find.text('Analyse'));
+    await tester.pump();
+    await tester.tap(find.text('Ergebnis erfassen'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nicht schockbar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Asystolie'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Erste Gabe fällig'), findsOneWidget);
+    expect(find.text('Gabe'), findsOneWidget);
+    expect(find.textContaining('Letzte Gabe'), findsNothing);
+  });
+
+  testWidgets('shows the Adrenalin hint at the ERC shock count', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await tester.tap(find.text('Analyse'));
+    await tester.pump();
+    await tester.tap(find.text('Ergebnis erfassen'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Schockbar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Kammerflimmern (VF)'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Erste Gabe fällig'), findsNothing);
+
+    for (var count = 1; count <= 3; count++) {
+      await tester.tap(find.text('Schock (${count - 1})'));
+      await tester.pump();
+      expect(find.text('Schock ($count)'), findsOneWidget);
+      if (count < 3) {
+        expect(find.text('Erste Gabe fällig'), findsNothing);
+      }
+    }
+
+    expect(find.text('Erste Gabe fällig'), findsOneWidget);
+  });
+
+  testWidgets('shows the Adrenalin hint at the AHA shock count', (
+    tester,
+  ) async {
+    await pumpApp(
+      tester,
+      settings: AppSettings(leitlinienprofil: Leitlinienprofil.aha2025),
+    );
+    await startNow(tester);
+
+    await tester.tap(find.text('Analyse'));
+    await tester.pump();
+    await tester.tap(find.text('Ergebnis erfassen'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Schockbar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Kammerflimmern (VF)'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Schock (0)'));
+    await tester.pump();
+    expect(find.text('Schock (1)'), findsOneWidget);
+    expect(find.text('Erste Gabe fällig'), findsNothing);
+
+    await tester.tap(find.text('Schock (1)'));
+    await tester.pump();
+    expect(find.text('Schock (2)'), findsOneWidget);
+    expect(find.text('Erste Gabe fällig'), findsOneWidget);
+  });
+
+  testWidgets('records an Adrenalin dose and runs the 3-5 minute window', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await tester.tap(find.text('Gabe'));
+    await tester.pump();
+
+    expect(find.text('Letzte Gabe 00:00'), findsOneWidget);
+    expect(find.text('wartet'), findsOneWidget);
+    expect(find.text('03:00'), findsOneWidget);
+    expect(find.text('05:00'), findsOneWidget);
+
+    clock.advance(const Duration(minutes: 3));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('fällig'), findsOneWidget);
+
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('fällig'), findsOneWidget);
+
+    clock.advance(const Duration(seconds: 1));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('überfällig'), findsOneWidget);
+
+    await tester.tap(find.text('Gabe'));
+    await tester.pump();
+
+    expect(find.text('Letzte Gabe 05:01'), findsOneWidget);
+    expect(find.text('wartet'), findsOneWidget);
+  });
+
+  testWidgets('keeps the Adrenalin window running during the Analysephase', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await tester.tap(find.text('Gabe'));
+    await tester.pump();
+    clock.advance(const Duration(minutes: 1));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    await tester.tap(find.text('Analyse'));
+    await tester.pump();
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    expect(find.text('Analysephase'), findsOneWidget);
+    expect(find.text('fällig'), findsOneWidget);
+  });
+
   testWidgets('keeps the timer and primary actions visible on landscape '
       'phones and tablets', (tester) async {
     addTearDown(tester.view.resetPhysicalSize);
@@ -591,10 +724,13 @@ void main() {
       expect(find.text('Druckphase'), findsOneWidget);
       expect(find.text('ERC 2025'), findsOneWidget);
       expect(find.text('Schock (0)'), findsOneWidget);
+      expect(find.text('Adrenalin'), findsOneWidget);
+      expect(find.text('Gabe'), findsOneWidget);
       expect(find.byType(Scrollable), findsNothing);
       expectInsideViewport(tester, find.text('02:00'));
       expectInsideViewport(tester, find.text('Druckphase'));
       expectInsideViewport(tester, find.text('Schock (0)'));
+      expectInsideViewport(tester, find.text('Gabe'));
       expect(tester.takeException(), isNull);
 
       await tester.tap(find.text('Analyse'));

@@ -17,4 +17,16 @@ enum Leitlinienprofil {
     Leitlinienprofil.aha2025 => const Duration(seconds: 10),
     Leitlinienprofil.erc2025 => const Duration(seconds: 5),
   };
+
+  /// The active Schock count at which the first Adrenalin dose is due.
+  int get adrenalinErsteGabeNachSchock => switch (this) {
+    Leitlinienprofil.aha2025 => 2,
+    Leitlinienprofil.erc2025 => 3,
+  };
+
+  /// The earliest time in the Adrenalin Zeitfenster.
+  Duration get adrenalinZeitfensterFruehestens => const Duration(minutes: 3);
+
+  /// The latest time in the Adrenalin Zeitfenster.
+  Duration get adrenalinZeitfensterSpaetestens => const Duration(minutes: 5);
 }

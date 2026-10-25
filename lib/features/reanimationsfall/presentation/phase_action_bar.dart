@@ -202,7 +202,7 @@ class _SchockStatusRow extends StatelessWidget {
     final theme = Theme.of(context);
     final buttonStyle = layout.isCompact
         ? TextButton.styleFrom(
-            minimumSize: const Size(0, 44),
+            minimumSize: const Size(0, 40),
             padding: const EdgeInsets.symmetric(horizontal: 8),
             visualDensity: VisualDensity.compact,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -375,17 +375,31 @@ class _RhythmusanalyseResultSummary extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          TextButton.icon(
-            onPressed: onEditNotiz,
-            icon: Icon(
-              notiz == null ? Icons.note_add_outlined : Icons.edit_note,
-            ),
-            label: Text(
-              notiz == null
+          if (layout.isCompact)
+            IconButton(
+              onPressed: onEditNotiz,
+              tooltip: notiz == null
                   ? l10n.rhythmusanalyseNoteAdd
                   : l10n.rhythmusanalyseNoteEdit,
+              icon: Icon(
+                notiz == null ? Icons.note_add_outlined : Icons.edit_note,
+              ),
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+              padding: EdgeInsets.zero,
+            )
+          else
+            TextButton.icon(
+              onPressed: onEditNotiz,
+              icon: Icon(
+                notiz == null ? Icons.note_add_outlined : Icons.edit_note,
+              ),
+              label: Text(
+                notiz == null
+                    ? l10n.rhythmusanalyseNoteAdd
+                    : l10n.rhythmusanalyseNoteEdit,
+              ),
             ),
-          ),
         ],
       ),
     );

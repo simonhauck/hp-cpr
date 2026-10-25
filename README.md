@@ -189,10 +189,12 @@ lib/
 ├── features/
 │   ├── reanimationsfall/
 │   │   ├── domain/
+│   │   │   ├── adrenalin.dart                   # Adrenalin doses + Zeitfenster state
 │   │   │   ├── reanimationsfall.dart           # Startzeit, Reanimationsphase, read model
 │   │   │   ├── rhythmusanalyse.dart            # Rhythmusanalyse result types
 │   │   │   └── schock.dart                     # Schock events and undo entries
 │   │   └── presentation/
+│   │       ├── adrenalin_panel.dart            # Adrenalin Zeitfenster bar
 │   │       ├── custom_startzeit_dialog.dart    # custom backdate entry
 │   │       ├── phase_action_bar.dart           # phase actions + result summary
 │   │       ├── reanimationsfall_page.dart      # running Reanimationsfall
