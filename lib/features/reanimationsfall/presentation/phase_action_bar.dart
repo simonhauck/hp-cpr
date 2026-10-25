@@ -8,6 +8,11 @@ import 'package:hp_cpr/ui/layout/page_layout.dart';
 
 enum PhaseActionEmphasis { filled, outlined }
 
+const double _statusIconSize = 18;
+const double _statusIconGap = 6;
+const double _statusActionPadding = 8;
+const double _summaryIconGap = 8;
+
 /// The phase-dependent actions, status hint, and result summary.
 class PhaseActionBar extends StatelessWidget {
   const PhaseActionBar({
@@ -139,7 +144,7 @@ class PhaseActionBar extends StatelessWidget {
             onEditEnergie: onEditSchockEnergie,
             onUndo: onUndoLastSchock,
           ),
-          SizedBox(height: layout.isCompact ? 2 : 8),
+          SizedBox(height: layout.statusGap),
         ],
         if (isAnalysephase && ergebnis != null) ...[
           _RhythmusanalyseResultSummary(
@@ -148,7 +153,7 @@ class PhaseActionBar extends StatelessWidget {
             layout: layout,
             onEditNotiz: onEditRhythmusanalyseNotiz,
           ),
-          SizedBox(height: layout.isCompact ? 4 : 10),
+          SizedBox(height: layout.resultSummaryGap),
         ] else if (isAnalysephase) ...[
           Text(
             l10n.rhythmusanalyseRequired,
@@ -156,13 +161,13 @@ class PhaseActionBar extends StatelessWidget {
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-          SizedBox(height: layout.isCompact ? 4 : 8),
+          SizedBox(height: layout.hintGap),
         ],
         if (layout.isCompact)
           Row(
             children: [
               for (var i = 0; i < buttons.length; i++) ...[
-                if (i > 0) const SizedBox(width: 8),
+                if (i > 0) SizedBox(width: layout.compactActionGap),
                 Expanded(child: buttons[i]),
               ],
             ],
@@ -171,8 +176,8 @@ class PhaseActionBar extends StatelessWidget {
           Wrap(
             alignment: WrapAlignment.end,
             crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 12,
-            runSpacing: 8,
+            spacing: layout.actionWrapSpacing,
+            runSpacing: layout.actionWrapRunSpacing,
             children: buttons,
           ),
       ],
@@ -200,22 +205,22 @@ class _SchockStatusRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final buttonStyle = layout.isCompact
-        ? TextButton.styleFrom(
-            minimumSize: const Size(0, 40),
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            visualDensity: VisualDensity.compact,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          )
-        : null;
+    final buttonStyle = TextButton.styleFrom(
+      minimumSize: Size(0, layout.touchTarget),
+      padding: const EdgeInsets.symmetric(horizontal: _statusActionPadding),
+    );
     final text = energieJoule == null
         ? l10n.schockRecorded(schockAnzahl)
         : l10n.schockRecordedWithEnergy(schockAnzahl, energieJoule!);
 
     return Row(
       children: [
-        Icon(Icons.bolt_outlined, size: 18, color: theme.colorScheme.primary),
-        const SizedBox(width: 6),
+        Icon(
+          Icons.bolt_outlined,
+          size: _statusIconSize,
+          color: theme.colorScheme.primary,
+        ),
+        const SizedBox(width: _statusIconGap),
         Expanded(
           child: Text(
             text,
@@ -296,10 +301,8 @@ class PhaseActionButton extends StatelessWidget {
   }
 
   ButtonStyle _style(ThemeData theme) {
-    final minimumSize = Size(layout.isCompact ? 0 : 180, layout.actionHeight);
-    final padding = layout.isCompact
-        ? const EdgeInsets.symmetric(horizontal: 14)
-        : null;
+    final minimumSize = Size(layout.phaseActionMinWidth, layout.actionHeight);
+    final padding = layout.phaseActionPadding;
     final textStyle = layout.isCompact
         ? theme.textTheme.labelLarge
         : theme.textTheme.titleMedium;
@@ -339,18 +342,15 @@ class _RhythmusanalyseResultSummary extends StatelessWidget {
     final notizText = notiz;
 
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: layout.isCompact ? 10 : 14,
-        vertical: layout.isCompact ? 4 : 10,
-      ),
+      padding: layout.resultSummaryPadding,
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(layout.cardRadius),
       ),
       child: Row(
         children: [
           Icon(Icons.check_circle_outline, color: theme.colorScheme.primary),
-          const SizedBox(width: 8),
+          const SizedBox(width: _summaryIconGap),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -374,7 +374,7 @@ class _RhythmusanalyseResultSummary extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: _summaryIconGap),
           if (layout.isCompact)
             IconButton(
               onPressed: onEditNotiz,
@@ -384,8 +384,10 @@ class _RhythmusanalyseResultSummary extends StatelessWidget {
               icon: Icon(
                 notiz == null ? Icons.note_add_outlined : Icons.edit_note,
               ),
-              visualDensity: VisualDensity.compact,
-              constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+              constraints: BoxConstraints.tightFor(
+                width: layout.touchTarget,
+                height: layout.touchTarget,
+              ),
               padding: EdgeInsets.zero,
             )
           else

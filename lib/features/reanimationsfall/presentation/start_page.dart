@@ -13,6 +13,11 @@ import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 import 'package:hp_cpr/ui/layout/page_scaffold.dart';
 
+const EdgeInsets _backdateChipPadding = EdgeInsets.symmetric(
+  horizontal: 8,
+  vertical: 4,
+);
+
 /// Starts a new Reanimationsfall, either now or with a corrected Startzeit.
 class StartPage extends StatelessWidget {
   const StartPage({
@@ -29,7 +34,7 @@ class StartPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PageScaffold(
-      maxWidth: 1200,
+      maxWidth: PageLayout.maxContentWidth,
       header: (context, layout) => _StartHeader(
         layout: layout,
         settings: settings,
@@ -239,7 +244,7 @@ class _RunningReanimationsfallCard extends StatelessWidget {
       layout: layout,
       children: [
         StartCardTitle(l10n.runningCaseTitle, layout: layout),
-        SizedBox(height: layout.isCompact ? 2 : 4),
+        SizedBox(height: layout.cardTitleGap),
         Text(
           l10n.backdateMinutesLabel,
           textAlign: TextAlign.center,
@@ -247,23 +252,23 @@ class _RunningReanimationsfallCard extends StatelessWidget {
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
-        SizedBox(height: layout.isCompact ? 6 : 8),
+        SizedBox(height: layout.cardLabelGap),
         Wrap(
           alignment: WrapAlignment.center,
-          spacing: 8,
-          runSpacing: 8,
+          spacing: layout.actionWrapRunSpacing,
+          runSpacing: layout.actionWrapRunSpacing,
           children: [
             for (final backdate in _backdatePresets)
               ActionChip(
                 label: Text('${backdate.inMinutes}'),
                 labelStyle: theme.textTheme.titleSmall,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: _backdateChipPadding,
                 tooltip: l10n.backdateChip(backdate.inMinutes),
                 onPressed: () => onStartBackdated(backdate),
               ),
           ],
         ),
-        SizedBox(height: layout.isCompact ? 6 : 12),
+        SizedBox(height: layout.cardActionGap),
         OutlinedButton.icon(
           onPressed: onCustomStartzeit,
           icon: const Icon(Icons.edit_outlined),
