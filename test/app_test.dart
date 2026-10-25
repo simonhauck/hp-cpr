@@ -158,6 +158,43 @@ void main() {
     expect(find.text('Messwerte'), findsOneWidget);
     expect(find.text('Notiz'), findsOneWidget);
     expect(find.text('Schock erfassen'), findsOneWidget);
+    expect(find.text('Druckphase neu starten'), findsNothing);
+    expect(find.text('Letzten Schock korrigieren'), findsNothing);
+    expect(find.text('Letzten Schock rückgängig'), findsNothing);
+  });
+
+  testWidgets('restarts the Druckphase from Weitere Aktionen and keeps the '
+      'medication timer', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await tester.tap(find.text('Gabe'));
+    await tester.pump();
+    clock.advance(const Duration(minutes: 1));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    await openActions(tester);
+    expect(find.text('Letzten Schock korrigieren'), findsNothing);
+    expect(find.text('Letzten Schock rückgängig'), findsNothing);
+    await tester.tap(find.text('Druckphase neu starten'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('01:00'), findsOneWidget);
+    expect(find.text('02:00'), findsOneWidget);
+    expect(find.text('Letzte Gabe 00:00'), findsOneWidget);
+    expect(find.text('wartet'), findsOneWidget);
+
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('fällig'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Fall beenden'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Abbruch'));
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(find.text('Druckphase neu gestartet'), 200);
+    expect(find.text('Druckphase neu gestartet'), findsOneWidget);
   });
 
   testWidgets('counts the Druckphase down and the Reanimationsdauer up', (
@@ -573,6 +610,7 @@ void main() {
     await recordSchock(tester);
 
     expect(find.text('Schocks: 1'), findsOneWidget);
+    expect(find.text('Weitere Aktionen'), findsNothing);
     expect(find.text('CPR fortsetzen'), findsNothing);
     expect(find.text('Schock 1 erfasst'), findsNothing);
     expect(find.text('Analyse starten'), findsOneWidget);
@@ -1458,6 +1496,7 @@ void main() {
     expect(find.text('Messwerte'), findsOneWidget);
     expect(find.text('Notiz'), findsOneWidget);
     expect(find.text('Schock erfassen'), findsNothing);
+    expect(find.text('Druckphase neu starten'), findsNothing);
   });
 
   testWidgets('records all four Messwerte and a note from the active case', (
