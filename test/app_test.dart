@@ -5,6 +5,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:hp_cpr/app.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
+import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_store.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
 
 import 'support/fake_clock.dart';
@@ -13,10 +14,12 @@ import 'support/fake_wake_lock.dart';
 void main() {
   late FakeClock clock;
   late FakeWakeLock wakeLock;
+  late InMemoryReanimationsfallStore store;
 
   setUp(() {
     clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
     wakeLock = FakeWakeLock();
+    store = InMemoryReanimationsfallStore();
     PackageInfo.setMockInitialValues(
       appName: 'HP-CPR',
       packageName: 'de.simonhauck.hp_cpr',
@@ -40,13 +43,18 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
   }
 
-  Future<void> pumpApp(WidgetTester tester, {AppSettings? settings}) async {
+  Future<void> pumpApp(
+    WidgetTester tester, {
+    AppSettings? settings,
+    ReanimationsfallStore? appStore,
+  }) async {
     await tester.pumpWidget(
       HpCprApp(
         key: UniqueKey(),
         clock: clock,
         settings: settings,
         wakeLock: wakeLock,
+        store: appStore ?? store,
       ),
     );
     await tester.pumpAndSettle();
@@ -412,7 +420,21 @@ void main() {
     expect(find.text('ERC 2025'), findsOneWidget);
     expect(find.text('AHA 2025'), findsNothing);
 
-    await tester.tap(find.byType(BackButton));
+    await tester.tap(find.byTooltip('Fall beenden'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Abbruch'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Zusammenfassung'), findsOneWidget);
+
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(AppBar),
+            matching: find.byType(BackButton),
+          )
+          .hitTestable(),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('AHA 2025'), findsOneWidget);
@@ -845,6 +867,7 @@ void main() {
       );
       clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
       wakeLock = FakeWakeLock();
+      store = InMemoryReanimationsfallStore();
 
       await pumpApp(tester);
 
@@ -1108,6 +1131,239 @@ void main() {
     expect(find.text('Rhythmus nicht beurteilbar'), findsNWidgets(2));
   });
 
+  testWidgets('restores an active Reanimationsfall after an app restart', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    clock.advance(const Duration(seconds: 30));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Schock (0)'));
+    await tester.pump();
+    await tester.tap(find.text('CPR fortsetzen'));
+    await tester.pump();
+
+    clock.advance(const Duration(seconds: 10));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    await pumpApp(tester);
+
+    expect(find.text('Aktiver Reanimationsfall'), findsOneWidget);
+    expect(find.text('Fortsetzen'), findsOneWidget);
+    expect(find.text('Jetzt starten'), findsNothing);
+
+    await tester.tap(find.text('Fortsetzen'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.text('Schock (1)'), findsOneWidget);
+    expect(find.text('00:40'), findsOneWidget);
+    expect(find.text('Schock 1 erfasst'), findsOneWidget);
+    expect(wakeLock.enabled, isTrue);
+  });
+
+  testWidgets('restores the Analysephase after an app restart', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Analyse'));
+    await tester.pump();
+    clock.advance(const Duration(seconds: 5));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    await pumpApp(tester);
+
+    expect(find.text('Aktiver Reanimationsfall'), findsOneWidget);
+    await tester.tap(find.text('Fortsetzen'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Analysephase'), findsOneWidget);
+    expect(find.text('00:05'), findsOneWidget);
+  });
+
+  testWidgets('stores a completed case in the Einsatzlog across a restart', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await tester.tap(find.byTooltip('Fall beenden'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Übergabe'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(AppBar),
+            matching: find.byType(BackButton),
+          )
+          .hitTestable(),
+    );
+    await tester.pumpAndSettle();
+
+    await openDrawer(tester);
+    await selectFromDrawer(tester, 'Einsatzlog');
+
+    expect(find.text('Reanimationsfall 08:00:00'), findsOneWidget);
+    expect(find.text('CPR 00:00 · ERC 2025'), findsOneWidget);
+
+    await tester.tap(find.text('Reanimationsfall 08:00:00'));
+    await tester.pumpAndSettle();
+    expect(find.text('Zusammenfassung'), findsOneWidget);
+    expect(find.text('Reanimationsfall beendet'), findsOneWidget);
+
+    await pumpApp(tester);
+    await openDrawer(tester);
+    await selectFromDrawer(tester, 'Einsatzlog');
+
+    expect(find.text('Reanimationsfall 08:00:00'), findsOneWidget);
+  });
+
+  testWidgets('marks a mis-started case as Verworfen and retains it in the '
+      'Einsatzlog', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await tester.tap(find.text('Schock (0)'));
+    await tester.pump();
+
+    await tester.tap(find.byTooltip('Fall beenden'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Fall verwerfen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reanimationsfall verwerfen?'), findsOneWidget);
+    await tester.tap(find.text('Verwerfen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Jetzt starten'), findsOneWidget);
+    expect(find.byTooltip('Reanimationsfall löschen'), findsNothing);
+
+    await openDrawer(tester);
+    await selectFromDrawer(tester, 'Einsatzlog');
+
+    expect(find.text('Reanimationsfall 08:00:00'), findsOneWidget);
+    expect(find.text('CPR 00:00 · ERC 2025 · Verworfen'), findsOneWidget);
+
+    await tester.tap(find.text('Reanimationsfall 08:00:00'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reanimationsfall verworfen'), findsOneWidget);
+    expect(find.text('Fall verworfen'), findsOneWidget);
+    expect(find.text('Schock 1'), findsOneWidget);
+  });
+
+  testWidgets('deletes a case only from the Einsatzlog after confirmation', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await tester.tap(find.byTooltip('Fall beenden'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Abbruch'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(AppBar),
+            matching: find.byType(BackButton),
+          )
+          .hitTestable(),
+    );
+    await tester.pumpAndSettle();
+
+    await openDrawer(tester);
+    await selectFromDrawer(tester, 'Einsatzlog');
+
+    await tester.tap(find.byTooltip('Reanimationsfall löschen'));
+    await tester.pumpAndSettle();
+    expect(find.text('Reanimationsfall löschen?'), findsOneWidget);
+    await tester.tap(find.text('Abbrechen'));
+    await tester.pumpAndSettle();
+    expect(find.text('Reanimationsfall 08:00:00'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Reanimationsfall löschen'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Löschen'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Noch keine abgeschlossenen Reanimationsfälle'),
+      findsOneWidget,
+    );
+
+    await pumpApp(tester);
+    await openDrawer(tester);
+    await selectFromDrawer(tester, 'Einsatzlog');
+
+    expect(
+      find.text('Noch keine abgeschlossenen Reanimationsfälle'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('does not list an active case in the Einsatzlog', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await openDrawer(tester);
+    await selectFromDrawer(tester, 'Einsatzlog');
+
+    expect(
+      find.text('Noch keine abgeschlossenen Reanimationsfälle'),
+      findsOneWidget,
+    );
+    expect(find.byTooltip('Reanimationsfall löschen'), findsNothing);
+
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(AppBar),
+            matching: find.byType(BackButton),
+          )
+          .hitTestable(),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Druckphase'), findsOneWidget);
+    expect(wakeLock.enabled, isTrue);
+  });
+
+  testWidgets('keeps the original Schock after an undo in the summary', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await tester.tap(find.text('Schock (0)'));
+    await tester.pump();
+    await tester.tap(find.text('Rückgängig'));
+    await tester.pump();
+
+    await tester.tap(find.byTooltip('Fall beenden'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Abbruch'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Schock 1'), findsOneWidget);
+    expect(find.text('Schock 1 zurückgenommen'), findsOneWidget);
+
+    final states = await store.load();
+    final stored = states.single;
+    expect(stored.schocks, hasLength(1));
+    expect(stored.schockRueckgaengigkeiten, hasLength(1));
+    expect(stored.schocks.single.energieJoule, isNull);
+  });
+
   testWidgets('opens the app menu and closes it on the current destination', (
     tester,
   ) async {
@@ -1118,6 +1374,7 @@ void main() {
     await openDrawer(tester);
 
     expect(find.text('Menü'), findsOneWidget);
+    expect(find.widgetWithText(ListTile, 'Einsatzlog'), findsOneWidget);
     expect(find.widgetWithText(ListTile, 'Einstellungen'), findsOneWidget);
     expect(find.widgetWithText(ListTile, 'Rechtliches'), findsOneWidget);
     expect(find.widgetWithText(ListTile, 'Über'), findsOneWidget);

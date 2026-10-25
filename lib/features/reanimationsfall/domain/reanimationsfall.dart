@@ -9,7 +9,7 @@ import 'package:hp_cpr/features/reanimationsfall/domain/schock.dart';
 enum Reanimationsphase { druckphase, analysephase }
 
 /// The lifecycle state of a Reanimationsfall.
-enum ReanimationsfallZustand { laufend, rosc, beendet }
+enum ReanimationsfallZustand { laufend, rosc, beendet, verworfen }
 
 /// Why the Zeitnehmer ended the Reanimationsfall.
 enum Beendigungsgrund { uebergabe, abbruch, sonstiges }
@@ -69,6 +69,8 @@ class ReanimationsfallEnde {
 /// the monotonic clock. On resume, the wall clock is used only to recover an
 /// interval in which the device was suspended.
 class Reanimationsfall {
+  static int _nextId = 0;
+
   Reanimationsfall.start({
     required AppClock clock,
     this.leitlinienprofil = Leitlinienprofil.erc2025,
@@ -77,7 +79,17 @@ class Reanimationsfall {
     Duration backdate = Duration.zero,
   }) : _clock = clock,
        _monotonicStartOffset = clock.monotonicNow() - backdate,
-       startzeit = clock.now().subtract(backdate) {
+       id =
+           '${clock.now().microsecondsSinceEpoch}-'
+           '${clock.monotonicNow().inMicroseconds}-'
+           '${_nextId++}',
+       startzeit = clock.now().subtract(backdate),
+       startzeitUtc = clock.now().toUtc().subtract(backdate),
+       utcOffsetMinutes = clock
+           .now()
+           .subtract(backdate)
+           .timeZoneOffset
+           .inMinutes {
     if (backdate.isNegative) {
       throw ArgumentError.value(backdate, 'backdate', 'must not be negative');
     }
@@ -87,10 +99,60 @@ class Reanimationsfall {
     );
   }
 
+  /// Restores a Reanimationsfall from its persisted state.
+  Reanimationsfall.restore({
+    required AppClock clock,
+    required ReanimationsfallState state,
+  }) : _clock = clock,
+       _monotonicStartOffset =
+           clock.monotonicNow() -
+           clock.now().toUtc().difference(state.startzeitUtc),
+       id = state.id,
+       leitlinienprofil = state.leitlinienprofil,
+       vibrationEnabled = state.vibrationEnabled,
+       soundEnabled = state.soundEnabled,
+       startzeit = state.startzeit,
+       startzeitUtc = state.startzeitUtc,
+       utcOffsetMinutes = state.utcOffsetMinutes {
+    _zustand = state.zustand;
+    _phase = state.phase;
+    _compressionCycleStartOffset =
+        _monotonicStartOffset + state.compressionCycleStartOffset;
+    _compressionRemainingAtPause = state.compressionRemainingAtPause;
+    final analysephaseStart = state.analysephaseStartOffset;
+    _analysephaseStartOffset = analysephaseStart == null
+        ? null
+        : _monotonicStartOffset + analysephaseStart;
+    _isSchockpause = state.isSchockpause;
+    _schockpauseWasDue = state.schockpauseWasDue;
+    _schockpauseOverdue = state.schockpauseOverdue;
+    _schockpauseOpeningSchockIndex = state.schockpauseOpeningSchockIndex;
+    _rhythmusanalyseErgebnis = state.rhythmusanalyseErgebnis;
+    _rhythmusanalyseNotiz = state.rhythmusanalyseNotiz;
+    _adrenalinAusloesendesErgebnis = state.adrenalinAusloesendesErgebnis;
+    _ende = state.ende;
+    _verworfenAm = state.verworfenAm;
+    _schocks.addAll(state.schocks);
+    _schockRueckgaengigkeiten.addAll(state.schockRueckgaengigkeiten);
+    _adrenalinGaben.addAll(state.adrenalinGaben);
+    _amiodaronGaben.addAll(state.amiodaronGaben);
+    _uebersprungeneRhythmusanalysen.addAll(
+      state.uebersprungeneRhythmusanalysen,
+    );
+    _rhythmusanalyseEintraege.addAll(state.rhythmusanalyseEintraege);
+    _roscEreignisse.addAll(state.roscEreignisse);
+    _wiederbeginnEreignisse.addAll(state.wiederbeginnEreignisse);
+    _abschnitte.addAll(state.abschnitte);
+    _updateAdrenalinGabeFaelligkeit();
+  }
+
   final AppClock _clock;
   Duration _monotonicAdjustment = Duration.zero;
 
   final Duration _monotonicStartOffset;
+
+  /// The identity of this Reanimationsfall in the local store.
+  final String id;
 
   /// The Leitlinienprofil snapshotted when the Reanimationsfall started.
   final Leitlinienprofil leitlinienprofil;
@@ -101,14 +163,21 @@ class Reanimationsfall {
   /// Whether sound was enabled when the Reanimationsfall started.
   final bool soundEnabled;
 
-  /// The corrected time zero of the Reanimationsfall.
+  /// The corrected wall-clock time zero of the Reanimationsfall.
   final DateTime startzeit;
+
+  /// The time zero as an absolute instant.
+  final DateTime startzeitUtc;
+
+  /// The device's UTC offset when the Reanimationsfall started.
+  final int utcOffsetMinutes;
 
   ReanimationsfallZustand _zustand = ReanimationsfallZustand.laufend;
   final List<Reanimationsabschnitt> _abschnitte = [];
   final List<RoscEreignis> _roscEreignisse = [];
   final List<Reanimationswiederbeginn> _wiederbeginnEreignisse = [];
   ReanimationsfallEnde? _ende;
+  Duration? _verworfenAm;
   final List<RhythmusanalyseEintrag> _rhythmusanalyseEintraege = [];
 
   Reanimationsphase _phase = Reanimationsphase.druckphase;
@@ -141,7 +210,7 @@ class Reanimationsfall {
   /// clock never shortens the Reanimationsdauer, so a backwards clock change
   /// is ignored.
   void reconcileWithWallClock() {
-    final wallElapsed = _clock.now().difference(startzeit);
+    final wallElapsed = _clock.now().toUtc().difference(startzeitUtc);
     final elapsed = _monotonicNow() - _monotonicStartOffset;
     if (wallElapsed > elapsed) {
       _monotonicAdjustment += wallElapsed - elapsed;
@@ -429,7 +498,8 @@ class Reanimationsfall {
 
   /// Ends the Reanimationsfall with a reason.
   void endReanimationsfall(Beendigungsgrund grund) {
-    if (_zustand == ReanimationsfallZustand.beendet) {
+    if (_zustand == ReanimationsfallZustand.beendet ||
+        _zustand == ReanimationsfallZustand.verworfen) {
       throw StateError('the Reanimationsfall has already ended');
     }
 
@@ -439,6 +509,30 @@ class Reanimationsfall {
     }
     _ende = ReanimationsfallEnde(zeitpunkt: offset, grund: grund);
     _zustand = ReanimationsfallZustand.beendet;
+    _phase = Reanimationsphase.druckphase;
+    _isSchockpause = false;
+    _schockpauseWasDue = false;
+    _schockpauseOverdue = Duration.zero;
+    _schockpauseOpeningSchockIndex = null;
+    _analysephaseStartOffset = null;
+    _ersteAdrenalinGabeFaellig = false;
+  }
+
+  /// Marks the Reanimationsfall as Verworfen and stops the arrest timers.
+  ///
+  /// The case stays in the local Einsatzlog; this command never deletes it.
+  void discardReanimationsfall() {
+    if (_zustand == ReanimationsfallZustand.beendet ||
+        _zustand == ReanimationsfallZustand.verworfen) {
+      throw StateError('the Reanimationsfall has already ended');
+    }
+
+    final offset = _monotonicNow() - _monotonicStartOffset;
+    if (_zustand == ReanimationsfallZustand.laufend) {
+      _closeCurrentAbschnitt(offset);
+    }
+    _verworfenAm = offset;
+    _zustand = ReanimationsfallZustand.verworfen;
     _phase = Reanimationsphase.druckphase;
     _isSchockpause = false;
     _schockpauseWasDue = false;
@@ -541,6 +635,7 @@ class Reanimationsfall {
       roscEreignisse: List.unmodifiable(_roscEreignisse),
       wiederbeginnEreignisse: List.unmodifiable(_wiederbeginnEreignisse),
       ende: _ende,
+      verworfenAm: _verworfenAm,
       compressionRemaining: compressionRemaining,
       rhythmusanalyseOverdue: rhythmusanalyseOverdue,
       isRhythmusanalyseDue: isRhythmusanalyseDue,
@@ -605,6 +700,49 @@ class Reanimationsfall {
     }
   }
 
+  /// The serializable state used by the local store.
+  ReanimationsfallState exportState() {
+    final analysephaseStart = _analysephaseStartOffset;
+
+    return ReanimationsfallState(
+      id: id,
+      startzeit: startzeit,
+      startzeitUtc: startzeitUtc,
+      utcOffsetMinutes: utcOffsetMinutes,
+      leitlinienprofil: leitlinienprofil,
+      vibrationEnabled: vibrationEnabled,
+      soundEnabled: soundEnabled,
+      zustand: _zustand,
+      phase: _phase,
+      compressionCycleStartOffset:
+          _compressionCycleStartOffset - _monotonicStartOffset,
+      compressionRemainingAtPause: _compressionRemainingAtPause,
+      analysephaseStartOffset: analysephaseStart == null
+          ? null
+          : analysephaseStart - _monotonicStartOffset,
+      isSchockpause: _isSchockpause,
+      schockpauseWasDue: _schockpauseWasDue,
+      schockpauseOverdue: _schockpauseOverdue,
+      schockpauseOpeningSchockIndex: _schockpauseOpeningSchockIndex,
+      rhythmusanalyseErgebnis: _rhythmusanalyseErgebnis,
+      rhythmusanalyseNotiz: _rhythmusanalyseNotiz,
+      adrenalinAusloesendesErgebnis: _adrenalinAusloesendesErgebnis,
+      schocks: List.unmodifiable(_schocks),
+      schockRueckgaengigkeiten: List.unmodifiable(_schockRueckgaengigkeiten),
+      adrenalinGaben: List.unmodifiable(_adrenalinGaben),
+      amiodaronGaben: List.unmodifiable(_amiodaronGaben),
+      uebersprungeneRhythmusanalysen: List.unmodifiable(
+        _uebersprungeneRhythmusanalysen,
+      ),
+      rhythmusanalyseEintraege: List.unmodifiable(_rhythmusanalyseEintraege),
+      roscEreignisse: List.unmodifiable(_roscEreignisse),
+      wiederbeginnEreignisse: List.unmodifiable(_wiederbeginnEreignisse),
+      abschnitte: List.unmodifiable(_abschnitte),
+      ende: _ende,
+      verworfenAm: _verworfenAm,
+    );
+  }
+
   void _startNextDruckphase() {
     _phase = Reanimationsphase.druckphase;
     _compressionCycleStartOffset = _monotonicNow();
@@ -647,6 +785,7 @@ class ReanimationsfallSnapshot {
     required this.roscEreignisse,
     required this.wiederbeginnEreignisse,
     required this.ende,
+    required this.verworfenAm,
     required this.compressionRemaining,
     required this.rhythmusanalyseOverdue,
     required this.isRhythmusanalyseDue,
@@ -694,6 +833,9 @@ class ReanimationsfallSnapshot {
 
   /// The end of the Reanimationsfall, if it has ended.
   final ReanimationsfallEnde? ende;
+
+  /// The time the Reanimationsfall was marked as Verworfen, if it was.
+  final Duration? verworfenAm;
 
   final Duration compressionRemaining;
 
@@ -755,6 +897,9 @@ class ReanimationsfallSnapshot {
   /// Whether the case has ended.
   bool get istBeendet => zustand == ReanimationsfallZustand.beendet;
 
+  /// Whether the case was marked as Verworfen.
+  bool get istVerworfen => zustand == ReanimationsfallZustand.verworfen;
+
   /// The most recent Adrenalin dose, if any.
   AdrenalinGabe? get letzteAdrenalinGabe {
     if (adrenalinGaben.isEmpty) return null;
@@ -778,4 +923,74 @@ class ReanimationsfallSnapshot {
     if (uebersprungeneRhythmusanalysen.isEmpty) return null;
     return uebersprungeneRhythmusanalysen.last;
   }
+}
+
+/// The serializable state of a Reanimationsfall.
+///
+/// Event times and phase offsets are relative to the Startzeit so that the
+/// state can be restored with a fresh monotonic clock.
+class ReanimationsfallState {
+  const ReanimationsfallState({
+    required this.id,
+    required this.startzeit,
+    required this.startzeitUtc,
+    required this.utcOffsetMinutes,
+    required this.leitlinienprofil,
+    required this.vibrationEnabled,
+    required this.soundEnabled,
+    required this.zustand,
+    required this.phase,
+    required this.compressionCycleStartOffset,
+    required this.compressionRemainingAtPause,
+    required this.analysephaseStartOffset,
+    required this.isSchockpause,
+    required this.schockpauseWasDue,
+    required this.schockpauseOverdue,
+    required this.schockpauseOpeningSchockIndex,
+    required this.rhythmusanalyseErgebnis,
+    required this.rhythmusanalyseNotiz,
+    required this.adrenalinAusloesendesErgebnis,
+    required this.schocks,
+    required this.schockRueckgaengigkeiten,
+    required this.adrenalinGaben,
+    required this.amiodaronGaben,
+    required this.uebersprungeneRhythmusanalysen,
+    required this.rhythmusanalyseEintraege,
+    required this.roscEreignisse,
+    required this.wiederbeginnEreignisse,
+    required this.abschnitte,
+    required this.ende,
+    required this.verworfenAm,
+  });
+
+  final String id;
+  final DateTime startzeit;
+  final DateTime startzeitUtc;
+  final int utcOffsetMinutes;
+  final Leitlinienprofil leitlinienprofil;
+  final bool vibrationEnabled;
+  final bool soundEnabled;
+  final ReanimationsfallZustand zustand;
+  final Reanimationsphase phase;
+  final Duration compressionCycleStartOffset;
+  final Duration compressionRemainingAtPause;
+  final Duration? analysephaseStartOffset;
+  final bool isSchockpause;
+  final bool schockpauseWasDue;
+  final Duration schockpauseOverdue;
+  final int? schockpauseOpeningSchockIndex;
+  final RhythmusanalyseErgebnis? rhythmusanalyseErgebnis;
+  final String? rhythmusanalyseNotiz;
+  final RhythmusanalyseErgebnis? adrenalinAusloesendesErgebnis;
+  final List<SchockEreignis> schocks;
+  final List<SchockRueckgaengig> schockRueckgaengigkeiten;
+  final List<AdrenalinGabe> adrenalinGaben;
+  final List<AmiodaronGabe> amiodaronGaben;
+  final List<RhythmusanalyseUeberspringung> uebersprungeneRhythmusanalysen;
+  final List<RhythmusanalyseEintrag> rhythmusanalyseEintraege;
+  final List<RoscEreignis> roscEreignisse;
+  final List<Reanimationswiederbeginn> wiederbeginnEreignisse;
+  final List<Reanimationsabschnitt> abschnitte;
+  final ReanimationsfallEnde? ende;
+  final Duration? verworfenAm;
 }

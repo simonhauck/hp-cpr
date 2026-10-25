@@ -625,5 +625,90 @@
         "type": "String"
       }
     }
+  },
+  "eventCaseDiscarded": "Fall verworfen",
+  "@eventCaseDiscarded": {
+    "description": "Ereignis: Reanimationsfall als Verworfen markiert"
+  },
+  "verworfenLabel": "Verworfen",
+  "@verworfenLabel": {
+    "description": "Status eines verworfenen Reanimationsfalls"
+  },
+  "summaryCaseDiscarded": "Reanimationsfall verworfen",
+  "@summaryCaseDiscarded": {
+    "description": "Überschrift der Zusammenfassung eines verworfenen Reanimationsfalls"
+  },
+  "activeCaseTitle": "Aktiver Reanimationsfall",
+  "@activeCaseTitle": {
+    "description": "Überschrift der Karte für einen gespeicherten aktiven Fall"
+  },
+  "activeCaseDescription": "Der Reanimationsfall läuft bereits. Setze ihn fort, um weiterzutimen.",
+  "@activeCaseDescription": {
+    "description": "Erklärung der Fortsetzen-Karte"
+  },
+  "resumeCaseButton": "Fortsetzen",
+  "@resumeCaseButton": {
+    "description": "Schaltfläche zum Fortsetzen des gespeicherten aktiven Falls"
+  },
+  "discardCaseButton": "Fall verwerfen",
+  "@discardCaseButton": {
+    "description": "Schaltfläche zum Verwerfen des Reanimationsfalls"
+  },
+  "discardCaseTitle": "Reanimationsfall verwerfen?",
+  "@discardCaseTitle": {
+    "description": "Titel der Bestätigung zum Verwerfen"
+  },
+  "discardCaseDescription": "Der Fall verlässt den aktiven Ablauf und bleibt im Einsatzlog.",
+  "@discardCaseDescription": {
+    "description": "Erklärung der Folgen des Verwerfens"
+  },
+  "discardCaseConfirm": "Verwerfen",
+  "@discardCaseConfirm": {
+    "description": "Bestätigung des Verwerfens"
+  },
+  "einsatzlogTitle": "Einsatzlog",
+  "@einsatzlogTitle": {
+    "description": "Titel des Einsatzlogs"
+  },
+  "einsatzlogEmpty": "Noch keine abgeschlossenen Reanimationsfälle",
+  "@einsatzlogEmpty": {
+    "description": "Leerer Zustand des Einsatzlogs"
+  },
+  "einsatzlogEntryTitle": "Reanimationsfall {time}",
+  "@einsatzlogEntryTitle": {
+    "description": "Titel eines Einsatzlog-Eintrags",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "einsatzlogEntrySubtitle": "CPR {cpr} · {profil}",
+  "@einsatzlogEntrySubtitle": {
+    "description": "Zusammenfassung eines Einsatzlog-Eintrags",
+    "placeholders": {
+      "cpr": {
+        "type": "String"
+      },
+      "profil": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteCaseTooltip": "Reanimationsfall löschen",
+  "@deleteCaseTooltip": {
+    "description": "Tooltip der Löschen-Schaltfläche im Einsatzlog"
+  },
+  "deleteCaseTitle": "Reanimationsfall löschen?",
+  "@deleteCaseTitle": {
+    "description": "Titel der Löschbestätigung"
+  },
+  "deleteCaseDescription": "Der Reanimationsfall wird dauerhaft gelöscht.",
+  "@deleteCaseDescription": {
+    "description": "Erklärung der Folgen des Löschens"
+  },
+  "deleteButton": "Löschen",
+  "@deleteButton": {
+    "description": "Bestätigung des Löschens"
   }
 }

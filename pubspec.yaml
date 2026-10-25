@@ -14,12 +14,19 @@ dependencies:
     sdk: flutter
   intl: any
   package_info_plus: ^10.2.2
+  shared_preferences: ^2.5.6
   wakelock_plus: ^1.8.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+
+dependency_overrides:
+  # shared_preferences_android 2.5.x pulls jni, whose Android CMake build needs
+  # a CMake 3.22.1 Ninja that segfaults in the Nix Android SDK. Stay on the
+  # Kotlin implementation until the Nix package is fixed.
+  shared_preferences_android: 2.4.16
 
 flutter:
   uses-material-design: true

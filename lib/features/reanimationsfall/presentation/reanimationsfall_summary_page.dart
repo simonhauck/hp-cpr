@@ -26,6 +26,7 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final ende = snapshot.ende;
+    final endZeitpunkt = ende?.zeitpunkt ?? snapshot.verworfenAm;
     final notes = [
       for (final eintrag in snapshot.rhythmusanalyseEintraege)
         if (eintrag.notiz != null) eintrag,
@@ -57,7 +58,9 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
               ),
               children: [
                 Text(
-                  l10n.summaryCaseEnded,
+                  snapshot.istVerworfen
+                      ? l10n.summaryCaseDiscarded
+                      : l10n.summaryCaseEnded,
                   style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -94,18 +97,18 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
                           label: l10n.summaryStartzeit,
                           value: formatWallTime(snapshot.startzeit),
                         ),
-                        if (ende != null) ...[
+                        if (endZeitpunkt != null)
                           _SummaryRow(
                             label: l10n.summaryEndzeit,
                             value: formatWallTime(
-                              snapshot.startzeit.add(ende.zeitpunkt),
+                              snapshot.startzeit.add(endZeitpunkt),
                             ),
                           ),
+                        if (ende != null)
                           _SummaryRow(
                             label: l10n.summaryEndReason,
                             value: beendigungsgrundLabel(l10n, ende.grund),
                           ),
-                        ],
                       ],
                     ),
                   ),
@@ -204,18 +207,22 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
     for (var index = 0; index < snapshot.schocks.length; index++) {
       final schock = snapshot.schocks[index];
       final count = index + 1;
-      if (schock.rueckgaengig) {
-        add(schock.zeitpunkt, Icons.undo, l10n.eventSchockUndone(count));
-      } else {
-        final energie = schock.energieJoule;
-        add(
-          schock.zeitpunkt,
-          Icons.bolt_outlined,
-          energie == null
-              ? l10n.eventSchock(count)
-              : l10n.eventSchockWithEnergy(count, energie),
-        );
-      }
+      final energie = schock.energieJoule;
+      add(
+        schock.zeitpunkt,
+        Icons.bolt_outlined,
+        energie == null
+            ? l10n.eventSchock(count)
+            : l10n.eventSchockWithEnergy(count, energie),
+      );
+    }
+
+    for (final rueckgaengig in snapshot.schockRueckgaengigkeiten) {
+      add(
+        rueckgaengig.zeitpunkt,
+        Icons.undo,
+        l10n.eventSchockUndone(rueckgaengig.schockIndex + 1),
+      );
     }
 
     for (final gabe in snapshot.adrenalinGaben) {
@@ -273,6 +280,11 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
         Icons.stop_circle_outlined,
         l10n.eventCaseEnded(beendigungsgrundLabel(l10n, ende.grund)),
       );
+    }
+
+    final verworfenAm = snapshot.verworfenAm;
+    if (verworfenAm != null) {
+      add(verworfenAm, Icons.block, l10n.eventCaseDiscarded);
     }
 
     events.sort((a, b) {

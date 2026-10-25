@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/core/clock.dart';
 import 'package:hp_cpr/core/wake_lock.dart';
+import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/reanimationsfall_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/custom_startzeit_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/start_card.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_chip.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
@@ -15,38 +19,116 @@ import 'package:hp_cpr/ui/navigation/app_destination.dart';
 import 'package:hp_cpr/ui/navigation/app_drawer.dart';
 import 'package:hp_cpr/ui/navigation/app_routes.dart';
 
-/// Starts a new Reanimationsfall, either now or with a corrected Startzeit.
-class StartPage extends StatelessWidget {
+/// Starts a new Reanimationsfall or resumes the stored active one.
+class StartPage extends StatefulWidget {
   const StartPage({
     super.key,
     required this.clock,
     required this.routes,
     required this.wakeLock,
+    required this.session,
   });
 
   final AppClock clock;
   final AppRoutes routes;
   final WakeLock wakeLock;
+  final ReanimationsfallSession session;
+
+  @override
+  State<StartPage> createState() => _StartPageState();
+}
+
+class _StartPageState extends State<StartPage> {
+  Reanimationsfall? _activeFall;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadActive();
+  }
+
+  Future<void> _loadActive() async {
+    final fall = await widget.session.loadActive();
+    if (!mounted) return;
+    setState(() {
+      _activeFall = fall;
+      _loading = false;
+    });
+  }
+
+  Future<void> _openReanimationsfall(Reanimationsfall reanimationsfall) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ReanimationsfallPage(
+          reanimationsfall: reanimationsfall,
+          wakeLock: widget.wakeLock,
+          routes: widget.routes,
+          session: widget.session,
+        ),
+      ),
+    );
+    if (!mounted) return;
+    await _loadActive();
+  }
+
+  Future<void> _startReanimationsfall(Duration backdate) async {
+    final settings = widget.routes.settings;
+    final reanimationsfall = Reanimationsfall.start(
+      clock: widget.clock,
+      leitlinienprofil: settings.leitlinienprofil,
+      vibrationEnabled: settings.vibrationEnabled,
+      soundEnabled: settings.soundEnabled,
+      backdate: backdate,
+    );
+
+    await widget.session.persist(reanimationsfall);
+    if (!mounted) return;
+    await _openReanimationsfall(reanimationsfall);
+  }
+
+  Future<void> _resumeActive() async {
+    final fall = _activeFall;
+    if (fall == null) return;
+    await _openReanimationsfall(fall);
+  }
 
   @override
   Widget build(BuildContext context) {
     return PageScaffold(
       maxWidth: PageLayout.maxContentWidth,
-      drawer: AppDrawer(routes: routes),
+      drawer: AppDrawer(routes: widget.routes),
       header: (context, layout) => _StartHeader(
         layout: layout,
-        settings: routes.settings,
+        settings: widget.routes.settings,
         onOpenSettings: () => _openSettings(context),
       ),
       content: (context, layout) {
+        if (_loading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final activeFall = _activeFall;
+        if (activeFall != null) {
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: _ActiveReanimationsfallCard(
+                layout: layout,
+                reanimationsfall: activeFall,
+                onResume: _resumeActive,
+              ),
+            ),
+          );
+        }
+
         final startNowCard = _StartNowCard(
           layout: layout,
-          onStart: () => _startReanimationsfall(context, Duration.zero),
+          onStart: () => _startReanimationsfall(Duration.zero),
         );
         final runningReanimationsfallCard = _RunningReanimationsfallCard(
           layout: layout,
-          onStartBackdated: (backdate) =>
-              _startReanimationsfall(context, backdate),
+          onStartBackdated: _startReanimationsfall,
           onCustomStartzeit: () => _showCustomStartzeit(context),
         );
 
@@ -70,31 +152,10 @@ class StartPage extends StatelessWidget {
     );
   }
 
-  void _startReanimationsfall(BuildContext context, Duration backdate) {
-    final settings = routes.settings;
-    final reanimationsfall = Reanimationsfall.start(
-      clock: clock,
-      leitlinienprofil: settings.leitlinienprofil,
-      vibrationEnabled: settings.vibrationEnabled,
-      soundEnabled: settings.soundEnabled,
-      backdate: backdate,
-    );
-
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => ReanimationsfallPage(
-          reanimationsfall: reanimationsfall,
-          wakeLock: wakeLock,
-          routes: routes,
-        ),
-      ),
-    );
-  }
-
   void _openSettings(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => routes.page(AppDestination.einstellungen),
+        builder: (_) => widget.routes.page(AppDestination.einstellungen),
       ),
     );
   }
@@ -106,7 +167,63 @@ class StartPage extends StatelessWidget {
     );
 
     if (backdate == null || !context.mounted) return;
-    _startReanimationsfall(context, backdate);
+    _startReanimationsfall(backdate);
+  }
+}
+
+class _ActiveReanimationsfallCard extends StatelessWidget {
+  const _ActiveReanimationsfallCard({
+    required this.layout,
+    required this.reanimationsfall,
+    required this.onResume,
+  });
+
+  final PageLayout layout;
+  final Reanimationsfall reanimationsfall;
+  final VoidCallback onResume;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    return StartCard(
+      layout: layout,
+      children: [
+        StartCardTitle(l10n.activeCaseTitle, layout: layout),
+        SizedBox(height: layout.cardTitleGap),
+        Text(
+          l10n.activeCaseDescription,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        SizedBox(height: layout.cardLabelGap),
+        LeitlinienprofilChip(
+          leitlinienprofil: reanimationsfall.leitlinienprofil,
+          compact: layout.isCompact,
+        ),
+        SizedBox(height: layout.cardLabelGap),
+        Text(
+          l10n.startzeitValue(formatWallTime(reanimationsfall.startzeit)),
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        SizedBox(height: layout.cardActionGap),
+        FilledButton.icon(
+          onPressed: onResume,
+          icon: const Icon(Icons.play_arrow),
+          label: Text(l10n.resumeCaseButton),
+          style: FilledButton.styleFrom(
+            minimumSize: Size.fromHeight(layout.primaryActionHeight),
+            textStyle: theme.textTheme.titleMedium,
+          ),
+        ),
+      ],
+    );
   }
 }
 
