@@ -54,6 +54,12 @@ class AppDrawer extends StatelessWidget {
             const Divider(height: 1),
             _destination(
               context,
+              AppDestination.einsatzlog,
+              icon: Icons.list_alt_outlined,
+              label: l10n.einsatzlogTitle,
+            ),
+            _destination(
+              context,
               AppDestination.einstellungen,
               icon: Icons.settings_outlined,
               label: l10n.settingsTitle,

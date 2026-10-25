@@ -13,6 +13,23 @@ String beendigungsgrundLabel(AppLocalizations l10n, Beendigungsgrund grund) {
   };
 }
 
+/// The choice made in the end dialog.
+sealed class ReanimationsfallEndChoice {
+  const ReanimationsfallEndChoice();
+}
+
+/// End the case with a reason.
+class EndWithReason extends ReanimationsfallEndChoice {
+  const EndWithReason(this.grund);
+
+  final Beendigungsgrund grund;
+}
+
+/// Mark the case as Verworfen instead of ending it.
+class DiscardReanimationsfall extends ReanimationsfallEndChoice {
+  const DiscardReanimationsfall();
+}
+
 /// Asks for the reason before the Reanimationsfall is closed.
 class EndReanimationsfallDialog extends StatelessWidget {
   const EndReanimationsfallDialog({super.key});
@@ -40,7 +57,8 @@ class EndReanimationsfallDialog extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
-                onPressed: () => Navigator.of(context).pop(grund),
+                onPressed: () =>
+                    Navigator.of(context).pop(EndWithReason(grund)),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size.fromHeight(
                     PageLayout.dialogOptionHeight,
@@ -58,6 +76,12 @@ class EndReanimationsfallDialog extends StatelessWidget {
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(l10n.cancelButton),
+        ),
+        TextButton(
+          onPressed: () =>
+              Navigator.of(context).pop(const DiscardReanimationsfall()),
+          style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+          child: Text(l10n.discardCaseButton),
         ),
       ],
     );

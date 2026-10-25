@@ -873,6 +873,114 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Fall beendet: {grund}'**
   String eventCaseEnded(String grund);
+
+  /// Ereignis: Reanimationsfall als Verworfen markiert
+  ///
+  /// In de, this message translates to:
+  /// **'Fall verworfen'**
+  String get eventCaseDiscarded;
+
+  /// Status eines verworfenen Reanimationsfalls
+  ///
+  /// In de, this message translates to:
+  /// **'Verworfen'**
+  String get verworfenLabel;
+
+  /// Überschrift der Zusammenfassung eines verworfenen Reanimationsfalls
+  ///
+  /// In de, this message translates to:
+  /// **'Reanimationsfall verworfen'**
+  String get summaryCaseDiscarded;
+
+  /// Überschrift der Karte für einen gespeicherten aktiven Fall
+  ///
+  /// In de, this message translates to:
+  /// **'Aktiver Reanimationsfall'**
+  String get activeCaseTitle;
+
+  /// Erklärung der Fortsetzen-Karte
+  ///
+  /// In de, this message translates to:
+  /// **'Der Reanimationsfall läuft bereits. Setze ihn fort, um weiterzutimen.'**
+  String get activeCaseDescription;
+
+  /// Schaltfläche zum Fortsetzen des gespeicherten aktiven Falls
+  ///
+  /// In de, this message translates to:
+  /// **'Fortsetzen'**
+  String get resumeCaseButton;
+
+  /// Schaltfläche zum Verwerfen des Reanimationsfalls
+  ///
+  /// In de, this message translates to:
+  /// **'Fall verwerfen'**
+  String get discardCaseButton;
+
+  /// Titel der Bestätigung zum Verwerfen
+  ///
+  /// In de, this message translates to:
+  /// **'Reanimationsfall verwerfen?'**
+  String get discardCaseTitle;
+
+  /// Erklärung der Folgen des Verwerfens
+  ///
+  /// In de, this message translates to:
+  /// **'Der Fall verlässt den aktiven Ablauf und bleibt im Einsatzlog.'**
+  String get discardCaseDescription;
+
+  /// Bestätigung des Verwerfens
+  ///
+  /// In de, this message translates to:
+  /// **'Verwerfen'**
+  String get discardCaseConfirm;
+
+  /// Titel des Einsatzlogs
+  ///
+  /// In de, this message translates to:
+  /// **'Einsatzlog'**
+  String get einsatzlogTitle;
+
+  /// Leerer Zustand des Einsatzlogs
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine abgeschlossenen Reanimationsfälle'**
+  String get einsatzlogEmpty;
+
+  /// Titel eines Einsatzlog-Eintrags
+  ///
+  /// In de, this message translates to:
+  /// **'Reanimationsfall {time}'**
+  String einsatzlogEntryTitle(String time);
+
+  /// Zusammenfassung eines Einsatzlog-Eintrags
+  ///
+  /// In de, this message translates to:
+  /// **'CPR {cpr} · {profil}'**
+  String einsatzlogEntrySubtitle(String cpr, String profil);
+
+  /// Tooltip der Löschen-Schaltfläche im Einsatzlog
+  ///
+  /// In de, this message translates to:
+  /// **'Reanimationsfall löschen'**
+  String get deleteCaseTooltip;
+
+  /// Titel der Löschbestätigung
+  ///
+  /// In de, this message translates to:
+  /// **'Reanimationsfall löschen?'**
+  String get deleteCaseTitle;
+
+  /// Erklärung der Folgen des Löschens
+  ///
+  /// In de, this message translates to:
+  /// **'Der Reanimationsfall wird dauerhaft gelöscht.'**
+  String get deleteCaseDescription;
+
+  /// Bestätigung des Löschens
+  ///
+  /// In de, this message translates to:
+  /// **'Löschen'**
+  String get deleteButton;
 }
 
 class _AppLocalizationsDelegate

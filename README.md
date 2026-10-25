@@ -2,7 +2,7 @@
 
 Flutter app as a companion for the **High-Performance CPR standard**. The app is intended to support the resuscitation workflow with timing: resuscitation duration, medication administration, rhythm analyses, and further steps.
 
-> **Status:** The Zeitnehmer can start a Reanimationsfall immediately or with a corrected Startzeit, run the Druckphase countdown, enter the Analysephase, record a Rhythmusanalyse result, skip it, and return to the Druckphase. Adrenalin and Amiodaron hints are implemented, and the case can be interrupted by ROSC, resumed after a rearrest, and ended with an in-app summary. The Einsatzlog and Messwerte are still to come.
+> **Status:** The Zeitnehmer can start a Reanimationsfall immediately or with a corrected Startzeit, run the Druckphase countdown, enter the Analysephase, record a Rhythmusanalyse result, skip it, and return to the Druckphase. Adrenalin and Amiodaron hints are implemented, the case can be interrupted by ROSC, resumed after a rearrest, and ended with an in-app summary, and active, completed, and Verworfene Reanimationsfälle are stored locally in the Einsatzlog. Messwerte are still to come.
 
 ## Goals
 
@@ -190,9 +190,15 @@ lib/
 ├── features/
 │   ├── about/
 │   │   └── presentation/about_page.dart         # app name, version, copyright
+│   ├── einsatzlog/
+│   │   └── presentation/einsatzlog_page.dart    # local case log + deletion
 │   ├── legal/
 │   │   └── presentation/legal_page.dart         # Rechtliches and the license page
 │   ├── reanimationsfall/
+│   │   ├── data/
+│   │   │   ├── reanimationsfall_session.dart    # load/restore/persist a case
+│   │   │   ├── reanimationsfall_state_json.dart # local state codec
+│   │   │   └── reanimationsfall_store.dart      # store interface + shared_preferences
 │   │   ├── domain/
 │   │   │   ├── adrenalin.dart                   # Adrenalin doses + Zeitfenster state
 │   │   │   ├── amiodaron.dart                   # Amiodaron doses + hint state

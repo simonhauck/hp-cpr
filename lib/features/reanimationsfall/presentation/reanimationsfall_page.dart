@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:hp_cpr/core/wake_lock.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_chip.dart';
+import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/amiodaron.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
@@ -31,11 +32,13 @@ class ReanimationsfallPage extends StatefulWidget {
     required this.reanimationsfall,
     required this.wakeLock,
     required this.routes,
+    required this.session,
   });
 
   final Reanimationsfall reanimationsfall;
   final WakeLock wakeLock;
   final AppRoutes routes;
+  final ReanimationsfallSession session;
 
   @override
   State<ReanimationsfallPage> createState() => _ReanimationsfallPageState();
@@ -72,27 +75,32 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     }
   }
 
+  void _mutate(VoidCallback action) {
+    setState(action);
+    unawaited(widget.session.persist(widget.reanimationsfall));
+  }
+
   void _enterAnalysephase() {
-    setState(widget.reanimationsfall.enterAnalysephase);
+    _mutate(widget.reanimationsfall.enterAnalysephase);
   }
 
   void _continueCpr() {
-    setState(widget.reanimationsfall.continueCpr);
+    _mutate(widget.reanimationsfall.continueCpr);
   }
 
   void _recordSchock() {
-    setState(() {
+    _mutate(() {
       widget.reanimationsfall.recordSchock();
       _amiodaronHinweisAusgeblendet = false;
     });
   }
 
   void _recordAdrenalin() {
-    setState(widget.reanimationsfall.recordAdrenalin);
+    _mutate(widget.reanimationsfall.recordAdrenalin);
   }
 
   void _recordAmiodaron() {
-    setState(() {
+    _mutate(() {
       widget.reanimationsfall.recordAmiodaron();
       _amiodaronHinweisAusgeblendet = false;
     });
@@ -103,31 +111,70 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
   }
 
   void _resumeResuscitation() {
-    setState(widget.reanimationsfall.resumeResuscitation);
+    _mutate(widget.reanimationsfall.resumeResuscitation);
   }
 
   Future<void> _endReanimationsfall() async {
-    final grund = await showDialog<Beendigungsgrund>(
+    final choice = await showDialog<ReanimationsfallEndChoice>(
       context: context,
       builder: (_) => const EndReanimationsfallDialog(),
     );
-    if (grund == null || !mounted) return;
+    if (choice == null || !mounted) return;
 
-    setState(() => widget.reanimationsfall.endReanimationsfall(grund));
-    final snapshot = widget.reanimationsfall.snapshot();
-    await Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(
-        builder: (_) => ReanimationsfallSummaryPage(
-          snapshot: snapshot,
-          routes: widget.routes,
-        ),
+    switch (choice) {
+      case EndWithReason(:final grund):
+        setState(() => widget.reanimationsfall.endReanimationsfall(grund));
+        await widget.session.persist(widget.reanimationsfall);
+        if (!mounted) return;
+
+        final snapshot = widget.reanimationsfall.snapshot();
+        await Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(
+            builder: (_) => ReanimationsfallSummaryPage(
+              snapshot: snapshot,
+              routes: widget.routes,
+            ),
+          ),
+        );
+      case DiscardReanimationsfall():
+        await _discardReanimationsfall();
+    }
+  }
+
+  Future<void> _discardReanimationsfall() async {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.discardCaseTitle),
+        content: Text(l10n.discardCaseDescription),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.cancelButton),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: theme.colorScheme.error,
+            ),
+            child: Text(l10n.discardCaseConfirm),
+          ),
+        ],
       ),
     );
+    if (confirmed != true || !mounted) return;
+
+    setState(widget.reanimationsfall.discardReanimationsfall);
+    await widget.session.persist(widget.reanimationsfall);
+    if (!mounted) return;
+    Navigator.of(context).pop();
   }
 
   void _undoLastSchock() {
     if (widget.reanimationsfall.snapshot().schockAnzahl == 0) return;
-    setState(() {
+    _mutate(() {
       widget.reanimationsfall.undoLastSchock();
       _amiodaronHinweisAusgeblendet = false;
     });
@@ -144,7 +191,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     );
     if (energie == null || !mounted) return;
 
-    setState(() => widget.reanimationsfall.setLastSchockEnergie(energie));
+    _mutate(() => widget.reanimationsfall.setLastSchockEnergie(energie));
   }
 
   Future<void> _recordRhythmusanalyse() async {
@@ -154,9 +201,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     );
     if (ergebnis == null || !mounted) return;
 
-    setState(() {
-      widget.reanimationsfall.recordRhythmusanalyse(ergebnis);
-    });
+    _mutate(() => widget.reanimationsfall.recordRhythmusanalyse(ergebnis));
 
     if (ergebnis == RhythmusanalyseErgebnis.unklar) {
       await _editRhythmusanalyseNotiz();
@@ -173,9 +218,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     );
     if (edit == null || !mounted) return;
 
-    setState(() {
-      widget.reanimationsfall.setRhythmusanalyseNotiz(edit.notiz);
-    });
+    _mutate(() => widget.reanimationsfall.setRhythmusanalyseNotiz(edit.notiz));
   }
 
   Future<void> _skipRhythmusanalyse() async {
@@ -185,9 +228,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     );
     if (choice == null || !mounted) return;
 
-    setState(() {
-      widget.reanimationsfall.skipRhythmusanalyse(choice.grund);
-    });
+    _mutate(() => widget.reanimationsfall.skipRhythmusanalyse(choice.grund));
   }
 
   @override
@@ -301,6 +342,7 @@ class _ReanimationsfallHeader extends StatelessWidget {
       },
       ReanimationsfallZustand.rosc => l10n.rhythmusanalyseRosc,
       ReanimationsfallZustand.beendet => l10n.summaryCaseEnded,
+      ReanimationsfallZustand.verworfen => l10n.verworfenLabel,
     };
 
     return Row(

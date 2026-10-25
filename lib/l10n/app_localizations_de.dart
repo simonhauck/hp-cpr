@@ -446,4 +446,65 @@ class AppLocalizationsDe extends AppLocalizations {
   String eventCaseEnded(String grund) {
     return 'Fall beendet: $grund';
   }
+
+  @override
+  String get eventCaseDiscarded => 'Fall verworfen';
+
+  @override
+  String get verworfenLabel => 'Verworfen';
+
+  @override
+  String get summaryCaseDiscarded => 'Reanimationsfall verworfen';
+
+  @override
+  String get activeCaseTitle => 'Aktiver Reanimationsfall';
+
+  @override
+  String get activeCaseDescription =>
+      'Der Reanimationsfall läuft bereits. Setze ihn fort, um weiterzutimen.';
+
+  @override
+  String get resumeCaseButton => 'Fortsetzen';
+
+  @override
+  String get discardCaseButton => 'Fall verwerfen';
+
+  @override
+  String get discardCaseTitle => 'Reanimationsfall verwerfen?';
+
+  @override
+  String get discardCaseDescription =>
+      'Der Fall verlässt den aktiven Ablauf und bleibt im Einsatzlog.';
+
+  @override
+  String get discardCaseConfirm => 'Verwerfen';
+
+  @override
+  String get einsatzlogTitle => 'Einsatzlog';
+
+  @override
+  String get einsatzlogEmpty => 'Noch keine abgeschlossenen Reanimationsfälle';
+
+  @override
+  String einsatzlogEntryTitle(String time) {
+    return 'Reanimationsfall $time';
+  }
+
+  @override
+  String einsatzlogEntrySubtitle(String cpr, String profil) {
+    return 'CPR $cpr · $profil';
+  }
+
+  @override
+  String get deleteCaseTooltip => 'Reanimationsfall löschen';
+
+  @override
+  String get deleteCaseTitle => 'Reanimationsfall löschen?';
+
+  @override
+  String get deleteCaseDescription =>
+      'Der Reanimationsfall wird dauerhaft gelöscht.';
+
+  @override
+  String get deleteButton => 'Löschen';
 }
