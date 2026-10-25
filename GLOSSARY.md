@@ -32,6 +32,10 @@ _Avoid_: Case phase, CPR phase
 The period in which chest compressions run and the 2-minute compression timer counts down.
 _Avoid_: Compression phase, CPR phase
 
+**DruckphaseNeustart**:
+The manual reset of the current Druckphase to a fresh 2-minute cycle after an interruption; it starts no new Reanimationsabschnitt and does not reset the Adrenalin or Amiodaron Zeitfenster.
+_Avoid_: Cycle restart, timer reset
+
 **Analysephase**:
 The paused period in which the team performs the rhythm analysis and may deliver a shock; the compression timer is stopped.
 _Avoid_: Analysis phase, rhythm phase
@@ -87,10 +91,6 @@ _Avoid_: Amiodarone in UI copy
 **Schock**:
 A defibrillation event recorded with its time and shock count; shock energy is optional.
 _Avoid_: Defibrillation in UI copy, shock delivery
-
-**Schockpause**:
-The interrupted Druckphase after a recorded Schock; the compression timer is frozen until CPR continues.
-_Avoid_: Compression pause, shock delivery pause
 
 **Zeitfenster**:
 The interval in which a time-based drug dose should be given, for example 3–5 minutes for adrenaline.
