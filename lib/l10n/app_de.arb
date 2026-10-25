@@ -432,5 +432,35 @@
   "aboutCopyright": "© 2026 Simon Hauck",
   "@aboutCopyright": {
     "description": "Copyright-Hinweis auf der Über-Seite"
+  },
+  "amiodaronLabel": "Amiodaron",
+  "@amiodaronLabel": {
+    "description": "Beschriftung des Amiodaron-Hinweises"
+  },
+  "amiodaronHint": "Amiodaron erwägen – {dosis} mg",
+  "@amiodaronHint": {
+    "description": "Hinweis auf eine mögliche Amiodaron-Gabe",
+    "placeholders": {
+      "dosis": {
+        "type": "int"
+      }
+    }
+  },
+  "amiodaronGiveButton": "Gegeben",
+  "@amiodaronGiveButton": {
+    "description": "Schaltfläche zum Erfassen einer Amiodaron-Gabe"
+  },
+  "amiodaronDismissButton": "Nicht jetzt",
+  "@amiodaronDismissButton": {
+    "description": "Schaltfläche zum Ausblenden des Amiodaron-Hinweises"
+  },
+  "amiodaronLastDose": "Letzte Gabe {time}",
+  "@amiodaronLastDose": {
+    "description": "Zeitpunkt der letzten Amiodaron-Gabe",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   }
 }

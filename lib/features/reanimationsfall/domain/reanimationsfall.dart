@@ -1,6 +1,7 @@
 import 'package:hp_cpr/core/clock.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/adrenalin.dart';
+import 'package:hp_cpr/features/reanimationsfall/domain/amiodaron.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/schock.dart';
 
@@ -61,6 +62,7 @@ class Reanimationsfall {
   final List<SchockEreignis> _schocks = [];
   final List<SchockRueckgaengig> _schockRueckgaengigkeiten = [];
   final List<AdrenalinGabe> _adrenalinGaben = [];
+  final List<AmiodaronGabe> _amiodaronGaben = [];
   RhythmusanalyseErgebnis? _adrenalinAusloesendesErgebnis;
   bool _ersteAdrenalinGabeFaellig = false;
 
@@ -139,6 +141,23 @@ class Reanimationsfall {
       AdrenalinGabe(zeitpunkt: _monotonicNow() - _monotonicStartOffset),
     );
     _ersteAdrenalinGabeFaellig = false;
+  }
+
+  /// Records an Amiodaron dose.
+  ///
+  /// The first dose is 300 mg and the second 150 mg. The app never records a
+  /// dose on its own; this command is only called when one was actually given.
+  void recordAmiodaron() {
+    if (_amiodaronGaben.length >= 2) {
+      throw StateError('at most two Amiodaron doses are supported');
+    }
+
+    _amiodaronGaben.add(
+      AmiodaronGabe(
+        zeitpunkt: _monotonicNow() - _monotonicStartOffset,
+        dosisMg: _amiodaronGaben.isEmpty ? 300 : 150,
+      ),
+    );
   }
 
   /// Marks the most recent active Schock as undone.
@@ -327,6 +346,9 @@ class Reanimationsfall {
     final adrenalinZeitfensterZustand = letzteAdrenalinGabe == null
         ? AdrenalinZeitfensterZustand.keine
         : _adrenalinZustand(adrenalinSeitLetzterGabe!);
+    final letzteAmiodaronGabe = _amiodaronGaben.isEmpty
+        ? null
+        : _amiodaronGaben.last;
 
     return ReanimationsfallSnapshot(
       phase: _phase,
@@ -352,7 +374,26 @@ class Reanimationsfall {
       adrenalinSeitLetzterGabe: adrenalinSeitLetzterGabe,
       adrenalinZeitfensterZustand: adrenalinZeitfensterZustand,
       istErsteAdrenalinGabeFaellig: _ersteAdrenalinGabeFaellig,
+      amiodaronGaben: List.unmodifiable(_amiodaronGaben),
+      letzteAmiodaronGabe: letzteAmiodaronGabe,
+      amiodaronHinweis: _amiodaronHinweis(),
     );
+  }
+
+  /// The contextual Amiodaron hint for the current Schock count.
+  AmiodaronHinweis _amiodaronHinweis() {
+    if (_amiodaronGaben.length >= 2) return AmiodaronHinweis.keine;
+
+    final schockAnzahl = _aktiveSchockAnzahl;
+    if (_amiodaronGaben.isEmpty) {
+      return schockAnzahl >= leitlinienprofil.amiodaronErsteGabeNachSchock
+          ? AmiodaronHinweis.ersteGabe
+          : AmiodaronHinweis.keine;
+    }
+
+    return schockAnzahl >= leitlinienprofil.amiodaronZweiteGabeNachSchock
+        ? AmiodaronHinweis.zweiteGabe
+        : AmiodaronHinweis.keine;
   }
 
   AdrenalinZeitfensterZustand _adrenalinZustand(Duration seit) {
@@ -422,6 +463,9 @@ class ReanimationsfallSnapshot {
     required this.adrenalinSeitLetzterGabe,
     required this.adrenalinZeitfensterZustand,
     required this.istErsteAdrenalinGabeFaellig,
+    required this.amiodaronGaben,
+    required this.letzteAmiodaronGabe,
+    required this.amiodaronHinweis,
   });
 
   final Reanimationsphase phase;
@@ -468,6 +512,15 @@ class ReanimationsfallSnapshot {
 
   /// Whether the first Adrenalin dose is clinically due.
   final bool istErsteAdrenalinGabeFaellig;
+
+  /// Every recorded Amiodaron dose.
+  final List<AmiodaronGabe> amiodaronGaben;
+
+  /// The most recent Amiodaron dose, if any.
+  final AmiodaronGabe? letzteAmiodaronGabe;
+
+  /// The contextual Amiodaron hint, or `keine` when no dose is suggested.
+  final AmiodaronHinweis amiodaronHinweis;
 
   /// The most recent Adrenalin dose, if any.
   AdrenalinGabe? get letzteAdrenalinGabe {

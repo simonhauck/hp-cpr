@@ -5,9 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:hp_cpr/core/wake_lock.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_chip.dart';
+import 'package:hp_cpr/features/reanimationsfall/domain/amiodaron.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/adrenalin_panel.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/amiodaron_panel.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/phase_action_bar.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_notiz_dialog.dart';
@@ -40,6 +42,7 @@ class ReanimationsfallPage extends StatefulWidget {
 class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     with WidgetsBindingObserver {
   Timer? _ticker;
+  bool _amiodaronHinweisAusgeblendet = false;
 
   @override
   void initState() {
@@ -76,16 +79,33 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
   }
 
   void _recordSchock() {
-    setState(widget.reanimationsfall.recordSchock);
+    setState(() {
+      widget.reanimationsfall.recordSchock();
+      _amiodaronHinweisAusgeblendet = false;
+    });
   }
 
   void _recordAdrenalin() {
     setState(widget.reanimationsfall.recordAdrenalin);
   }
 
+  void _recordAmiodaron() {
+    setState(() {
+      widget.reanimationsfall.recordAmiodaron();
+      _amiodaronHinweisAusgeblendet = false;
+    });
+  }
+
+  void _dismissAmiodaronHinweis() {
+    setState(() => _amiodaronHinweisAusgeblendet = true);
+  }
+
   void _undoLastSchock() {
     if (widget.reanimationsfall.snapshot().schockAnzahl == 0) return;
-    setState(widget.reanimationsfall.undoLastSchock);
+    setState(() {
+      widget.reanimationsfall.undoLastSchock();
+      _amiodaronHinweisAusgeblendet = false;
+    });
   }
 
   Future<void> _editLastSchockEnergie() async {
@@ -180,6 +200,11 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
                 ],
               );
 
+        final showAmiodaron =
+            snapshot.amiodaronGaben.isNotEmpty ||
+            (snapshot.amiodaronHinweis != AmiodaronHinweis.keine &&
+                !_amiodaronHinweisAusgeblendet);
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -190,6 +215,16 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
               layout: layout,
               onRecordAdrenalin: _recordAdrenalin,
             ),
+            if (showAmiodaron) ...[
+              SizedBox(height: layout.contentGap),
+              AmiodaronPanel(
+                snapshot: snapshot,
+                layout: layout,
+                isHintVisible: !_amiodaronHinweisAusgeblendet,
+                onRecordAmiodaron: _recordAmiodaron,
+                onDismiss: _dismissAmiodaronHinweis,
+              ),
+            ],
           ],
         );
       },

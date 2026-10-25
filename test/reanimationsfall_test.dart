@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:hp_cpr/features/reanimationsfall/domain/adrenalin.dart';
+import 'package:hp_cpr/features/reanimationsfall/domain/amiodaron.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
@@ -744,5 +745,150 @@ void main() {
       snapshot.adrenalinZeitfensterZustand,
       AdrenalinZeitfensterZustand.faellig,
     );
+  });
+
+  test('does not suggest Amiodaron before the third Schock', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    expect(
+      reanimationsfall.snapshot().amiodaronHinweis,
+      AmiodaronHinweis.keine,
+    );
+
+    reanimationsfall.recordSchock();
+    reanimationsfall.recordSchock();
+
+    final snapshot = reanimationsfall.snapshot();
+    expect(snapshot.schockAnzahl, 2);
+    expect(snapshot.amiodaronHinweis, AmiodaronHinweis.keine);
+    expect(snapshot.amiodaronGaben, isEmpty);
+  });
+
+  test('suggests the first 300 mg dose after the third Schock without '
+      'recording it', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    reanimationsfall.recordSchock();
+    reanimationsfall.recordSchock();
+    reanimationsfall.recordSchock();
+
+    final snapshot = reanimationsfall.snapshot();
+    expect(snapshot.amiodaronHinweis, AmiodaronHinweis.ersteGabe);
+    expect(snapshot.amiodaronHinweis.dosisMg, 300);
+    expect(snapshot.amiodaronGaben, isEmpty);
+    expect(snapshot.letzteAmiodaronGabe, isNull);
+  });
+
+  test('records the first 300 mg dose and suppresses the hint until the second '
+      'trigger', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    for (var i = 0; i < 3; i++) {
+      reanimationsfall.recordSchock();
+    }
+    clock.advance(const Duration(seconds: 10));
+    reanimationsfall.recordAmiodaron();
+
+    final afterFirstDose = reanimationsfall.snapshot();
+    expect(afterFirstDose.amiodaronGaben, hasLength(1));
+    expect(afterFirstDose.amiodaronGaben.single.dosisMg, 300);
+    expect(
+      afterFirstDose.amiodaronGaben.single.zeitpunkt,
+      const Duration(seconds: 10),
+    );
+    expect(afterFirstDose.letzteAmiodaronGabe!.dosisMg, 300);
+    expect(afterFirstDose.amiodaronHinweis, AmiodaronHinweis.keine);
+
+    reanimationsfall.recordSchock();
+    reanimationsfall.recordSchock();
+
+    final secondHint = reanimationsfall.snapshot();
+    expect(secondHint.schockAnzahl, 5);
+    expect(secondHint.amiodaronHinweis, AmiodaronHinweis.zweiteGabe);
+    expect(secondHint.amiodaronHinweis.dosisMg, 150);
+
+    clock.advance(const Duration(minutes: 1));
+    reanimationsfall.recordAmiodaron();
+
+    final afterSecondDose = reanimationsfall.snapshot();
+    expect(afterSecondDose.amiodaronGaben, hasLength(2));
+    expect(afterSecondDose.amiodaronGaben.last.dosisMg, 150);
+    expect(
+      afterSecondDose.amiodaronGaben.last.zeitpunkt,
+      const Duration(minutes: 1, seconds: 10),
+    );
+    expect(afterSecondDose.amiodaronHinweis, AmiodaronHinweis.keine);
+    expect(reanimationsfall.recordAmiodaron, throwsStateError);
+  });
+
+  test('the second Amiodaron trigger follows the Leitlinienprofil', () {
+    for (final (profil, trigger) in [
+      (Leitlinienprofil.aha2025, 4),
+      (Leitlinienprofil.erc2025, 5),
+    ]) {
+      final clock = FakeClock();
+      final reanimationsfall = Reanimationsfall.start(
+        clock: clock,
+        leitlinienprofil: profil,
+      );
+
+      for (var i = 0; i < 3; i++) {
+        reanimationsfall.recordSchock();
+      }
+      reanimationsfall.recordAmiodaron();
+
+      for (var schock = 4; schock < trigger; schock++) {
+        reanimationsfall.recordSchock();
+        expect(
+          reanimationsfall.snapshot().amiodaronHinweis,
+          AmiodaronHinweis.keine,
+          reason: '$profil after $schock Schocks',
+        );
+      }
+
+      reanimationsfall.recordSchock();
+      expect(
+        reanimationsfall.snapshot().amiodaronHinweis,
+        AmiodaronHinweis.zweiteGabe,
+        reason: '$profil at $trigger Schocks',
+      );
+    }
+  });
+
+  test('never suggests a second dose before the first one is recorded', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    for (var i = 0; i < 5; i++) {
+      reanimationsfall.recordSchock();
+    }
+
+    final snapshot = reanimationsfall.snapshot();
+    expect(snapshot.amiodaronHinweis, AmiodaronHinweis.ersteGabe);
+    expect(snapshot.amiodaronHinweis.dosisMg, 300);
+    expect(snapshot.amiodaronGaben, isEmpty);
+  });
+
+  test('undoing a Schock below the trigger removes the Amiodaron hint', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    for (var i = 0; i < 3; i++) {
+      reanimationsfall.recordSchock();
+    }
+    expect(
+      reanimationsfall.snapshot().amiodaronHinweis,
+      AmiodaronHinweis.ersteGabe,
+    );
+
+    reanimationsfall.undoLastSchock();
+
+    final snapshot = reanimationsfall.snapshot();
+    expect(snapshot.schockAnzahl, 2);
+    expect(snapshot.amiodaronHinweis, AmiodaronHinweis.keine);
+    expect(snapshot.amiodaronGaben, isEmpty);
   });
 }
