@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/core/wake_lock.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
+import 'package:hp_cpr/features/messwerte/presentation/messwerte_page.dart';
 import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_chip.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/amiodaron.dart';
@@ -112,6 +113,19 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
 
   void _resumeResuscitation() {
     _mutate(widget.reanimationsfall.resumeResuscitation);
+  }
+
+  void _openMesswerte() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => MesswertePage(
+          snapshot: widget.reanimationsfall.snapshot(),
+          routes: widget.routes,
+          reanimationsfall: widget.reanimationsfall,
+          session: widget.session,
+        ),
+      ),
+    );
   }
 
   Future<void> _endReanimationsfall() async {
@@ -237,7 +251,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
 
     return PageScaffold(
       maxWidth: PageLayout.maxContentWidth,
-      drawer: AppDrawer(routes: widget.routes),
+      drawer: AppDrawer(routes: widget.routes, onOpenMesswerte: _openMesswerte),
       header: (context, layout) => _ReanimationsfallHeader(
         snapshot: snapshot,
         layout: layout,

@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_state_json.dart';
+import 'package:hp_cpr/features/reanimationsfall/domain/messwert.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 
@@ -21,6 +22,11 @@ void main() {
 
     clock.advance(const Duration(seconds: 10));
     reanimationsfall.recordAdrenalin();
+    reanimationsfall.recordTemperatur(36.5, notiz: 'rektal');
+    reanimationsfall.recordBlutzucker(120);
+    reanimationsfall.recordBlutdruck(systolisch: 120, diastolisch: 80);
+    reanimationsfall.recordHerzfrequenz(88);
+    reanimationsfall.recordNotiz('Nach ROSC');
     for (var i = 0; i < 3; i++) {
       reanimationsfall.recordSchock();
     }
@@ -56,6 +62,13 @@ void main() {
     expect(decoded.schocks, hasLength(3));
     expect(decoded.adrenalinGaben, hasLength(1));
     expect(decoded.rhythmusanalyseEintraege.single.notiz, 'VF');
+    expect(decoded.messwerte, hasLength(4));
+    expect(decoded.messwerte[0], isA<TemperaturMesswert>());
+    expect((decoded.messwerte[0] as TemperaturMesswert).notiz, 'rektal');
+    expect((decoded.messwerte[1] as BlutzuckerMesswert).mgDl, 120);
+    expect((decoded.messwerte[2] as BlutdruckMesswert).diastolisch, 80);
+    expect((decoded.messwerte[3] as HerzfrequenzMesswert).proMinute, 88);
+    expect(decoded.notizen.single.text, 'Nach ROSC');
     expect(decoded.roscEreignisse, hasLength(1));
     expect(decoded.wiederbeginnEreignisse, hasLength(1));
     expect(decoded.abschnitte, hasLength(2));
@@ -74,6 +87,8 @@ void main() {
     expect(snapshot.roscEreignisse, hasLength(1));
     expect(snapshot.wiederbeginnEreignisse, hasLength(1));
     expect(snapshot.rhythmusanalyseEintraege.single.notiz, 'VF');
+    expect(snapshot.messwerte, hasLength(4));
+    expect(snapshot.notizen.single.text, 'Nach ROSC');
     expect(snapshot.startzeit, state.startzeit);
   });
 

@@ -981,6 +981,186 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Löschen'**
   String get deleteButton;
+
+  /// Titel der Messwerte-Seite und Menüeintrag
+  ///
+  /// In de, this message translates to:
+  /// **'Messwerte'**
+  String get messwerteTitle;
+
+  /// Leerer Zustand der Messwerte
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Messwerte'**
+  String get messwerteEmpty;
+
+  /// Schaltfläche zum Öffnen der Messwerte aus der Zusammenfassung
+  ///
+  /// In de, this message translates to:
+  /// **'Messwerte öffnen'**
+  String get messwerteOpenButton;
+
+  /// Schaltfläche zum Erfassen eines Messwerts
+  ///
+  /// In de, this message translates to:
+  /// **'Messwert erfassen'**
+  String get messwertErfassenButton;
+
+  /// Titel des Dialogs für einen Messwert
+  ///
+  /// In de, this message translates to:
+  /// **'Messwert erfassen'**
+  String get messwertErfassenTitle;
+
+  /// Beschriftung der Messwert-Auswahl
+  ///
+  /// In de, this message translates to:
+  /// **'Messwert'**
+  String get messwertTypLabel;
+
+  /// Name des Temperatur-Messwerts
+  ///
+  /// In de, this message translates to:
+  /// **'Temperatur'**
+  String get messwertTemperatur;
+
+  /// Name des Blutzucker-Messwerts
+  ///
+  /// In de, this message translates to:
+  /// **'Blutzucker'**
+  String get messwertBlutzucker;
+
+  /// Name des Blutdruck-Messwerts
+  ///
+  /// In de, this message translates to:
+  /// **'Blutdruck'**
+  String get messwertBlutdruck;
+
+  /// Name des Herzfrequenz-Messwerts
+  ///
+  /// In de, this message translates to:
+  /// **'Herzfrequenz'**
+  String get messwertHerzfrequenz;
+
+  /// Eingabefeld für die Temperatur
+  ///
+  /// In de, this message translates to:
+  /// **'Temperatur (°C)'**
+  String get messwertTemperaturLabel;
+
+  /// Eingabefeld für den Blutzucker
+  ///
+  /// In de, this message translates to:
+  /// **'Blutzucker (mg/dL)'**
+  String get messwertBlutzuckerLabel;
+
+  /// Eingabefeld für den systolischen Blutdruck
+  ///
+  /// In de, this message translates to:
+  /// **'Systolisch (mmHg)'**
+  String get messwertSystolischLabel;
+
+  /// Eingabefeld für den diastolischen Blutdruck
+  ///
+  /// In de, this message translates to:
+  /// **'Diastolisch (mmHg)'**
+  String get messwertDiastolischLabel;
+
+  /// Eingabefeld für die Herzfrequenz
+  ///
+  /// In de, this message translates to:
+  /// **'Herzfrequenz (/min)'**
+  String get messwertHerzfrequenzLabel;
+
+  /// Anzeige einer Temperatur
+  ///
+  /// In de, this message translates to:
+  /// **'{value} °C'**
+  String messwertTemperaturValue(String value);
+
+  /// Anzeige eines Blutzuckerwerts
+  ///
+  /// In de, this message translates to:
+  /// **'{value} mg/dL'**
+  String messwertBlutzuckerValue(int value);
+
+  /// Anzeige eines Blutdruckwerts
+  ///
+  /// In de, this message translates to:
+  /// **'{systolisch}/{diastolisch} mmHg'**
+  String messwertBlutdruckValue(int systolisch, int diastolisch);
+
+  /// Anzeige einer Herzfrequenz
+  ///
+  /// In de, this message translates to:
+  /// **'{value} /min'**
+  String messwertHerzfrequenzValue(int value);
+
+  /// Fehlermeldung bei einem ungültigen Messwert
+  ///
+  /// In de, this message translates to:
+  /// **'Bitte einen gültigen Wert eingeben.'**
+  String get messwertInvalid;
+
+  /// Fehlermeldung bei vertauschten Blutdruckwerten
+  ///
+  /// In de, this message translates to:
+  /// **'Systolisch muss größer als diastolisch sein.'**
+  String get messwertBloodPressureInvalid;
+
+  /// Beschriftung eines Notizfelds
+  ///
+  /// In de, this message translates to:
+  /// **'Notiz'**
+  String get noteLabel;
+
+  /// Beschriftung eines optionalen Notizfelds
+  ///
+  /// In de, this message translates to:
+  /// **'Notiz (optional)'**
+  String get noteOptionalLabel;
+
+  /// Schaltfläche zum Erfassen einer freien Notiz
+  ///
+  /// In de, this message translates to:
+  /// **'Notiz erfassen'**
+  String get notizErfassenButton;
+
+  /// Titel des Dialogs für eine freie Notiz
+  ///
+  /// In de, this message translates to:
+  /// **'Notiz erfassen'**
+  String get notizErfassenTitle;
+
+  /// Fehlermeldung bei einer leeren Notiz
+  ///
+  /// In de, this message translates to:
+  /// **'Bitte eine Notiz eingeben.'**
+  String get notizEmptyInvalid;
+
+  /// Überschrift der freien Notizen
+  ///
+  /// In de, this message translates to:
+  /// **'Notizen'**
+  String get notizenTitle;
+
+  /// Leerer Zustand der freien Notizen
+  ///
+  /// In de, this message translates to:
+  /// **'Noch keine Notizen'**
+  String get notizenEmpty;
+
+  /// Ereignis: erfasster Messwert
+  ///
+  /// In de, this message translates to:
+  /// **'{typ}: {value}'**
+  String eventMesswert(String typ, String value);
+
+  /// Ereignis: erfasste freie Notiz
+  ///
+  /// In de, this message translates to:
+  /// **'Notiz: {text}'**
+  String eventNotiz(String text);
 }
 
 class _AppLocalizationsDelegate

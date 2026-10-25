@@ -1,6 +1,7 @@
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/adrenalin.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/amiodaron.dart';
+import 'package:hp_cpr/features/reanimationsfall/domain/messwert.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/schock.dart';
@@ -60,6 +61,13 @@ Map<String, dynamic> reanimationsfallStateToJson(ReanimationsfallState state) {
           'ergebnis': entry.ergebnis.name,
           'notiz': entry.notiz,
         },
+    ],
+    'messwerte': [
+      for (final messwert in state.messwerte) _messwertToJson(messwert),
+    ],
+    'notizen': [
+      for (final notiz in state.notizen)
+        {'zeitpunkt': _millis(notiz.zeitpunkt), 'text': notiz.text},
     ],
     'roscEreignisse': [
       for (final entry in state.roscEreignisse)
@@ -168,6 +176,17 @@ ReanimationsfallState reanimationsfallStateFromJson(Map<String, dynamic> json) {
           notiz: map(item)['notiz'] as String?,
         ),
     ],
+    messwerte: [
+      for (final item in (json['messwerte'] as List<dynamic>? ?? const []))
+        _messwertFromJson(map(item)),
+    ],
+    notizen: [
+      for (final item in (json['notizen'] as List<dynamic>? ?? const []))
+        ReanimationsfallNotiz(
+          zeitpunkt: _duration(map(item)['zeitpunkt']),
+          text: map(item)['text'] as String,
+        ),
+    ],
     roscEreignisse: [
       for (final item in (json['roscEreignisse'] as List<dynamic>? ?? const []))
         RoscEreignis(zeitpunkt: _duration(map(item)['zeitpunkt'])),
@@ -215,3 +234,51 @@ RhythmusanalyseUebersprungenGrund? _uebersprungenGrund(Object? value) =>
     value == null
     ? null
     : RhythmusanalyseUebersprungenGrund.values.byName(value as String);
+
+Map<String, dynamic> _messwertToJson(Messwert messwert) {
+  final base = {
+    'typ': messwert.typ.name,
+    'zeitpunkt': _millis(messwert.zeitpunkt),
+    'notiz': messwert.notiz,
+  };
+
+  return switch (messwert) {
+    TemperaturMesswert(:final celsius) => {...base, 'celsius': celsius},
+    BlutzuckerMesswert(:final mgDl) => {...base, 'mgDl': mgDl},
+    BlutdruckMesswert(:final systolisch, :final diastolisch) => {
+      ...base,
+      'systolisch': systolisch,
+      'diastolisch': diastolisch,
+    },
+    HerzfrequenzMesswert(:final proMinute) => {...base, 'proMinute': proMinute},
+  };
+}
+
+Messwert _messwertFromJson(Map<String, dynamic> json) {
+  final zeitpunkt = _duration(json['zeitpunkt']);
+  final notiz = json['notiz'] as String?;
+
+  return switch (MesswertTyp.values.byName(json['typ'] as String)) {
+    MesswertTyp.temperatur => TemperaturMesswert(
+      zeitpunkt: zeitpunkt,
+      celsius: (json['celsius'] as num).toDouble(),
+      notiz: notiz,
+    ),
+    MesswertTyp.blutzucker => BlutzuckerMesswert(
+      zeitpunkt: zeitpunkt,
+      mgDl: json['mgDl'] as int,
+      notiz: notiz,
+    ),
+    MesswertTyp.blutdruck => BlutdruckMesswert(
+      zeitpunkt: zeitpunkt,
+      systolisch: json['systolisch'] as int,
+      diastolisch: json['diastolisch'] as int,
+      notiz: notiz,
+    ),
+    MesswertTyp.herzfrequenz => HerzfrequenzMesswert(
+      zeitpunkt: zeitpunkt,
+      proMinute: json['proMinute'] as int,
+      notiz: notiz,
+    ),
+  };
+}

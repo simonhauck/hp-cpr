@@ -710,5 +710,161 @@
   "deleteButton": "Löschen",
   "@deleteButton": {
     "description": "Bestätigung des Löschens"
+  },
+  "messwerteTitle": "Messwerte",
+  "@messwerteTitle": {
+    "description": "Titel der Messwerte-Seite und Menüeintrag"
+  },
+  "messwerteEmpty": "Noch keine Messwerte",
+  "@messwerteEmpty": {
+    "description": "Leerer Zustand der Messwerte"
+  },
+  "messwerteOpenButton": "Messwerte öffnen",
+  "@messwerteOpenButton": {
+    "description": "Schaltfläche zum Öffnen der Messwerte aus der Zusammenfassung"
+  },
+  "messwertErfassenButton": "Messwert erfassen",
+  "@messwertErfassenButton": {
+    "description": "Schaltfläche zum Erfassen eines Messwerts"
+  },
+  "messwertErfassenTitle": "Messwert erfassen",
+  "@messwertErfassenTitle": {
+    "description": "Titel des Dialogs für einen Messwert"
+  },
+  "messwertTypLabel": "Messwert",
+  "@messwertTypLabel": {
+    "description": "Beschriftung der Messwert-Auswahl"
+  },
+  "messwertTemperatur": "Temperatur",
+  "@messwertTemperatur": {
+    "description": "Name des Temperatur-Messwerts"
+  },
+  "messwertBlutzucker": "Blutzucker",
+  "@messwertBlutzucker": {
+    "description": "Name des Blutzucker-Messwerts"
+  },
+  "messwertBlutdruck": "Blutdruck",
+  "@messwertBlutdruck": {
+    "description": "Name des Blutdruck-Messwerts"
+  },
+  "messwertHerzfrequenz": "Herzfrequenz",
+  "@messwertHerzfrequenz": {
+    "description": "Name des Herzfrequenz-Messwerts"
+  },
+  "messwertTemperaturLabel": "Temperatur (°C)",
+  "@messwertTemperaturLabel": {
+    "description": "Eingabefeld für die Temperatur"
+  },
+  "messwertBlutzuckerLabel": "Blutzucker (mg/dL)",
+  "@messwertBlutzuckerLabel": {
+    "description": "Eingabefeld für den Blutzucker"
+  },
+  "messwertSystolischLabel": "Systolisch (mmHg)",
+  "@messwertSystolischLabel": {
+    "description": "Eingabefeld für den systolischen Blutdruck"
+  },
+  "messwertDiastolischLabel": "Diastolisch (mmHg)",
+  "@messwertDiastolischLabel": {
+    "description": "Eingabefeld für den diastolischen Blutdruck"
+  },
+  "messwertHerzfrequenzLabel": "Herzfrequenz (/min)",
+  "@messwertHerzfrequenzLabel": {
+    "description": "Eingabefeld für die Herzfrequenz"
+  },
+  "messwertTemperaturValue": "{value} °C",
+  "@messwertTemperaturValue": {
+    "description": "Anzeige einer Temperatur",
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "messwertBlutzuckerValue": "{value} mg/dL",
+  "@messwertBlutzuckerValue": {
+    "description": "Anzeige eines Blutzuckerwerts",
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "messwertBlutdruckValue": "{systolisch}/{diastolisch} mmHg",
+  "@messwertBlutdruckValue": {
+    "description": "Anzeige eines Blutdruckwerts",
+    "placeholders": {
+      "systolisch": {
+        "type": "int"
+      },
+      "diastolisch": {
+        "type": "int"
+      }
+    }
+  },
+  "messwertHerzfrequenzValue": "{value} /min",
+  "@messwertHerzfrequenzValue": {
+    "description": "Anzeige einer Herzfrequenz",
+    "placeholders": {
+      "value": {
+        "type": "int"
+      }
+    }
+  },
+  "messwertInvalid": "Bitte einen gültigen Wert eingeben.",
+  "@messwertInvalid": {
+    "description": "Fehlermeldung bei einem ungültigen Messwert"
+  },
+  "messwertBloodPressureInvalid": "Systolisch muss größer als diastolisch sein.",
+  "@messwertBloodPressureInvalid": {
+    "description": "Fehlermeldung bei vertauschten Blutdruckwerten"
+  },
+  "noteLabel": "Notiz",
+  "@noteLabel": {
+    "description": "Beschriftung eines Notizfelds"
+  },
+  "noteOptionalLabel": "Notiz (optional)",
+  "@noteOptionalLabel": {
+    "description": "Beschriftung eines optionalen Notizfelds"
+  },
+  "notizErfassenButton": "Notiz erfassen",
+  "@notizErfassenButton": {
+    "description": "Schaltfläche zum Erfassen einer freien Notiz"
+  },
+  "notizErfassenTitle": "Notiz erfassen",
+  "@notizErfassenTitle": {
+    "description": "Titel des Dialogs für eine freie Notiz"
+  },
+  "notizEmptyInvalid": "Bitte eine Notiz eingeben.",
+  "@notizEmptyInvalid": {
+    "description": "Fehlermeldung bei einer leeren Notiz"
+  },
+  "notizenTitle": "Notizen",
+  "@notizenTitle": {
+    "description": "Überschrift der freien Notizen"
+  },
+  "notizenEmpty": "Noch keine Notizen",
+  "@notizenEmpty": {
+    "description": "Leerer Zustand der freien Notizen"
+  },
+  "eventMesswert": "{typ}: {value}",
+  "@eventMesswert": {
+    "description": "Ereignis: erfasster Messwert",
+    "placeholders": {
+      "typ": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "eventNotiz": "Notiz: {text}",
+  "@eventNotiz": {
+    "description": "Ereignis: erfasste freie Notiz",
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
   }
 }

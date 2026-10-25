@@ -7,12 +7,20 @@ import 'package:hp_cpr/ui/navigation/app_routes.dart';
 
 /// The app-wide drawer with the menu destinations.
 class AppDrawer extends StatelessWidget {
-  const AppDrawer({super.key, required this.routes, this.currentDestination});
+  const AppDrawer({
+    super.key,
+    required this.routes,
+    this.currentDestination,
+    this.onOpenMesswerte,
+  });
 
   final AppRoutes routes;
 
   /// The destination currently on screen, or null outside the menu pages.
   final AppDestination? currentDestination;
+
+  /// Opens the Messwerte of the active case; null when no case is running.
+  final VoidCallback? onOpenMesswerte;
 
   @override
   Widget build(BuildContext context) {
@@ -76,10 +84,25 @@ class AppDrawer extends StatelessWidget {
               icon: Icons.info_outline,
               label: l10n.aboutTitle,
             ),
+            if (onOpenMesswerte != null) ...[
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.assignment_outlined),
+                title: Text(l10n.messwerteTitle),
+                onTap: () => _openMesswerte(context),
+              ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  void _openMesswerte(BuildContext context) {
+    final open = onOpenMesswerte;
+    if (open == null) return;
+    Navigator.of(context).pop();
+    open();
   }
 
   Widget _destination(

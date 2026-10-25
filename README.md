@@ -2,7 +2,7 @@
 
 Flutter app as a companion for the **High-Performance CPR standard**. The app is intended to support the resuscitation workflow with timing: resuscitation duration, medication administration, rhythm analyses, and further steps.
 
-> **Status:** The Zeitnehmer can start a Reanimationsfall immediately or with a corrected Startzeit, run the Druckphase countdown, enter the Analysephase, record a Rhythmusanalyse result, skip it, and return to the Druckphase. Adrenalin and Amiodaron hints are implemented, the case can be interrupted by ROSC, resumed after a rearrest, and ended with an in-app summary, and active, completed, and Verworfene Reanimationsfälle are stored locally in the Einsatzlog. Messwerte are still to come.
+> **Status:** The Zeitnehmer can start a Reanimationsfall immediately or with a corrected Startzeit, run the Druckphase countdown, enter the Analysephase, record a Rhythmusanalyse result, skip it, and return to the Druckphase. Adrenalin and Amiodaron hints are implemented, the case can be interrupted by ROSC, resumed after a rearrest, and ended with an in-app summary, and active, completed, and Verworfene Reanimationsfälle are stored locally in the Einsatzlog. Messwerte and free-text notes are recorded in a separate view and included in the summary.
 
 ## Goals
 
@@ -194,6 +194,12 @@ lib/
 │   │   └── presentation/einsatzlog_page.dart    # local case log + deletion
 │   ├── legal/
 │   │   └── presentation/legal_page.dart         # Rechtliches and the license page
+│   ├── messwerte/
+│   │   └── presentation/
+│   │       ├── messwert_erfassen_dialog.dart    # two-step measurement entry
+│   │       ├── messwert_format.dart             # value formatting + icons
+│   │       ├── messwerte_page.dart              # measurements and notes
+│   │       └── notiz_erfassen_dialog.dart       # free-text note entry
 │   ├── reanimationsfall/
 │   │   ├── data/
 │   │   │   ├── reanimationsfall_session.dart    # load/restore/persist a case
@@ -202,6 +208,7 @@ lib/
 │   │   ├── domain/
 │   │   │   ├── adrenalin.dart                   # Adrenalin doses + Zeitfenster state
 │   │   │   ├── amiodaron.dart                   # Amiodaron doses + hint state
+│   │   │   ├── messwert.dart                    # Messwerte + free-text notes
 │   │   │   ├── reanimationsfall.dart           # Startzeit, Reanimationsphase, read model
 │   │   │   ├── rhythmusanalyse.dart            # Rhythmusanalyse result types
 │   │   │   └── schock.dart                     # Schock events and undo entries
@@ -241,8 +248,10 @@ lib/
     └── app_localizations*.dart                 # generated
 test/
 ├── app_settings_test.dart                      # settings behavior
-├── app_test.dart                               # start-screen and running-screen flows
-├── reanimationsfall_test.dart                  # start, backdate, and timer rules
+├── app_test.dart                               # app-seam flows, persistence, and log
+├── reanimationsfall_test.dart                  # start, phases, drugs, ROSC, and Messwerte
+├── reanimationsfall_state_json_test.dart       # local state codec round-trips
+├── reanimationsfall_store_test.dart            # shared_preferences store behavior
 ├── timer_format_test.dart                      # timer and wall-clock formatting
 └── support/                                    # fake clock and wake lock
 android/                                        # Android target

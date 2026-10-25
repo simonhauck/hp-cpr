@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:hp_cpr/features/reanimationsfall/domain/adrenalin.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/amiodaron.dart';
+import 'package:hp_cpr/features/reanimationsfall/domain/messwert.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
@@ -1020,6 +1021,88 @@ void main() {
     expect(ended.ende!.grund, Beendigungsgrund.abbruch);
     expect(ended.abschnitte.single.ende, const Duration(seconds: 30));
     expect(ended.cprDauer, const Duration(seconds: 30));
+  });
+
+  test('records all four Messwerte with timestamps and notes', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    clock.advance(const Duration(seconds: 10));
+    reanimationsfall.recordTemperatur(36.5, notiz: '  rektal  ');
+    clock.advance(const Duration(seconds: 5));
+    reanimationsfall.recordBlutzucker(120);
+    clock.advance(const Duration(seconds: 5));
+    reanimationsfall.recordBlutdruck(
+      systolisch: 120,
+      diastolisch: 80,
+      notiz: 'links',
+    );
+    clock.advance(const Duration(seconds: 5));
+    reanimationsfall.recordHerzfrequenz(88);
+    clock.advance(const Duration(seconds: 5));
+    reanimationsfall.recordNotiz('  Patient kalt  ');
+
+    final snapshot = reanimationsfall.snapshot();
+    expect(snapshot.messwerte, hasLength(4));
+
+    final temperatur = snapshot.messwerte[0] as TemperaturMesswert;
+    expect(temperatur.celsius, 36.5);
+    expect(temperatur.zeitpunkt, const Duration(seconds: 10));
+    expect(temperatur.notiz, 'rektal');
+
+    final blutzucker = snapshot.messwerte[1] as BlutzuckerMesswert;
+    expect(blutzucker.mgDl, 120);
+    expect(blutzucker.zeitpunkt, const Duration(seconds: 15));
+    expect(blutzucker.notiz, isNull);
+
+    final blutdruck = snapshot.messwerte[2] as BlutdruckMesswert;
+    expect(blutdruck.systolisch, 120);
+    expect(blutdruck.diastolisch, 80);
+    expect(blutdruck.zeitpunkt, const Duration(seconds: 20));
+    expect(blutdruck.notiz, 'links');
+
+    final herzfrequenz = snapshot.messwerte[3] as HerzfrequenzMesswert;
+    expect(herzfrequenz.proMinute, 88);
+    expect(herzfrequenz.zeitpunkt, const Duration(seconds: 25));
+
+    expect(snapshot.notizen.single.text, 'Patient kalt');
+    expect(snapshot.notizen.single.zeitpunkt, const Duration(seconds: 30));
+  });
+
+  test('rejects invalid Messwerte and empty notes', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+    expect(() => reanimationsfall.recordTemperatur(0), throwsArgumentError);
+    expect(() => reanimationsfall.recordBlutzucker(0), throwsArgumentError);
+    expect(
+      () => reanimationsfall.recordBlutdruck(systolisch: 80, diastolisch: 120),
+      throwsArgumentError,
+    );
+    expect(() => reanimationsfall.recordHerzfrequenz(-1), throwsArgumentError);
+    expect(() => reanimationsfall.recordNotiz('   '), throwsArgumentError);
+
+    expect(reanimationsfall.snapshot().messwerte, isEmpty);
+    expect(reanimationsfall.snapshot().notizen, isEmpty);
+  });
+
+  test('records Messwerte during ROSC but not after the case is closed', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+    clock.advance(const Duration(seconds: 30));
+    reanimationsfall.recordRosc();
+
+    reanimationsfall.recordTemperatur(37.2);
+    reanimationsfall.recordNotiz('Nach ROSC');
+
+    expect(reanimationsfall.snapshot().messwerte, hasLength(1));
+    expect(reanimationsfall.snapshot().notizen, hasLength(1));
+
+    reanimationsfall.endReanimationsfall(Beendigungsgrund.uebergabe);
+
+    expect(() => reanimationsfall.recordBlutzucker(100), throwsStateError);
+    expect(() => reanimationsfall.recordNotiz('zu spät'), throwsStateError);
+    expect(reanimationsfall.snapshot().messwerte, hasLength(1));
   });
 
   test('undoing a Schock below the trigger removes the Amiodaron hint', () {

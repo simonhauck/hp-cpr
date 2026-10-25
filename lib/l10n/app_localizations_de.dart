@@ -507,4 +507,107 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get deleteButton => 'Löschen';
+
+  @override
+  String get messwerteTitle => 'Messwerte';
+
+  @override
+  String get messwerteEmpty => 'Noch keine Messwerte';
+
+  @override
+  String get messwerteOpenButton => 'Messwerte öffnen';
+
+  @override
+  String get messwertErfassenButton => 'Messwert erfassen';
+
+  @override
+  String get messwertErfassenTitle => 'Messwert erfassen';
+
+  @override
+  String get messwertTypLabel => 'Messwert';
+
+  @override
+  String get messwertTemperatur => 'Temperatur';
+
+  @override
+  String get messwertBlutzucker => 'Blutzucker';
+
+  @override
+  String get messwertBlutdruck => 'Blutdruck';
+
+  @override
+  String get messwertHerzfrequenz => 'Herzfrequenz';
+
+  @override
+  String get messwertTemperaturLabel => 'Temperatur (°C)';
+
+  @override
+  String get messwertBlutzuckerLabel => 'Blutzucker (mg/dL)';
+
+  @override
+  String get messwertSystolischLabel => 'Systolisch (mmHg)';
+
+  @override
+  String get messwertDiastolischLabel => 'Diastolisch (mmHg)';
+
+  @override
+  String get messwertHerzfrequenzLabel => 'Herzfrequenz (/min)';
+
+  @override
+  String messwertTemperaturValue(String value) {
+    return '$value °C';
+  }
+
+  @override
+  String messwertBlutzuckerValue(int value) {
+    return '$value mg/dL';
+  }
+
+  @override
+  String messwertBlutdruckValue(int systolisch, int diastolisch) {
+    return '$systolisch/$diastolisch mmHg';
+  }
+
+  @override
+  String messwertHerzfrequenzValue(int value) {
+    return '$value /min';
+  }
+
+  @override
+  String get messwertInvalid => 'Bitte einen gültigen Wert eingeben.';
+
+  @override
+  String get messwertBloodPressureInvalid =>
+      'Systolisch muss größer als diastolisch sein.';
+
+  @override
+  String get noteLabel => 'Notiz';
+
+  @override
+  String get noteOptionalLabel => 'Notiz (optional)';
+
+  @override
+  String get notizErfassenButton => 'Notiz erfassen';
+
+  @override
+  String get notizErfassenTitle => 'Notiz erfassen';
+
+  @override
+  String get notizEmptyInvalid => 'Bitte eine Notiz eingeben.';
+
+  @override
+  String get notizenTitle => 'Notizen';
+
+  @override
+  String get notizenEmpty => 'Noch keine Notizen';
+
+  @override
+  String eventMesswert(String typ, String value) {
+    return '$typ: $value';
+  }
+
+  @override
+  String eventNotiz(String text) {
+    return 'Notiz: $text';
+  }
 }

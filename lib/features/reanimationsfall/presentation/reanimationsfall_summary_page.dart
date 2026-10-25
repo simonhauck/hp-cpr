@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_chip.dart';
+import 'package:hp_cpr/features/messwerte/presentation/messwert_format.dart';
+import 'package:hp_cpr/features/messwerte/presentation/messwerte_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/end_reanimationsfall_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_format.dart';
@@ -27,10 +29,17 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
     final theme = Theme.of(context);
     final ende = snapshot.ende;
     final endZeitpunkt = ende?.zeitpunkt ?? snapshot.verworfenAm;
-    final notes = [
+    final notes = <_SummaryNote>[
       for (final eintrag in snapshot.rhythmusanalyseEintraege)
-        if (eintrag.notiz != null) eintrag,
-    ];
+        if (eintrag.notiz != null)
+          _SummaryNote(
+            zeitpunkt: eintrag.zeitpunkt,
+            text: eintrag.notiz!,
+            detail: rhythmusanalyseErgebnisLabel(l10n, eintrag.ergebnis),
+          ),
+      for (final notiz in snapshot.notizen)
+        _SummaryNote(zeitpunkt: notiz.zeitpunkt, text: notiz.text),
+    ]..sort((a, b) => a.zeitpunkt.compareTo(b.zeitpunkt));
 
     return Scaffold(
       appBar: AppBar(
@@ -140,6 +149,52 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
                 ),
                 const SizedBox(height: PageLayout.space20),
                 Text(
+                  l10n.messwerteTitle,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: PageLayout.space8),
+                if (snapshot.messwerte.isEmpty)
+                  Text(
+                    l10n.messwerteEmpty,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  )
+                else
+                  Card(
+                    child: Column(
+                      children: [
+                        for (final (index, messwert)
+                            in snapshot.messwerte.indexed) ...[
+                          if (index > 0) const Divider(height: 1),
+                          ListTile(
+                            leading: Icon(messwertIcon(messwert.typ)),
+                            title: Text(formatMesswert(l10n, messwert)),
+                            subtitle: Text(
+                              [
+                                messwertTypLabel(l10n, messwert.typ),
+                                formatReanimationsdauer(messwert.zeitpunkt),
+                                ?messwert.notiz,
+                              ].join(' · '),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: PageLayout.space8),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: () => _openMesswerte(context),
+                    icon: const Icon(Icons.assignment_outlined),
+                    label: Text(l10n.messwerteOpenButton),
+                  ),
+                ),
+                const SizedBox(height: PageLayout.space20),
+                Text(
                   l10n.summaryNotes,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
@@ -157,23 +212,20 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
                   Card(
                     child: Column(
                       children: [
-                        for (final eintrag in notes)
+                        for (final note in notes)
                           ListTile(
                             leading: Text(
-                              formatReanimationsdauer(eintrag.zeitpunkt),
+                              formatReanimationsdauer(note.zeitpunkt),
                               style: theme.textTheme.labelLarge?.copyWith(
                                 fontFeatures: const [
                                   FontFeature.tabularFigures(),
                                 ],
                               ),
                             ),
-                            title: Text(eintrag.notiz!),
-                            subtitle: Text(
-                              rhythmusanalyseErgebnisLabel(
-                                l10n,
-                                eintrag.ergebnis,
-                              ),
-                            ),
+                            title: Text(note.text),
+                            subtitle: note.detail == null
+                                ? null
+                                : Text(note.detail!),
                           ),
                       ],
                     ),
@@ -252,6 +304,22 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
       );
     }
 
+    for (final messwert in snapshot.messwerte) {
+      add(
+        messwert.zeitpunkt,
+        messwertIcon(messwert.typ),
+        l10n.eventMesswert(
+          messwertTypLabel(l10n, messwert.typ),
+          formatMesswert(l10n, messwert),
+        ),
+        detail: messwert.notiz,
+      );
+    }
+
+    for (final notiz in snapshot.notizen) {
+      add(notiz.zeitpunkt, Icons.notes, l10n.eventNotiz(notiz.text));
+    }
+
     for (final ueberspringung in snapshot.uebersprungeneRhythmusanalysen) {
       final grund = ueberspringung.grund;
       add(
@@ -293,6 +361,26 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
     });
     return events;
   }
+
+  void _openMesswerte(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => MesswertePage(snapshot: snapshot, routes: routes),
+      ),
+    );
+  }
+}
+
+class _SummaryNote {
+  const _SummaryNote({
+    required this.zeitpunkt,
+    required this.text,
+    this.detail,
+  });
+
+  final Duration zeitpunkt;
+  final String text;
+  final String? detail;
 }
 
 class _SummaryRow extends StatelessWidget {
