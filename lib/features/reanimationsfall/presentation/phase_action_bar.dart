@@ -13,46 +13,31 @@ class PhaseActionBar extends StatelessWidget {
     required this.snapshot,
     required this.layout,
     required this.onEnterAnalysephase,
-    required this.onRecordSchock,
     required this.onRecordRhythmusanalyse,
     required this.onSkipRhythmusanalyse,
+    required this.onOpenActions,
   });
 
   final ReanimationsfallSnapshot snapshot;
   final PageLayout layout;
   final VoidCallback onEnterAnalysephase;
-  final VoidCallback onRecordSchock;
   final VoidCallback onRecordRhythmusanalyse;
   final VoidCallback onSkipRhythmusanalyse;
+  final VoidCallback onOpenActions;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final isAnalysephase = snapshot.phase == Reanimationsphase.analysephase;
 
-    final buttons = <Widget>[
-      if (isAnalysephase)
+    final phaseButtons = <Widget>[
+      if (isAnalysephase) ...[
         PhaseActionButton(
           layout: layout,
           label: l10n.rhythmusanalyseRecordButton,
           icon: Icons.fact_check_outlined,
           onPressed: onRecordRhythmusanalyse,
-        )
-      else
-        PhaseActionButton(
-          layout: layout,
-          label: l10n.analyseButton,
-          icon: Icons.monitor_heart_outlined,
-          onPressed: onEnterAnalysephase,
         ),
-      PhaseActionButton(
-        layout: layout,
-        emphasis: PhaseActionEmphasis.outlined,
-        label: l10n.schockButton(snapshot.schockAnzahl),
-        icon: Icons.bolt_outlined,
-        onPressed: onRecordSchock,
-      ),
-      if (isAnalysephase)
         PhaseActionButton(
           layout: layout,
           emphasis: PhaseActionEmphasis.outlined,
@@ -60,15 +45,28 @@ class PhaseActionBar extends StatelessWidget {
           icon: Icons.skip_next_outlined,
           onPressed: onSkipRhythmusanalyse,
         ),
+      ] else
+        PhaseActionButton(
+          layout: layout,
+          label: l10n.analyseButton,
+          icon: Icons.monitor_heart_outlined,
+          onPressed: onEnterAnalysephase,
+        ),
     ];
+    final actionsButton = ActionsButton(
+      layout: layout,
+      onPressed: onOpenActions,
+    );
 
     if (layout.isCompact) {
       return Row(
         children: [
-          for (var i = 0; i < buttons.length; i++) ...[
+          for (var i = 0; i < phaseButtons.length; i++) ...[
             if (i > 0) SizedBox(width: layout.compactActionGap),
-            Expanded(child: buttons[i]),
+            Expanded(child: phaseButtons[i]),
           ],
+          SizedBox(width: layout.compactActionGap),
+          actionsButton,
         ],
       );
     }
@@ -78,7 +76,38 @@ class PhaseActionBar extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       spacing: layout.actionWrapSpacing,
       runSpacing: layout.actionWrapRunSpacing,
-      children: buttons,
+      children: [...phaseButtons, actionsButton],
+    );
+  }
+}
+
+/// The secondary entry point for measurements, notes, and manual events.
+class ActionsButton extends StatelessWidget {
+  const ActionsButton({
+    super.key,
+    required this.layout,
+    required this.onPressed,
+  });
+
+  final PageLayout layout;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    return TextButton.icon(
+      onPressed: onPressed,
+      icon: const Icon(Icons.more_horiz),
+      label: Text(l10n.actionsButton),
+      style: TextButton.styleFrom(
+        minimumSize: Size(PageLayout.space0, layout.actionHeight),
+        padding: layout.actionsButtonPadding,
+        textStyle: layout.isCompact
+            ? theme.textTheme.labelLarge
+            : theme.textTheme.titleMedium,
+      ),
     );
   }
 }

@@ -101,7 +101,46 @@ class AppLocalizationsDe extends AppLocalizations {
   String get phaseAnalysephase => 'Analysephase';
 
   @override
-  String get analyseButton => 'Analyse';
+  String get analyseButton => 'Analyse starten';
+
+  @override
+  String get phaseStripDruckphase =>
+      'Druckphase · Jetzt 2 Minuten komprimieren';
+
+  @override
+  String get phaseStripDruckphaseDue => 'Druckphase · Analyse jetzt starten';
+
+  @override
+  String get phaseStripAnalysephase => 'Analysephase · Jetzt Rhythmus prüfen';
+
+  @override
+  String get phaseStripRosc => 'ROSC · Reanimation pausiert';
+
+  @override
+  String get phaseStripDruckphaseCompact => 'Druckphase · Komprimieren';
+
+  @override
+  String get phaseStripDruckphaseDueCompact => 'Druckphase · Analyse starten';
+
+  @override
+  String get phaseStripAnalysephaseCompact => 'Analysephase · Rhythmus prüfen';
+
+  @override
+  String get phaseStripRoscCompact => 'ROSC · Pausiert';
+
+  @override
+  String schockCountChip(int count) {
+    return 'Schocks: $count';
+  }
+
+  @override
+  String get actionsButton => 'Aktionen';
+
+  @override
+  String get actionsTitle => 'Weitere Aktionen';
+
+  @override
+  String get actionsSchock => 'Schock erfassen';
 
   @override
   String get pauseLabel => 'Pause';
@@ -150,12 +189,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rhythmusanalyseRecordButton => 'Ergebnis erfassen';
 
   @override
-  String get skipAnalysisButton => 'Analyse überspringen';
-
-  @override
-  String schockButton(int count) {
-    return 'Schock ($count)';
-  }
+  String get skipAnalysisButton => 'Überspringen';
 
   @override
   String get adrenalinLabel => 'Adrenalin';
@@ -277,7 +311,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get roscDescription => 'Kreislauf zurückgekehrt';
 
   @override
-  String get resumeResuscitationButton => 'Reanimation wieder aufnehmen';
+  String get resumeResuscitationButton => 'Reanimationswiederbeginn';
 
   @override
   String get endCaseButton => 'Fall beenden';

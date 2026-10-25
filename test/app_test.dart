@@ -79,6 +79,17 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
   }
 
+  Future<void> openActions(WidgetTester tester) async {
+    await tester.tap(find.text('Aktionen'));
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> recordSchock(WidgetTester tester) async {
+    await openActions(tester);
+    await tester.tap(find.text('Schock erfassen'));
+    await tester.pumpAndSettle();
+  }
+
   testWidgets('offers the two ways to start a Reanimationsfall', (
     tester,
   ) async {
@@ -110,6 +121,36 @@ void main() {
     expect(find.text('02:00'), findsOneWidget);
     expect(find.text('ERC 2025'), findsOneWidget);
     expect(wakeLock.enabled, isTrue);
+  });
+
+  testWidgets('shows the phase strip, the shock count, and Weitere Aktionen', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    expect(
+      find.text('Druckphase · Jetzt 2 Minuten komprimieren'),
+      findsOneWidget,
+    );
+    expect(find.text('Schocks: 0'), findsOneWidget);
+
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('Druckphase · Analyse jetzt starten'), findsOneWidget);
+
+    await tester.tap(find.text('Analyse starten'));
+    await tester.pump();
+
+    expect(find.text('Analysephase · Jetzt Rhythmus prüfen'), findsOneWidget);
+    expect(find.text('Ergebnis erfassen'), findsOneWidget);
+    expect(find.text('Überspringen'), findsOneWidget);
+    expect(find.text('Aktionen'), findsOneWidget);
+    expect(find.text('Schock (0)'), findsNothing);
+
+    await openActions(tester);
+    expect(find.text('Weitere Aktionen'), findsOneWidget);
+    expect(find.text('Schock erfassen'), findsOneWidget);
   });
 
   testWidgets('counts the Druckphase down and the Reanimationsdauer up', (
@@ -153,7 +194,7 @@ void main() {
 
     clock.advance(const Duration(minutes: 2));
     await tester.pump(const Duration(milliseconds: 250));
-    await tester.tap(find.text('Analyse'));
+    await tester.tap(find.text('Analyse starten'));
     await tester.pump();
 
     expect(find.text('Analysephase'), findsOneWidget);
@@ -174,7 +215,7 @@ void main() {
 
     clock.advance(const Duration(minutes: 2));
     await tester.pump(const Duration(milliseconds: 250));
-    await tester.tap(find.text('Analyse'));
+    await tester.tap(find.text('Analyse starten'));
     await tester.pump();
 
     await tester.tap(find.text('Ergebnis erfassen'));
@@ -241,7 +282,7 @@ void main() {
 
     clock.advance(const Duration(minutes: 2));
     await tester.pump(const Duration(milliseconds: 250));
-    await tester.tap(find.text('Analyse'));
+    await tester.tap(find.text('Analyse starten'));
     await tester.pump();
 
     clock.advance(const Duration(seconds: 10));
@@ -261,7 +302,7 @@ void main() {
 
     clock.advance(const Duration(minutes: 2));
     await tester.pump(const Duration(milliseconds: 250));
-    await tester.tap(find.text('Analyse'));
+    await tester.tap(find.text('Analyse starten'));
     await tester.pump();
 
     await tester.tap(find.text('Ergebnis erfassen'));
@@ -282,10 +323,10 @@ void main() {
 
     clock.advance(const Duration(minutes: 2));
     await tester.pump(const Duration(milliseconds: 250));
-    await tester.tap(find.text('Analyse'));
+    await tester.tap(find.text('Analyse starten'));
     await tester.pump();
 
-    await tester.tap(find.text('Analyse überspringen'));
+    await tester.tap(find.text('Überspringen'));
     await tester.pumpAndSettle();
 
     expect(find.text('Grund (optional)'), findsNothing);
@@ -301,7 +342,7 @@ void main() {
 
     clock.advance(const Duration(minutes: 2));
     await tester.pump(const Duration(milliseconds: 250));
-    await tester.tap(find.text('Analyse'));
+    await tester.tap(find.text('Analyse starten'));
     await tester.pump();
 
     await tester.tap(find.text('Ergebnis erfassen'));
@@ -318,7 +359,7 @@ void main() {
     expect(find.text('Druckphase'), findsOneWidget);
     expect(find.text('Ergebnis: Nicht schockbar – Asystolie'), findsNothing);
 
-    await tester.tap(find.text('Analyse'));
+    await tester.tap(find.text('Analyse starten'));
     await tester.pump();
 
     await tester.tap(find.text('Ergebnis erfassen'));
@@ -328,7 +369,7 @@ void main() {
 
     expect(find.text('ROSC'), findsWidgets);
     expect(find.text('Kreislauf zurückgekehrt'), findsOneWidget);
-    expect(find.text('Reanimation wieder aufnehmen'), findsOneWidget);
+    expect(find.text('Reanimationswiederbeginn'), findsOneWidget);
     expect(find.text('Fall beenden'), findsOneWidget);
     expect(find.text('Zusammenfassung'), findsNothing);
   });
@@ -434,19 +475,18 @@ void main() {
   ) async {
     await pumpApp(tester);
     await startNow(tester);
-    expect(find.text('Schock (0)'), findsOneWidget);
+    expect(find.text('Schocks: 0'), findsOneWidget);
 
     clock.advance(const Duration(seconds: 30));
     await tester.pump(const Duration(milliseconds: 250));
     expect(find.text('01:30'), findsOneWidget);
 
-    await tester.tap(find.text('Schock (0)'));
-    await tester.pump();
+    await recordSchock(tester);
 
-    expect(find.text('Schock (1)'), findsOneWidget);
+    expect(find.text('Schocks: 1'), findsOneWidget);
     expect(find.text('CPR fortsetzen'), findsNothing);
     expect(find.text('Schock 1 erfasst'), findsNothing);
-    expect(find.text('Analyse'), findsOneWidget);
+    expect(find.text('Analyse starten'), findsOneWidget);
 
     clock.advance(const Duration(seconds: 10));
     await tester.pump(const Duration(milliseconds: 250));
@@ -458,11 +498,11 @@ void main() {
       'the manual Schock available', (tester) async {
     await pumpApp(tester);
     await startNow(tester);
-    expect(find.widgetWithText(OutlinedButton, 'Schock (0)'), findsOneWidget);
+    expect(find.text('Schocks: 0'), findsOneWidget);
 
-    await tester.tap(find.text('Analyse'));
+    await tester.tap(find.text('Analyse starten'));
     await tester.pump();
-    expect(find.text('Schock (0)'), findsOneWidget);
+    expect(find.text('Schocks: 0'), findsOneWidget);
 
     await tester.tap(find.text('Ergebnis erfassen'));
     await tester.pumpAndSettle();
@@ -475,9 +515,8 @@ void main() {
     expect(find.text('Nächste Analyse'), findsOneWidget);
     expect(find.text('CPR fortsetzen'), findsNothing);
 
-    await tester.tap(find.text('Schock (0)'));
-    await tester.pump();
-    expect(find.text('Schock (1)'), findsOneWidget);
+    await recordSchock(tester);
+    expect(find.text('Schocks: 1'), findsOneWidget);
     expect(find.text('Druckphase'), findsOneWidget);
     expect(find.text('CPR fortsetzen'), findsNothing);
   });
@@ -490,7 +529,7 @@ void main() {
 
     expect(find.textContaining('Letzte Gabe'), findsNothing);
 
-    await tester.tap(find.text('Analyse'));
+    await tester.tap(find.text('Analyse starten'));
     await tester.pump();
     await tester.tap(find.text('Ergebnis erfassen'));
     await tester.pumpAndSettle();
@@ -510,7 +549,7 @@ void main() {
     await pumpApp(tester);
     await startNow(tester);
 
-    await tester.tap(find.text('Analyse'));
+    await tester.tap(find.text('Analyse starten'));
     await tester.pump();
     await tester.tap(find.text('Ergebnis erfassen'));
     await tester.pumpAndSettle();
@@ -522,9 +561,8 @@ void main() {
     expect(find.text('Erste Gabe fällig'), findsNothing);
 
     for (var count = 1; count <= 3; count++) {
-      await tester.tap(find.text('Schock (${count - 1})'));
-      await tester.pump();
-      expect(find.text('Schock ($count)'), findsOneWidget);
+      await recordSchock(tester);
+      expect(find.text('Schocks: $count'), findsOneWidget);
       if (count < 3) {
         expect(find.text('Erste Gabe fällig'), findsNothing);
       }
@@ -542,7 +580,7 @@ void main() {
     );
     await startNow(tester);
 
-    await tester.tap(find.text('Analyse'));
+    await tester.tap(find.text('Analyse starten'));
     await tester.pump();
     await tester.tap(find.text('Ergebnis erfassen'));
     await tester.pumpAndSettle();
@@ -551,14 +589,12 @@ void main() {
     await tester.tap(find.text('Kammerflimmern (VF)'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Schock (0)'));
-    await tester.pump();
-    expect(find.text('Schock (1)'), findsOneWidget);
+    await recordSchock(tester);
+    expect(find.text('Schocks: 1'), findsOneWidget);
     expect(find.text('Erste Gabe fällig'), findsNothing);
 
-    await tester.tap(find.text('Schock (1)'));
-    await tester.pump();
-    expect(find.text('Schock (2)'), findsOneWidget);
+    await recordSchock(tester);
+    expect(find.text('Schocks: 2'), findsOneWidget);
     expect(find.text('Erste Gabe fällig'), findsOneWidget);
   });
 
@@ -606,7 +642,7 @@ void main() {
     clock.advance(const Duration(minutes: 1));
     await tester.pump(const Duration(milliseconds: 250));
 
-    await tester.tap(find.text('Analyse'));
+    await tester.tap(find.text('Analyse starten'));
     await tester.pump();
     clock.advance(const Duration(minutes: 2));
     await tester.pump(const Duration(milliseconds: 250));
@@ -621,15 +657,13 @@ void main() {
     await startNow(tester);
 
     for (var count = 0; count < 2; count++) {
-      await tester.tap(find.text('Schock ($count)'));
-      await tester.pump();
+      await recordSchock(tester);
     }
 
     expect(find.text('Amiodaron erwägen – 300 mg'), findsNothing);
     expect(find.textContaining('Letzte Gabe'), findsNothing);
 
-    await tester.tap(find.text('Schock (2)'));
-    await tester.pump();
+    await recordSchock(tester);
 
     expect(find.text('Amiodaron erwägen – 300 mg'), findsOneWidget);
     expect(find.text('Gegeben'), findsOneWidget);
@@ -649,8 +683,7 @@ void main() {
     await startNow(tester);
 
     for (var count = 0; count < 3; count++) {
-      await tester.tap(find.text('Schock ($count)'));
-      await tester.pump();
+      await recordSchock(tester);
     }
 
     expect(find.text('Amiodaron erwägen – 300 mg'), findsOneWidget);
@@ -662,15 +695,13 @@ void main() {
     expect(find.text('Amiodaron erwägen – 300 mg'), findsNothing);
     expect(find.text('Amiodaron · Letzte Gabe 00:00'), findsOneWidget);
 
-    await tester.tap(find.text('Schock (3)'));
-    await tester.pump();
+    await recordSchock(tester);
     expect(find.text('Amiodaron erwägen – 150 mg'), findsNothing);
 
     clock.advance(const Duration(seconds: 45));
     await tester.pump(const Duration(milliseconds: 250));
 
-    await tester.tap(find.text('Schock (4)'));
-    await tester.pump();
+    await recordSchock(tester);
     expect(find.text('Amiodaron erwägen – 150 mg'), findsOneWidget);
 
     await tester.tap(find.text('Gegeben'));
@@ -689,15 +720,13 @@ void main() {
     await startNow(tester);
 
     for (var count = 0; count < 3; count++) {
-      await tester.tap(find.text('Schock ($count)'));
-      await tester.pump();
+      await recordSchock(tester);
     }
     await tester.tap(find.text('Gegeben'));
     await tester.pump();
     expect(find.text('Amiodaron erwägen – 150 mg'), findsNothing);
 
-    await tester.tap(find.text('Schock (3)'));
-    await tester.pump();
+    await recordSchock(tester);
 
     expect(find.text('Amiodaron erwägen – 150 mg'), findsOneWidget);
   });
@@ -714,8 +743,7 @@ void main() {
     await startNow(tester);
 
     for (var count = 0; count < 3; count++) {
-      await tester.tap(find.text('Schock ($count)'));
-      await tester.pump();
+      await recordSchock(tester);
     }
 
     expect(find.text('Amiodaron erwägen – 300 mg'), findsOneWidget);
@@ -772,28 +800,28 @@ void main() {
       expect(find.text('02:00'), findsOneWidget);
       expect(find.text('Druckphase'), findsOneWidget);
       expect(find.text('ERC 2025'), findsOneWidget);
-      expect(find.text('Schock (0)'), findsOneWidget);
+      expect(find.text('Schocks: 0'), findsOneWidget);
       expect(find.text('Adrenalin'), findsOneWidget);
       expect(find.text('Gabe'), findsOneWidget);
       expect(find.byType(Scrollable), findsNothing);
       expectInsideViewport(tester, find.text('02:00'));
       expectInsideViewport(tester, find.text('Druckphase'));
-      expectInsideViewport(tester, find.text('Schock (0)'));
+      expectInsideViewport(tester, find.text('Schocks: 0'));
       expectInsideViewport(tester, find.text('Gabe'));
       expectInsideViewport(tester, find.byTooltip('Menü öffnen'));
       expectInsideViewport(tester, find.byTooltip('Fall beenden'));
       expect(tester.takeException(), isNull);
 
-      await tester.tap(find.text('Analyse'));
+      await tester.tap(find.text('Analyse starten'));
       await tester.pump();
 
       expect(find.text('Analysephase'), findsOneWidget);
       expect(find.text('Ergebnis erfassen'), findsOneWidget);
-      expect(find.text('Analyse überspringen'), findsOneWidget);
-      expect(find.text('Schock (0)'), findsOneWidget);
+      expect(find.text('Überspringen'), findsOneWidget);
+      expect(find.text('Schocks: 0'), findsOneWidget);
       expectInsideViewport(tester, find.text('Ergebnis erfassen'));
-      expectInsideViewport(tester, find.text('Analyse überspringen'));
-      expectInsideViewport(tester, find.text('Schock (0)'));
+      expectInsideViewport(tester, find.text('Überspringen'));
+      expectInsideViewport(tester, find.text('Schocks: 0'));
       expect(tester.takeException(), isNull, reason: 'size $size');
 
       await tester.tap(find.text('Ergebnis erfassen'));
@@ -814,10 +842,9 @@ void main() {
       expect(find.text('CPR fortsetzen'), findsNothing);
       expect(tester.takeException(), isNull, reason: 'size $size result');
 
-      await tester.tap(find.text('Schock (0)'));
-      await tester.pump();
+      await recordSchock(tester);
 
-      expect(find.text('Schock (1)'), findsOneWidget);
+      expect(find.text('Schocks: 1'), findsOneWidget);
       expect(find.text('Druckphase'), findsOneWidget);
       expect(find.text('CPR fortsetzen'), findsNothing);
       expect(tester.takeException(), isNull, reason: 'size $size Schock');
@@ -856,7 +883,7 @@ void main() {
 
     clock.advance(const Duration(minutes: 2));
     await tester.pump(const Duration(milliseconds: 250));
-    await tester.tap(find.text('Analyse'));
+    await tester.tap(find.text('Analyse starten'));
     await tester.pump();
     await tester.tap(find.text('Ergebnis erfassen'));
     await tester.pumpAndSettle();
@@ -864,7 +891,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('ROSC'), findsWidgets);
-    expect(find.text('Reanimation wieder aufnehmen'), findsOneWidget);
+    expect(find.text('ROSC · Reanimation pausiert'), findsOneWidget);
+    expect(find.text('Reanimationswiederbeginn'), findsOneWidget);
+    expect(find.text('Aktionen'), findsOneWidget);
     expect(find.text('Letzte Gabe 00:00'), findsOneWidget);
     expect(
       tester
@@ -890,7 +919,7 @@ void main() {
 
     clock.advance(const Duration(minutes: 2));
     await tester.pump(const Duration(milliseconds: 250));
-    await tester.tap(find.text('Analyse'));
+    await tester.tap(find.text('Analyse starten'));
     await tester.pump();
     await tester.tap(find.text('Ergebnis erfassen'));
     await tester.pumpAndSettle();
@@ -899,7 +928,7 @@ void main() {
 
     clock.advance(const Duration(seconds: 30));
     await tester.pump(const Duration(milliseconds: 250));
-    await tester.tap(find.text('Reanimation wieder aufnehmen'));
+    await tester.tap(find.text('Reanimationswiederbeginn'));
     await tester.pump();
 
     expect(find.text('Druckphase'), findsOneWidget);
@@ -979,8 +1008,7 @@ void main() {
 
     clock.advance(const Duration(seconds: 30));
     await tester.pump(const Duration(milliseconds: 250));
-    await tester.tap(find.text('Schock (0)'));
-    await tester.pump();
+    await recordSchock(tester);
 
     clock.advance(const Duration(seconds: 10));
     await tester.pump(const Duration(milliseconds: 250));
@@ -996,7 +1024,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(find.text('Druckphase'), findsOneWidget);
-    expect(find.text('Schock (1)'), findsOneWidget);
+    expect(find.text('Schocks: 1'), findsOneWidget);
     expect(find.text('00:40'), findsOneWidget);
     expect(wakeLock.enabled, isTrue);
   });
@@ -1007,7 +1035,7 @@ void main() {
 
     clock.advance(const Duration(minutes: 2));
     await tester.pump(const Duration(milliseconds: 250));
-    await tester.tap(find.text('Analyse'));
+    await tester.tap(find.text('Analyse starten'));
     await tester.pump();
     clock.advance(const Duration(seconds: 5));
     await tester.pump(const Duration(milliseconds: 250));
@@ -1067,8 +1095,7 @@ void main() {
     await pumpApp(tester);
     await startNow(tester);
 
-    await tester.tap(find.text('Schock (0)'));
-    await tester.pump();
+    await recordSchock(tester);
 
     await tester.tap(find.byTooltip('Fall beenden'));
     await tester.pumpAndSettle();

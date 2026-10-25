@@ -259,8 +259,80 @@ abstract class AppLocalizations {
   /// Schaltfläche zum Starten der Analysephase
   ///
   /// In de, this message translates to:
-  /// **'Analyse'**
+  /// **'Analyse starten'**
   String get analyseButton;
+
+  /// Aktuelle Aufgabe in der Druckphase
+  ///
+  /// In de, this message translates to:
+  /// **'Druckphase · Jetzt 2 Minuten komprimieren'**
+  String get phaseStripDruckphase;
+
+  /// Aktuelle Aufgabe, wenn die Rhythmusanalyse fällig ist
+  ///
+  /// In de, this message translates to:
+  /// **'Druckphase · Analyse jetzt starten'**
+  String get phaseStripDruckphaseDue;
+
+  /// Aktuelle Aufgabe in der Analysephase
+  ///
+  /// In de, this message translates to:
+  /// **'Analysephase · Jetzt Rhythmus prüfen'**
+  String get phaseStripAnalysephase;
+
+  /// Statuszeile im ROSC-Zustand
+  ///
+  /// In de, this message translates to:
+  /// **'ROSC · Reanimation pausiert'**
+  String get phaseStripRosc;
+
+  /// Kompakte Aufgabe in der Druckphase
+  ///
+  /// In de, this message translates to:
+  /// **'Druckphase · Komprimieren'**
+  String get phaseStripDruckphaseCompact;
+
+  /// Kompakte Aufgabe, wenn die Rhythmusanalyse fällig ist
+  ///
+  /// In de, this message translates to:
+  /// **'Druckphase · Analyse starten'**
+  String get phaseStripDruckphaseDueCompact;
+
+  /// Kompakte Aufgabe in der Analysephase
+  ///
+  /// In de, this message translates to:
+  /// **'Analysephase · Rhythmus prüfen'**
+  String get phaseStripAnalysephaseCompact;
+
+  /// Kompakte Statuszeile im ROSC-Zustand
+  ///
+  /// In de, this message translates to:
+  /// **'ROSC · Pausiert'**
+  String get phaseStripRoscCompact;
+
+  /// Kompakte Anzeige der Schockanzahl
+  ///
+  /// In de, this message translates to:
+  /// **'Schocks: {count}'**
+  String schockCountChip(int count);
+
+  /// Sekundäre Schaltfläche für weitere Fallaktionen
+  ///
+  /// In de, this message translates to:
+  /// **'Aktionen'**
+  String get actionsButton;
+
+  /// Titel des Sheets für weitere Fallaktionen
+  ///
+  /// In de, this message translates to:
+  /// **'Weitere Aktionen'**
+  String get actionsTitle;
+
+  /// Aktion zum manuellen Erfassen eines Schocks
+  ///
+  /// In de, this message translates to:
+  /// **'Schock erfassen'**
+  String get actionsSchock;
 
   /// Beschriftung des Pausenzählers in der Analysephase
   ///
@@ -349,14 +421,8 @@ abstract class AppLocalizations {
   /// Schaltfläche zum Überspringen der Rhythmusanalyse
   ///
   /// In de, this message translates to:
-  /// **'Analyse überspringen'**
+  /// **'Überspringen'**
   String get skipAnalysisButton;
-
-  /// Schaltfläche zum Erfassen eines Schocks mit der aktuellen Anzahl
-  ///
-  /// In de, this message translates to:
-  /// **'Schock ({count})'**
-  String schockButton(int count);
 
   /// Beschriftung des Adrenalin-Zeitfensters
   ///
@@ -577,7 +643,7 @@ abstract class AppLocalizations {
   /// Schaltfläche zum Start eines neuen Reanimationsabschnitts nach ROSC
   ///
   /// In de, this message translates to:
-  /// **'Reanimation wieder aufnehmen'**
+  /// **'Reanimationswiederbeginn'**
   String get resumeResuscitationButton;
 
   /// Schaltfläche zum Beenden des Reanimationsfalls
