@@ -123,9 +123,62 @@
   "@phaseAnalysephase": {
     "description": "Name der aktiven Phase mit pausierter Kompression"
   },
-  "analyseButton": "Analyse",
+  "analyseButton": "Analyse starten",
   "@analyseButton": {
     "description": "Schaltfläche zum Starten der Analysephase"
+  },
+  "phaseStripDruckphase": "Druckphase · Jetzt 2 Minuten komprimieren",
+  "@phaseStripDruckphase": {
+    "description": "Aktuelle Aufgabe in der Druckphase"
+  },
+  "phaseStripDruckphaseDue": "Druckphase · Analyse jetzt starten",
+  "@phaseStripDruckphaseDue": {
+    "description": "Aktuelle Aufgabe, wenn die Rhythmusanalyse fällig ist"
+  },
+  "phaseStripAnalysephase": "Analysephase · Jetzt Rhythmus prüfen",
+  "@phaseStripAnalysephase": {
+    "description": "Aktuelle Aufgabe in der Analysephase"
+  },
+  "phaseStripRosc": "ROSC · Reanimation pausiert",
+  "@phaseStripRosc": {
+    "description": "Statuszeile im ROSC-Zustand"
+  },
+  "phaseStripDruckphaseCompact": "Druckphase · Komprimieren",
+  "@phaseStripDruckphaseCompact": {
+    "description": "Kompakte Aufgabe in der Druckphase"
+  },
+  "phaseStripDruckphaseDueCompact": "Druckphase · Analyse starten",
+  "@phaseStripDruckphaseDueCompact": {
+    "description": "Kompakte Aufgabe, wenn die Rhythmusanalyse fällig ist"
+  },
+  "phaseStripAnalysephaseCompact": "Analysephase · Rhythmus prüfen",
+  "@phaseStripAnalysephaseCompact": {
+    "description": "Kompakte Aufgabe in der Analysephase"
+  },
+  "phaseStripRoscCompact": "ROSC · Pausiert",
+  "@phaseStripRoscCompact": {
+    "description": "Kompakte Statuszeile im ROSC-Zustand"
+  },
+  "schockCountChip": "Schocks: {count}",
+  "@schockCountChip": {
+    "description": "Kompakte Anzeige der Schockanzahl",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "actionsButton": "Aktionen",
+  "@actionsButton": {
+    "description": "Sekundäre Schaltfläche für weitere Fallaktionen"
+  },
+  "actionsTitle": "Weitere Aktionen",
+  "@actionsTitle": {
+    "description": "Titel des Sheets für weitere Fallaktionen"
+  },
+  "actionsSchock": "Schock erfassen",
+  "@actionsSchock": {
+    "description": "Aktion zum manuellen Erfassen eines Schocks"
   },
   "pauseLabel": "Pause",
   "@pauseLabel": {
@@ -193,18 +246,9 @@
   "@rhythmusanalyseRecordButton": {
     "description": "Schaltfläche zum Erfassen des Rhythmusanalyse-Ergebnisses"
   },
-  "skipAnalysisButton": "Analyse überspringen",
+  "skipAnalysisButton": "Überspringen",
   "@skipAnalysisButton": {
     "description": "Schaltfläche zum Überspringen der Rhythmusanalyse"
-  },
-  "schockButton": "Schock ({count})",
-  "@schockButton": {
-    "description": "Schaltfläche zum Erfassen eines Schocks mit der aktuellen Anzahl",
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
   },
   "adrenalinLabel": "Adrenalin",
   "@adrenalinLabel": {
@@ -370,7 +414,7 @@
   "@roscDescription": {
     "description": "Erklärung des ROSC-Zustands auf dem laufenden Fall"
   },
-  "resumeResuscitationButton": "Reanimation wieder aufnehmen",
+  "resumeResuscitationButton": "Reanimationswiederbeginn",
   "@resumeResuscitationButton": {
     "description": "Schaltfläche zum Start eines neuen Reanimationsabschnitts nach ROSC"
   },

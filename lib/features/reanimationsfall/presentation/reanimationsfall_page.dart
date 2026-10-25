@@ -12,8 +12,10 @@ import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/adrenalin_panel.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/amiodaron_panel.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/actions_sheet.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/end_reanimationsfall_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/phase_action_bar.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/phase_strip.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/reanimationsfall_summary_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
@@ -106,6 +108,10 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
 
   void _resumeResuscitation() {
     _mutate(widget.reanimationsfall.resumeResuscitation);
+  }
+
+  Future<void> _openActions() async {
+    await showActionsSheet(context, onRecordSchock: _recordSchock);
   }
 
   void _openMesswerte() {
@@ -265,14 +271,15 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
               layout: layout,
               onResumeResuscitation: _resumeResuscitation,
               onEndCase: _endReanimationsfall,
+              onOpenActions: _openActions,
             )
           : PhaseActionBar(
               snapshot: snapshot,
               layout: layout,
               onEnterAnalysephase: _enterAnalysephase,
-              onRecordSchock: _recordSchock,
               onRecordRhythmusanalyse: _recordRhythmusanalyse,
               onSkipRhythmusanalyse: _skipRhythmusanalyse,
+              onOpenActions: _openActions,
             ),
     );
   }
@@ -397,7 +404,9 @@ class _PhaseTimerPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (snapshot.istRosc) return _RoscPanel(layout: layout);
+    if (snapshot.istRosc) {
+      return _RoscPanel(snapshot: snapshot, layout: layout);
+    }
 
     return switch (snapshot.phase) {
       Reanimationsphase.druckphase => _DruckphaseTimerPanel(
@@ -413,8 +422,9 @@ class _PhaseTimerPanel extends StatelessWidget {
 }
 
 class _RoscPanel extends StatelessWidget {
-  const _RoscPanel({required this.layout});
+  const _RoscPanel({required this.snapshot, required this.layout});
 
+  final ReanimationsfallSnapshot snapshot;
   final PageLayout layout;
 
   @override
@@ -425,6 +435,7 @@ class _RoscPanel extends StatelessWidget {
     return _PhasePanel(
       isAlert: false,
       layout: layout,
+      snapshot: snapshot,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -463,11 +474,13 @@ class _RoscActionBar extends StatelessWidget {
     required this.layout,
     required this.onResumeResuscitation,
     required this.onEndCase,
+    required this.onOpenActions,
   });
 
   final PageLayout layout;
   final VoidCallback onResumeResuscitation;
   final VoidCallback onEndCase;
+  final VoidCallback onOpenActions;
 
   @override
   Widget build(BuildContext context) {
@@ -485,6 +498,7 @@ class _RoscActionBar extends StatelessWidget {
       onPressed: onEndCase,
       emphasis: PhaseActionEmphasis.outlined,
     );
+    final actions = ActionsButton(layout: layout, onPressed: onOpenActions);
 
     if (layout.isCompact) {
       return Row(
@@ -492,6 +506,8 @@ class _RoscActionBar extends StatelessWidget {
           Expanded(child: resume),
           SizedBox(width: layout.compactActionGap),
           Expanded(child: end),
+          SizedBox(width: layout.compactActionGap),
+          actions,
         ],
       );
     }
@@ -501,7 +517,7 @@ class _RoscActionBar extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       spacing: layout.actionWrapSpacing,
       runSpacing: layout.actionWrapRunSpacing,
-      children: [end, resume],
+      children: [end, resume, actions],
     );
   }
 }
@@ -509,11 +525,13 @@ class _RoscActionBar extends StatelessWidget {
 class _PhasePanel extends StatelessWidget {
   const _PhasePanel({
     required this.isAlert,
+    required this.snapshot,
     required this.layout,
     required this.child,
   });
 
   final bool isAlert;
+  final ReanimationsfallSnapshot snapshot;
   final PageLayout layout;
   final Widget child;
 
@@ -535,7 +553,14 @@ class _PhasePanel extends StatelessWidget {
           width: isAlert ? layout.alertBorderWidth : layout.panelBorderWidth,
         ),
       ),
-      child: child,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          PhaseStrip(snapshot: snapshot, layout: layout),
+          SizedBox(height: layout.phaseStripGap),
+          Expanded(child: child),
+        ],
+      ),
     );
   }
 }
@@ -559,6 +584,7 @@ class _DruckphaseTimerPanel extends StatelessWidget {
     return _PhasePanel(
       isAlert: isDue,
       layout: layout,
+      snapshot: snapshot,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -631,6 +657,7 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
     return _PhasePanel(
       isAlert: isOverdue,
       layout: layout,
+      snapshot: snapshot,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

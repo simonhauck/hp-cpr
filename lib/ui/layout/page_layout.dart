@@ -106,8 +106,8 @@ class PageLayout {
   /// The gap between the main content and a full-width status strip.
   double get contentGap => isCompact ? space4 : space10;
 
-  /// The gap between stacked status rows in the phase action bar.
-  double get statusGap => isCompact ? space2 : space8;
+  /// The gap between the phase strip and the timer content.
+  double get phaseStripGap => isCompact ? space2 : space8;
 
   /// The gap after the Rhythmusanalyse result summary.
   double get resultSummaryGap => isCompact ? space2 : space10;
@@ -130,6 +130,10 @@ class PageLayout {
   /// The horizontal padding of a compact phase action button.
   EdgeInsets? get phaseActionPadding =>
       isCompact ? const EdgeInsets.symmetric(horizontal: space14) : null;
+
+  /// The horizontal padding of the secondary actions button.
+  EdgeInsets get actionsButtonPadding =>
+      EdgeInsets.symmetric(horizontal: isCompact ? space8 : space12);
 
   /// The padding inside a phase timer panel.
   EdgeInsets get phasePanelPadding =>
