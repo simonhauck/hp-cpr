@@ -35,14 +35,17 @@ class StartCardTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Text(
-      text,
-      textAlign: TextAlign.center,
-      style:
-          (layout.isCompact
-                  ? theme.textTheme.titleMedium
-                  : theme.textTheme.titleLarge)
-              ?.copyWith(fontWeight: FontWeight.w700),
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style:
+            (layout.isCompact
+                    ? theme.textTheme.titleMedium
+                    : theme.textTheme.titleLarge)
+                ?.copyWith(fontWeight: FontWeight.w700),
+      ),
     );
   }
 }

@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:hp_cpr/app.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
@@ -15,7 +17,28 @@ void main() {
   setUp(() {
     clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
     wakeLock = FakeWakeLock();
+    PackageInfo.setMockInitialValues(
+      appName: 'HP-CPR',
+      packageName: 'de.simonhauck.hp_cpr',
+      version: '0.1.0',
+      buildNumber: '1',
+      buildSignature: '',
+    );
   });
+
+  Future<void> openDrawer(WidgetTester tester) async {
+    await tester.tap(find.byTooltip('Menü öffnen').hitTestable().first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+  }
+
+  Future<void> selectFromDrawer(WidgetTester tester, String label) async {
+    await tester.tap(
+      find.descendant(of: find.byType(Drawer), matching: find.text(label)),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+  }
 
   Future<void> pumpApp(WidgetTester tester, {AppSettings? settings}) async {
     await tester.pumpWidget(
@@ -713,10 +736,21 @@ void main() {
 
       expect(find.text('Jetzt starten'), findsOneWidget);
       expect(find.widgetWithText(ActionChip, '15'), findsOneWidget);
+      expect(find.byTooltip('Menü öffnen'), findsOneWidget);
       expectInsideViewport(tester, find.text('Jetzt starten'));
       expectInsideViewport(tester, find.widgetWithText(ActionChip, '15'));
       expectInsideViewport(tester, find.text('Eigene Startzeit'));
+      expectInsideViewport(tester, find.byTooltip('Menü öffnen'));
       expect(tester.takeException(), isNull);
+
+      await openDrawer(tester);
+      expectInsideViewport(
+        tester,
+        find.widgetWithText(ListTile, 'Rechtliches'),
+      );
+      expect(tester.takeException(), isNull);
+      await tester.tapAt(Offset(size.width - 20, 20));
+      await tester.pumpAndSettle();
 
       await startNow(tester);
 
@@ -731,6 +765,7 @@ void main() {
       expectInsideViewport(tester, find.text('Druckphase'));
       expectInsideViewport(tester, find.text('Schock (0)'));
       expectInsideViewport(tester, find.text('Gabe'));
+      expectInsideViewport(tester, find.byTooltip('Menü öffnen'));
       expect(tester.takeException(), isNull);
 
       await tester.tap(find.text('Analyse'));
@@ -800,6 +835,7 @@ void main() {
     await pumpApp(tester);
 
     expect(find.text('Jetzt starten'), findsOneWidget);
+    expect(find.byTooltip('Menü öffnen'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     await startNow(tester);
@@ -807,5 +843,179 @@ void main() {
     expect(find.text('02:00'), findsOneWidget);
     expect(find.text('Druckphase'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('opens the app menu and closes it on the current destination', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+
+    expect(find.byTooltip('Menü öffnen'), findsOneWidget);
+
+    await openDrawer(tester);
+
+    expect(find.text('Menü'), findsOneWidget);
+    expect(find.widgetWithText(ListTile, 'Einstellungen'), findsOneWidget);
+    expect(find.widgetWithText(ListTile, 'Rechtliches'), findsOneWidget);
+    expect(find.widgetWithText(ListTile, 'Über'), findsOneWidget);
+    expect(
+      tester
+          .widget<ListTile>(find.widgetWithText(ListTile, 'Einstellungen'))
+          .selected,
+      isFalse,
+    );
+
+    await selectFromDrawer(tester, 'Einstellungen');
+
+    expect(find.text('Einstellungen'), findsOneWidget);
+    expect(find.text('Menü'), findsNothing);
+
+    await openDrawer(tester);
+
+    expect(
+      tester
+          .widget<ListTile>(find.widgetWithText(ListTile, 'Einstellungen'))
+          .selected,
+      isTrue,
+    );
+
+    await selectFromDrawer(tester, 'Einstellungen');
+
+    expect(find.text('Einstellungen'), findsOneWidget);
+    expect(find.text('Menü'), findsNothing);
+  });
+
+  testWidgets('opens Rechtliches and Über from the drawer', (tester) async {
+    await pumpApp(tester);
+
+    await openDrawer(tester);
+    await selectFromDrawer(tester, 'Rechtliches');
+
+    expect(find.text('Rechtliches'), findsOneWidget);
+    expect(find.text('Rechtliche Informationen zu HP-CPR.'), findsOneWidget);
+    expect(find.text('Lizenzen'), findsOneWidget);
+
+    await openDrawer(tester);
+    await selectFromDrawer(tester, 'Über');
+
+    expect(find.text('Über'), findsOneWidget);
+    expect(find.text('HP-CPR'), findsOneWidget);
+    expect(find.text('Version 0.1.0 (Build 1)'), findsOneWidget);
+    expect(
+      find.text('Begleit-App für den High-Performance-CPR-Standard'),
+      findsOneWidget,
+    );
+    expect(find.text('© 2026 Simon Hauck'), findsOneWidget);
+
+    await tester.tap(find.text('Rechtliches').hitTestable());
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Lizenzen'), findsOneWidget);
+  });
+
+  testWidgets('opens the license page with the app and package licenses', (
+    tester,
+  ) async {
+    LicenseRegistry.addLicense(() async* {
+      yield const LicenseEntryWithLineBreaks([
+        'hp_cpr',
+      ], 'MIT License\n\nCopyright (c) 2026 Simon Hauck');
+      yield const LicenseEntryWithLineBreaks([
+        'wakelock_plus',
+      ], 'BSD 3-Clause License');
+    });
+
+    await pumpApp(tester);
+
+    await openDrawer(tester);
+    await selectFromDrawer(tester, 'Rechtliches');
+    await tester.tap(find.text('Lizenzen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('HP-CPR'), findsOneWidget);
+    expect(find.text('0.1.0 (Build 1)'), findsOneWidget);
+    expect(find.text('MIT-Lizenz · © 2026 Simon Hauck'), findsOneWidget);
+    expect(find.text('hp_cpr'), findsOneWidget);
+    expect(find.text('wakelock_plus'), findsOneWidget);
+
+    await tester.tap(find.text('hp_cpr'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('Copyright (c) 2026 Simon Hauck'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('keeps the running Reanimationsfall alive while visiting the '
+      'menu', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    clock.advance(const Duration(seconds: 20));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    await openDrawer(tester);
+    await selectFromDrawer(tester, 'Einstellungen');
+
+    expect(find.text('Einstellungen'), findsOneWidget);
+    expect(wakeLock.enabled, isTrue);
+
+    clock.advance(const Duration(seconds: 15));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(AppBar),
+            matching: find.byType(BackButton),
+          )
+          .hitTestable(),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.text('00:35'), findsOneWidget);
+    expect(wakeLock.enabled, isTrue);
+  });
+
+  testWidgets('switches destinations from secondary pages and unwinds with '
+      'back', (tester) async {
+    await pumpApp(tester);
+
+    await openDrawer(tester);
+    await selectFromDrawer(tester, 'Einstellungen');
+    await openDrawer(tester);
+    await selectFromDrawer(tester, 'Über');
+
+    expect(find.text('Version 0.1.0 (Build 1)'), findsOneWidget);
+
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(AppBar),
+            matching: find.byType(BackButton),
+          )
+          .hitTestable(),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Einstellungen'), findsOneWidget);
+
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(AppBar),
+            matching: find.byType(BackButton),
+          )
+          .hitTestable(),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Neuer Reanimationsfall'), findsOneWidget);
   });
 }

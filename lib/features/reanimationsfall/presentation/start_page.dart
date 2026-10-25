@@ -8,31 +8,34 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/custom_startzeit_d
 import 'package:hp_cpr/features/reanimationsfall/presentation/start_card.dart';
 import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_chip.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
-import 'package:hp_cpr/features/settings/presentation/settings_page.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 import 'package:hp_cpr/ui/layout/page_scaffold.dart';
+import 'package:hp_cpr/ui/navigation/app_destination.dart';
+import 'package:hp_cpr/ui/navigation/app_drawer.dart';
+import 'package:hp_cpr/ui/navigation/app_routes.dart';
 
 /// Starts a new Reanimationsfall, either now or with a corrected Startzeit.
 class StartPage extends StatelessWidget {
   const StartPage({
     super.key,
     required this.clock,
-    required this.settings,
+    required this.routes,
     required this.wakeLock,
   });
 
   final AppClock clock;
-  final AppSettings settings;
+  final AppRoutes routes;
   final WakeLock wakeLock;
 
   @override
   Widget build(BuildContext context) {
     return PageScaffold(
       maxWidth: PageLayout.maxContentWidth,
+      drawer: AppDrawer(routes: routes),
       header: (context, layout) => _StartHeader(
         layout: layout,
-        settings: settings,
+        settings: routes.settings,
         onOpenSettings: () => _openSettings(context),
       ),
       content: (context, layout) {
@@ -68,6 +71,7 @@ class StartPage extends StatelessWidget {
   }
 
   void _startReanimationsfall(BuildContext context, Duration backdate) {
+    final settings = routes.settings;
     final reanimationsfall = Reanimationsfall.start(
       clock: clock,
       leitlinienprofil: settings.leitlinienprofil,
@@ -81,6 +85,7 @@ class StartPage extends StatelessWidget {
         builder: (_) => ReanimationsfallPage(
           reanimationsfall: reanimationsfall,
           wakeLock: wakeLock,
+          routes: routes,
         ),
       ),
     );
@@ -88,7 +93,9 @@ class StartPage extends StatelessWidget {
 
   void _openSettings(BuildContext context) {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => SettingsPage(settings: settings)),
+      MaterialPageRoute<void>(
+        builder: (_) => routes.page(AppDestination.einstellungen),
+      ),
     );
   }
 
@@ -136,13 +143,17 @@ class _StartHeader extends StatelessWidget {
                           letterSpacing: PageLayout.appTitleLetterSpacing,
                         ),
               ),
-              Text(
-                l10n.newCaseTitle,
-                style:
-                    (layout.isCompact
-                            ? theme.textTheme.titleMedium
-                            : theme.textTheme.headlineSmall)
-                        ?.copyWith(fontWeight: FontWeight.w700),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  l10n.newCaseTitle,
+                  style:
+                      (layout.isCompact
+                              ? theme.textTheme.titleMedium
+                              : theme.textTheme.headlineSmall)
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                ),
               ),
             ],
           ),
@@ -155,6 +166,8 @@ class _StartHeader extends StatelessWidget {
             onPressed: onOpenSettings,
           ),
         ),
+        const SizedBox(width: PageLayout.space8),
+        const AppMenuButton(),
       ],
     );
   }

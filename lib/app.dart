@@ -5,6 +5,7 @@ import 'package:hp_cpr/core/wake_lock.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/start_page.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
+import 'package:hp_cpr/ui/navigation/app_routes.dart';
 
 class HpCprApp extends StatefulWidget {
   const HpCprApp({super.key, this.clock, this.settings, this.wakeLock});
@@ -28,6 +29,7 @@ class _HpCprAppState extends State<HpCprApp> {
       widget.wakeLock ?? const WakelockPlusWakeLock();
   late final AppSettings _settings = widget.settings ?? AppSettings();
   late final bool _ownsSettings = widget.settings == null;
+  late final AppRoutes _routes = AppRoutes(settings: _settings);
 
   @override
   void dispose() {
@@ -56,7 +58,7 @@ class _HpCprAppState extends State<HpCprApp> {
       locale: const Locale('de'),
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
-      home: StartPage(clock: _clock, settings: _settings, wakeLock: _wakeLock),
+      home: StartPage(clock: _clock, routes: _routes, wakeLock: _wakeLock),
     );
   }
 }

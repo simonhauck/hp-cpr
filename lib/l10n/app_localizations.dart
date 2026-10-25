@@ -597,6 +597,72 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Ton bei fälligen Aktionen'**
   String get settingsSoundDescription;
+
+  /// Überschrift im App-Menü
+  ///
+  /// In de, this message translates to:
+  /// **'Menü'**
+  String get menuTitle;
+
+  /// Tooltip der Menü-Schaltfläche
+  ///
+  /// In de, this message translates to:
+  /// **'Menü öffnen'**
+  String get menuOpenTooltip;
+
+  /// Titel der Seite mit rechtlichen Informationen
+  ///
+  /// In de, this message translates to:
+  /// **'Rechtliches'**
+  String get legalTitle;
+
+  /// Einleitung auf der Rechtliches-Seite
+  ///
+  /// In de, this message translates to:
+  /// **'Rechtliche Informationen zu HP-CPR.'**
+  String get legalDescription;
+
+  /// Eintrag zu den Lizenztexten
+  ///
+  /// In de, this message translates to:
+  /// **'Lizenzen'**
+  String get legalLicensesTile;
+
+  /// Erklärung des Lizenzen-Eintrags
+  ///
+  /// In de, this message translates to:
+  /// **'Lizenztexte der App und ihrer Bibliotheken'**
+  String get legalLicensesDescription;
+
+  /// Copyright-Hinweis auf der Lizenzseite
+  ///
+  /// In de, this message translates to:
+  /// **'MIT-Lizenz · © 2026 Simon Hauck'**
+  String get licensesLegalese;
+
+  /// Titel der Über-Seite
+  ///
+  /// In de, this message translates to:
+  /// **'Über'**
+  String get aboutTitle;
+
+  /// Anzeige der installierten Version
+  ///
+  /// In de, this message translates to:
+  /// **'Version {version}'**
+  String aboutVersion(String version);
+
+  /// Kurzbeschreibung der App auf der Über-Seite
+  ///
+  /// In de, this message translates to:
+  /// **'Begleit-App für den High-Performance-CPR-Standard'**
+  String get aboutDescription;
+
+  /// Copyright-Hinweis auf der Über-Seite
+  ///
+  /// In de, this message translates to:
+  /// **'© 2026 Simon Hauck'**
+  String get aboutCopyright;
 }
 
 class _AppLocalizationsDelegate

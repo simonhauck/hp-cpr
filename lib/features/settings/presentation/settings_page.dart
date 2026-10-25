@@ -4,12 +4,16 @@ import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
+import 'package:hp_cpr/ui/navigation/app_destination.dart';
+import 'package:hp_cpr/ui/navigation/app_drawer.dart';
+import 'package:hp_cpr/ui/navigation/app_routes.dart';
 
 /// The app-wide settings for the Leitlinienprofil and alert signals.
 class SettingsPage extends StatelessWidget {
-  const SettingsPage({super.key, required this.settings});
+  const SettingsPage({super.key, required this.settings, required this.routes});
 
   final AppSettings settings;
+  final AppRoutes routes;
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +21,19 @@ class SettingsPage extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.settingsTitle)),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        leading: const BackButton(),
+        title: Text(l10n.settingsTitle),
+        actions: const [
+          AppMenuButton(),
+          SizedBox(width: PageLayout.space8),
+        ],
+      ),
+      drawer: AppDrawer(
+        routes: routes,
+        currentDestination: AppDestination.einstellungen,
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
