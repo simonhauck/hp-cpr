@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/core/wake_lock.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
-import 'package:hp_cpr/features/messwerte/presentation/messwerte_page.dart';
 import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_chip.dart';
+import 'package:hp_cpr/features/messwerte/presentation/messwerte_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/amiodaron.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/actions_sheet.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/adrenalin_panel.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/amiodaron_panel.dart';
-import 'package:hp_cpr/features/reanimationsfall/presentation/actions_sheet.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/end_reanimationsfall_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/phase_action_bar.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/phase_strip.dart';
@@ -19,6 +19,7 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/reanimationsfall_s
 import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
+import 'package:hp_cpr/ui/dialogs/notiz_erfassen_dialog.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 import 'package:hp_cpr/ui/layout/page_scaffold.dart';
 import 'package:hp_cpr/ui/navigation/app_drawer.dart';
@@ -110,7 +111,20 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
   }
 
   Future<void> _openActions() async {
-    await showActionsSheet(context, onRecordSchock: _recordSchock);
+    final snapshot = widget.reanimationsfall.snapshot();
+    await showActionsSheet(
+      context,
+      onOpenMesswerte: _openMesswerte,
+      onRecordNotiz: _recordNotiz,
+      onRecordSchock: snapshot.istLaufend ? _recordSchock : null,
+    );
+  }
+
+  Future<void> _recordNotiz() async {
+    final text = await showNotizErfassenDialog(context);
+    if (text == null || !mounted) return;
+
+    _mutate(() => widget.reanimationsfall.recordNotiz(text));
   }
 
   void _openMesswerte() {
@@ -219,7 +233,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
 
     return PageScaffold(
       maxWidth: PageLayout.maxContentWidth,
-      drawer: AppDrawer(routes: widget.routes, onOpenMesswerte: _openMesswerte),
+      drawer: AppDrawer(routes: widget.routes),
       header: (context, layout) => _ReanimationsfallHeader(
         snapshot: snapshot,
         layout: layout,

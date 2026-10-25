@@ -86,6 +86,11 @@ void main() {
 
   Future<void> recordSchock(WidgetTester tester) async {
     await openActions(tester);
+    await tester.scrollUntilVisible(
+      find.text('Schock erfassen'),
+      100,
+      scrollable: find.byType(Scrollable).last,
+    );
     await tester.tap(find.text('Schock erfassen'));
     await tester.pumpAndSettle();
   }
@@ -150,6 +155,8 @@ void main() {
 
     await openActions(tester);
     expect(find.text('Weitere Aktionen'), findsOneWidget);
+    expect(find.text('Messwerte'), findsOneWidget);
+    expect(find.text('Notiz'), findsOneWidget);
     expect(find.text('Schock erfassen'), findsOneWidget);
   });
 
@@ -1297,16 +1304,9 @@ void main() {
   });
 
   Future<void> openMesswerte(WidgetTester tester) async {
-    await openDrawer(tester);
-    await tester.tap(
-      find.descendant(
-        of: find.byType(Drawer),
-        matching: find.text('Messwerte'),
-      ),
-    );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump(const Duration(milliseconds: 400));
+    await openActions(tester);
+    await tester.tap(find.text('Messwerte'));
+    await tester.pumpAndSettle();
   }
 
   Future<void> openMesswertDialog(WidgetTester tester) async {
@@ -1333,6 +1333,132 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
   }
+
+  testWidgets('does not show Messwerte in the drawer during a case', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+    await openDrawer(tester);
+
+    expect(
+      find.descendant(
+        of: find.byType(Drawer),
+        matching: find.text('Messwerte'),
+      ),
+      findsNothing,
+    );
+  });
+
+  testWidgets('records a general Notiz from Weitere Aktionen', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await openActions(tester);
+    await tester.tap(find.text('Notiz'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextFormField), 'Patient kalt');
+    await tester.tap(find.text('Speichern'));
+    await tester.pumpAndSettle();
+    expect((await store.load()).single.notizen, hasLength(1));
+
+    await tester.tap(find.byTooltip('Fall beenden'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Abbruch'));
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(find.text('Patient kalt'), 200);
+    expect(find.text('Patient kalt'), findsOneWidget);
+  });
+
+  testWidgets('keeps the timer running while Messwerte is open', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    clock.advance(const Duration(seconds: 20));
+    await tester.pump(const Duration(milliseconds: 250));
+    await openMesswerte(tester);
+
+    clock.advance(const Duration(seconds: 10));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(AppBar),
+            matching: find.byType(BackButton),
+          )
+          .hitTestable(),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('00:30'), findsOneWidget);
+    expect(find.text('01:30'), findsOneWidget);
+  });
+
+  testWidgets('persists notes from Weitere Aktionen and the Messwerte page', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await openActions(tester);
+    await tester.tap(find.text('Notiz'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField), 'Erste Notiz');
+    await tester.tap(find.text('Speichern'));
+    await tester.pumpAndSettle();
+
+    await openMesswerte(tester);
+    await tester.tap(find.text('Notiz erfassen'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField), 'Zweite Notiz');
+    await tester.tap(find.text('Speichern'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(AppBar),
+            matching: find.byType(BackButton),
+          )
+          .hitTestable(),
+    );
+    await tester.pumpAndSettle();
+
+    final notes = (await store.load()).single.notizen;
+    expect(notes, hasLength(2));
+    expect(
+      notes.map((notiz) => notiz.text),
+      containsAll(['Erste Notiz', 'Zweite Notiz']),
+    );
+  });
+
+  testWidgets('shows Messwerte and Notiz but no Schock in the ROSC actions', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Analyse starten'));
+    await tester.pump();
+    await tester.tap(find.text('Ergebnis erfassen'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ROSC'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ROSC bestätigen'));
+    await tester.pumpAndSettle();
+
+    await openActions(tester);
+    expect(find.text('Messwerte'), findsOneWidget);
+    expect(find.text('Notiz'), findsOneWidget);
+    expect(find.text('Schock erfassen'), findsNothing);
+  });
 
   testWidgets('records all four Messwerte and a note from the active case', (
     tester,

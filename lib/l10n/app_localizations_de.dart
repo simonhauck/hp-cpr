@@ -143,6 +143,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get actionsSchock => 'Schock erfassen';
 
   @override
+  String get actionsNotiz => 'Notiz';
+
+  @override
   String get pauseLabel => 'Pause';
 
   @override

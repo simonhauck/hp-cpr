@@ -180,6 +180,10 @@
   "@actionsSchock": {
     "description": "Aktion zum manuellen Erfassen eines Schocks"
   },
+  "actionsNotiz": "Notiz",
+  "@actionsNotiz": {
+    "description": "Aktion zum Erfassen einer freien Notiz"
+  },
   "pauseLabel": "Pause",
   "@pauseLabel": {
     "description": "Beschriftung des Pausenzählers in der Analysephase"
