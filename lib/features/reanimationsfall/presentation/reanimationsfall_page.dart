@@ -7,6 +7,7 @@ import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_chip.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/adrenalin_panel.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/phase_action_bar.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_notiz_dialog.dart';
@@ -72,6 +73,10 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
 
   void _recordSchock() {
     setState(widget.reanimationsfall.recordSchock);
+  }
+
+  void _recordAdrenalin() {
+    setState(widget.reanimationsfall.recordAdrenalin);
   }
 
   void _undoLastSchock() {
@@ -150,7 +155,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
         );
         final timer = _PhaseTimerPanel(snapshot: snapshot, layout: layout);
 
-        return layout.isLandscape
+        final main = layout.isLandscape
             ? Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -166,6 +171,19 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
                   Expanded(child: timer),
                 ],
               );
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(child: main),
+            SizedBox(height: layout.isCompact ? 6 : 10),
+            AdrenalinPanel(
+              snapshot: snapshot,
+              layout: layout,
+              onRecordAdrenalin: _recordAdrenalin,
+            ),
+          ],
+        );
       },
       footer: (context, layout) => PhaseActionBar(
         snapshot: snapshot,
@@ -351,7 +369,7 @@ class _DruckphaseTimerPanel extends StatelessWidget {
 
     return _PhasePanel(
       isAlert: isDue,
-      padding: EdgeInsets.all(layout.isCompact ? 12 : 20),
+      padding: EdgeInsets.all(layout.isCompact ? 6 : 20),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -369,10 +387,16 @@ class _DruckphaseTimerPanel extends StatelessWidget {
                 ],
                 Text(
                   label,
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    color: foreground,
-                    fontWeight: isDue ? FontWeight.w800 : FontWeight.w500,
-                  ),
+                  style:
+                      (layout.isCompact
+                              ? theme.textTheme.titleMedium
+                              : theme.textTheme.headlineMedium)
+                          ?.copyWith(
+                            color: foreground,
+                            fontWeight: isDue
+                                ? FontWeight.w800
+                                : FontWeight.w500,
+                          ),
                 ),
               ],
             ),
@@ -420,18 +444,22 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
 
     return _PhasePanel(
       isAlert: isOverdue,
-      padding: EdgeInsets.all(layout.isCompact ? 12 : 20),
+      padding: EdgeInsets.all(layout.isCompact ? 6 : 20),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             l10n.pauseLabel,
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: isOverdue
-                  ? foreground
-                  : theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w600,
-            ),
+            style:
+                (layout.isCompact
+                        ? theme.textTheme.labelLarge
+                        : theme.textTheme.titleMedium)
+                    ?.copyWith(
+                      color: isOverdue
+                          ? foreground
+                          : theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
           ),
           const SizedBox(height: 4),
           Flexible(

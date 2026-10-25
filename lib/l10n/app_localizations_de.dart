@@ -226,6 +226,32 @@ class AppLocalizationsDe extends AppLocalizations {
       'Bitte eine ganze Zahl größer als 0 eingeben.';
 
   @override
+  String get adrenalinLabel => 'Adrenalin';
+
+  @override
+  String get adrenalinRecordButton => 'Gabe';
+
+  @override
+  String get adrenalinFirstDoseDue => 'Erste Gabe fällig';
+
+  @override
+  String get adrenalinNotDue => 'Noch nicht fällig';
+
+  @override
+  String get adrenalinStateWaiting => 'wartet';
+
+  @override
+  String get adrenalinStateDue => 'fällig';
+
+  @override
+  String get adrenalinStateOverdue => 'überfällig';
+
+  @override
+  String adrenalinLastDose(String time) {
+    return 'Letzte Gabe $time';
+  }
+
+  @override
   String get saveButton => 'Speichern';
 
   @override

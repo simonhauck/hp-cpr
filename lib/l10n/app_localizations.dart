@@ -484,6 +484,54 @@ abstract class AppLocalizations {
   /// **'Bitte eine ganze Zahl größer als 0 eingeben.'**
   String get schockEnergyInvalid;
 
+  /// Beschriftung des Adrenalin-Zeitfensters
+  ///
+  /// In de, this message translates to:
+  /// **'Adrenalin'**
+  String get adrenalinLabel;
+
+  /// Schaltfläche zum Erfassen einer Adrenalin-Gabe
+  ///
+  /// In de, this message translates to:
+  /// **'Gabe'**
+  String get adrenalinRecordButton;
+
+  /// Hinweis, dass die erste Adrenalin-Gabe jetzt fällig ist
+  ///
+  /// In de, this message translates to:
+  /// **'Erste Gabe fällig'**
+  String get adrenalinFirstDoseDue;
+
+  /// Hinweis, dass die erste Adrenalin-Gabe noch nicht fällig ist
+  ///
+  /// In de, this message translates to:
+  /// **'Noch nicht fällig'**
+  String get adrenalinNotDue;
+
+  /// Zustand des Adrenalin-Zeitfensters vor 3 Minuten
+  ///
+  /// In de, this message translates to:
+  /// **'wartet'**
+  String get adrenalinStateWaiting;
+
+  /// Zustand des Adrenalin-Zeitfensters zwischen 3 und 5 Minuten
+  ///
+  /// In de, this message translates to:
+  /// **'fällig'**
+  String get adrenalinStateDue;
+
+  /// Zustand des Adrenalin-Zeitfensters nach 5 Minuten
+  ///
+  /// In de, this message translates to:
+  /// **'überfällig'**
+  String get adrenalinStateOverdue;
+
+  /// Zeitpunkt der letzten Adrenalin-Gabe
+  ///
+  /// In de, this message translates to:
+  /// **'Letzte Gabe {time}'**
+  String adrenalinLastDose(String time);
+
   /// Schaltfläche zum Speichern eines Dialogs
   ///
   /// In de, this message translates to:

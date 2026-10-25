@@ -1,5 +1,6 @@
 import 'package:hp_cpr/core/clock.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
+import 'package:hp_cpr/features/reanimationsfall/domain/adrenalin.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/schock.dart';
 
@@ -59,6 +60,9 @@ class Reanimationsfall {
       [];
   final List<SchockEreignis> _schocks = [];
   final List<SchockRueckgaengig> _schockRueckgaengigkeiten = [];
+  final List<AdrenalinGabe> _adrenalinGaben = [];
+  RhythmusanalyseErgebnis? _adrenalinAusloesendesErgebnis;
+  bool _ersteAdrenalinGabeFaellig = false;
 
   /// The monotonic timeline shifted by intervals recovered from the wall clock.
   Duration _monotonicNow() => _clock.monotonicNow() + _monotonicAdjustment;
@@ -125,6 +129,16 @@ class Reanimationsfall {
       _schockpauseOpeningSchockIndex = _schocks.length - 1;
       _isSchockpause = true;
     }
+
+    _updateAdrenalinGabeFaelligkeit();
+  }
+
+  /// Records an Adrenalin dose and starts a new Zeitfenster.
+  void recordAdrenalin() {
+    _adrenalinGaben.add(
+      AdrenalinGabe(zeitpunkt: _monotonicNow() - _monotonicStartOffset),
+    );
+    _ersteAdrenalinGabeFaellig = false;
   }
 
   /// Marks the most recent active Schock as undone.
@@ -155,6 +169,8 @@ class Reanimationsfall {
       _schockpauseOverdue = Duration.zero;
       _schockpauseOpeningSchockIndex = null;
     }
+
+    _updateAdrenalinGabeFaelligkeit();
   }
 
   /// Adds or replaces the energy of the most recent active Schock.
@@ -178,6 +194,26 @@ class Reanimationsfall {
     return -1;
   }
 
+  int get _aktiveSchockAnzahl =>
+      _schocks.length - _schockRueckgaengigkeiten.length;
+
+  void _updateAdrenalinGabeFaelligkeit() {
+    if (_adrenalinGaben.isNotEmpty) {
+      _ersteAdrenalinGabeFaellig = false;
+      return;
+    }
+
+    final ergebnis = _adrenalinAusloesendesErgebnis;
+    _ersteAdrenalinGabeFaellig = switch (ergebnis?.kategorie) {
+      RhythmusanalyseKategorie.nichtSchockbar => true,
+      RhythmusanalyseKategorie.schockbar =>
+        _aktiveSchockAnzahl >= leitlinienprofil.adrenalinErsteGabeNachSchock,
+      RhythmusanalyseKategorie.rosc ||
+      RhythmusanalyseKategorie.unklar ||
+      null => false,
+    };
+  }
+
   Duration _remainingInCycle(Duration now) {
     final cycle = leitlinienprofil.compressionCycle;
     final cycleElapsed = now - _compressionCycleStartOffset;
@@ -195,6 +231,8 @@ class Reanimationsfall {
     }
     _rhythmusanalyseErgebnis = ergebnis;
     _rhythmusanalyseNotiz = _normalizeNotiz(notiz);
+    _adrenalinAusloesendesErgebnis = ergebnis;
+    _updateAdrenalinGabeFaelligkeit();
   }
 
   /// Adds or replaces the optional note of the recorded result.
@@ -280,6 +318,16 @@ class Reanimationsfall {
         ),
     ];
 
+    final letzteAdrenalinGabe = _adrenalinGaben.isEmpty
+        ? null
+        : _adrenalinGaben.last;
+    final adrenalinSeitLetzterGabe = letzteAdrenalinGabe == null
+        ? null
+        : elapsed - letzteAdrenalinGabe.zeitpunkt;
+    final adrenalinZeitfensterZustand = letzteAdrenalinGabe == null
+        ? AdrenalinZeitfensterZustand.keine
+        : _adrenalinZustand(adrenalinSeitLetzterGabe!);
+
     return ReanimationsfallSnapshot(
       phase: _phase,
       leitlinienprofil: leitlinienprofil,
@@ -300,7 +348,21 @@ class Reanimationsfall {
       ),
       schocks: List.unmodifiable(schocks),
       schockRueckgaengigkeiten: List.unmodifiable(_schockRueckgaengigkeiten),
+      adrenalinGaben: List.unmodifiable(_adrenalinGaben),
+      adrenalinSeitLetzterGabe: adrenalinSeitLetzterGabe,
+      adrenalinZeitfensterZustand: adrenalinZeitfensterZustand,
+      istErsteAdrenalinGabeFaellig: _ersteAdrenalinGabeFaellig,
     );
+  }
+
+  AdrenalinZeitfensterZustand _adrenalinZustand(Duration seit) {
+    if (seit < leitlinienprofil.adrenalinZeitfensterFruehestens) {
+      return AdrenalinZeitfensterZustand.wartet;
+    }
+    if (seit <= leitlinienprofil.adrenalinZeitfensterSpaetestens) {
+      return AdrenalinZeitfensterZustand.faellig;
+    }
+    return AdrenalinZeitfensterZustand.ueberfaellig;
   }
 
   void _requireAnalysephase() {
@@ -356,6 +418,10 @@ class ReanimationsfallSnapshot {
     required this.uebersprungeneRhythmusanalysen,
     required this.schocks,
     required this.schockRueckgaengigkeiten,
+    required this.adrenalinGaben,
+    required this.adrenalinSeitLetzterGabe,
+    required this.adrenalinZeitfensterZustand,
+    required this.istErsteAdrenalinGabeFaellig,
   });
 
   final Reanimationsphase phase;
@@ -390,6 +456,24 @@ class ReanimationsfallSnapshot {
 
   /// Every undo entry for a Schock, kept as its own log record.
   final List<SchockRueckgaengig> schockRueckgaengigkeiten;
+
+  /// Every recorded Adrenalin dose.
+  final List<AdrenalinGabe> adrenalinGaben;
+
+  /// The time since the last Adrenalin dose, or null before the first dose.
+  final Duration? adrenalinSeitLetzterGabe;
+
+  /// The state of the current Adrenalin Zeitfenster.
+  final AdrenalinZeitfensterZustand adrenalinZeitfensterZustand;
+
+  /// Whether the first Adrenalin dose is clinically due.
+  final bool istErsteAdrenalinGabeFaellig;
+
+  /// The most recent Adrenalin dose, if any.
+  AdrenalinGabe? get letzteAdrenalinGabe {
+    if (adrenalinGaben.isEmpty) return null;
+    return adrenalinGaben.last;
+  }
 
   /// The number of Schocks that have not been undone.
   int get schockAnzahl =>

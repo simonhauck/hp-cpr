@@ -303,6 +303,43 @@
   "@schockEnergyInvalid": {
     "description": "Fehlermeldung bei einer ungültigen Schockenergie"
   },
+  "adrenalinLabel": "Adrenalin",
+  "@adrenalinLabel": {
+    "description": "Beschriftung des Adrenalin-Zeitfensters"
+  },
+  "adrenalinRecordButton": "Gabe",
+  "@adrenalinRecordButton": {
+    "description": "Schaltfläche zum Erfassen einer Adrenalin-Gabe"
+  },
+  "adrenalinFirstDoseDue": "Erste Gabe fällig",
+  "@adrenalinFirstDoseDue": {
+    "description": "Hinweis, dass die erste Adrenalin-Gabe jetzt fällig ist"
+  },
+  "adrenalinNotDue": "Noch nicht fällig",
+  "@adrenalinNotDue": {
+    "description": "Hinweis, dass die erste Adrenalin-Gabe noch nicht fällig ist"
+  },
+  "adrenalinStateWaiting": "wartet",
+  "@adrenalinStateWaiting": {
+    "description": "Zustand des Adrenalin-Zeitfensters vor 3 Minuten"
+  },
+  "adrenalinStateDue": "fällig",
+  "@adrenalinStateDue": {
+    "description": "Zustand des Adrenalin-Zeitfensters zwischen 3 und 5 Minuten"
+  },
+  "adrenalinStateOverdue": "überfällig",
+  "@adrenalinStateOverdue": {
+    "description": "Zustand des Adrenalin-Zeitfensters nach 5 Minuten"
+  },
+  "adrenalinLastDose": "Letzte Gabe {time}",
+  "@adrenalinLastDose": {
+    "description": "Zeitpunkt der letzten Adrenalin-Gabe",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "saveButton": "Speichern",
   "@saveButton": {
     "description": "Schaltfläche zum Speichern eines Dialogs"
