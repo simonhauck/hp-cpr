@@ -30,7 +30,7 @@
             cmdLineToolsVersion = "latest";
             platformToolsVersion = "latest";
             buildToolsVersions = [ "36.0.0" ];
-            platformVersions = [ "36" ];
+            platformVersions = [ "35" "36" ];
             includeEmulator = false;
             includeNDK = true;
             ndkVersion = "28.2.13676358";
