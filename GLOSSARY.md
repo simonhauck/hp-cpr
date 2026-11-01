@@ -103,3 +103,7 @@ _Avoid_: Dose, administration
 **ROSC**:
 Return of spontaneous circulation, recorded only when observed. It is optional and ends the current resuscitation segment, but not necessarily the case.
 _Avoid_: Pulse return, circulation restored
+
+**Demo-Modus**:
+A mode in which a Reanimationsfall's time can be advanced manually so its timing behaviour can be tried without waiting.
+_Avoid_: Testmodus

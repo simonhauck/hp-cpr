@@ -84,6 +84,25 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get demoModusToggleLabel => 'Demo-Modus';
+
+  @override
+  String get demoModusToggleDescription => 'Zeit im Fall zum Testen vorspulen.';
+
+  @override
+  String get demoModusLabel => 'Demo';
+
+  @override
+  String get demoModusTooltip =>
+      'Demo-Modus: Die Zeit dieses Falls kann manuell vorgespult werden.';
+
+  @override
+  String get demoModusAdvanceButton => '+30 s';
+
+  @override
+  String get demoModusAdvanceTooltip => '30 Sekunden vorspulen';
+
+  @override
   String get phaseDruckphase => 'Druckphase';
 
   @override

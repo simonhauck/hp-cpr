@@ -180,6 +180,13 @@ class _EinsatzlogTile extends StatelessWidget {
       formatReanimationsdauer(summary.cprDauer),
       profil,
     );
+    final markers = [
+      if (state.demoMode) l10n.demoModusLabel,
+      if (isVerworfen) l10n.verworfenLabel,
+    ];
+    final subtitleWithMarkers = markers.isEmpty
+        ? subtitle
+        : '$subtitle · ${markers.join(' · ')}';
 
     return ListTile(
       leading: Icon(
@@ -189,9 +196,7 @@ class _EinsatzlogTile extends StatelessWidget {
             : theme.colorScheme.primary,
       ),
       title: Text(l10n.einsatzlogEntryTitle(formatWallTime(state.startzeit))),
-      subtitle: Text(
-        isVerworfen ? '$subtitle · ${l10n.verworfenLabel}' : subtitle,
-      ),
+      subtitle: Text(subtitleWithMarkers),
       trailing: IconButton(
         onPressed: onDelete,
         tooltip: l10n.deleteCaseTooltip,

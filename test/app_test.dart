@@ -1810,4 +1810,197 @@ void main() {
 
     expect(find.text('Neuer Reanimationsfall'), findsOneWidget);
   });
+
+  testWidgets('enables Demo-Modus on the start screen and advances the '
+      'simulated case time in 30 second steps', (tester) async {
+    final settings = AppSettings();
+    await pumpApp(tester, settings: settings);
+
+    expect(find.text('Demo-Modus'), findsOneWidget);
+    expect(find.text('Zeit im Fall zum Testen vorspulen.'), findsOneWidget);
+    expect(
+      tester
+          .widget<SwitchListTile>(
+            find.widgetWithText(SwitchListTile, 'Demo-Modus'),
+          )
+          .value,
+      isFalse,
+    );
+
+    await tester.tap(find.text('Demo-Modus'));
+    await tester.pump();
+    expect(settings.demoMode, isTrue);
+
+    await startNow(tester);
+
+    expect(find.text('Demo'), findsOneWidget);
+    expect(find.text('+30 s'), findsOneWidget);
+    expect(find.text('02:00'), findsOneWidget);
+
+    for (var i = 0; i < 4; i++) {
+      await tester.tap(find.text('+30 s'));
+      await tester.pump();
+    }
+
+    expect(find.text('Analyse fällig'), findsOneWidget);
+    expect(find.text('+00:00'), findsOneWidget);
+    expect(find.text('02:00'), findsOneWidget);
+  });
+
+  testWidgets('advances the Adrenalin Zeitfenster with the demo action', (
+    tester,
+  ) async {
+    await pumpApp(tester, settings: AppSettings(demoMode: true));
+    await startNow(tester);
+
+    await tester.tap(find.text('Gabe'));
+    await tester.pump();
+    expect(find.text('wartet'), findsOneWidget);
+
+    for (var i = 0; i < 6; i++) {
+      await tester.tap(find.text('+30 s'));
+      await tester.pump();
+    }
+
+    expect(find.text('fällig'), findsOneWidget);
+  });
+
+  testWidgets('advances the Analysephase pause with the demo action', (
+    tester,
+  ) async {
+    await pumpApp(tester, settings: AppSettings(demoMode: true));
+    await startNow(tester);
+
+    await tester.tap(find.text('Analyse starten'));
+    await tester.pump();
+    expect(find.text('+30 s'), findsOneWidget);
+
+    await tester.tap(find.text('+30 s'));
+    await tester.pump();
+
+    expect(find.text('Pause über 5 s – CPR fortsetzen'), findsOneWidget);
+  });
+
+  testWidgets('restores a demo case with its simulated time and action', (
+    tester,
+  ) async {
+    await pumpApp(tester, settings: AppSettings(demoMode: true));
+    await startNow(tester);
+
+    for (var i = 0; i < 2; i++) {
+      await tester.tap(find.text('+30 s'));
+      await tester.pump();
+    }
+    expect(find.text('01:00'), findsNWidgets(2));
+
+    await pumpApp(tester);
+
+    expect(find.text('Aktiver Reanimationsfall'), findsOneWidget);
+    await tester.tap(find.text('Fortsetzen'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(find.text('Demo'), findsOneWidget);
+    expect(find.text('+30 s'), findsOneWidget);
+    expect(find.text('01:00'), findsNWidgets(2));
+  });
+
+  testWidgets('marks a demo case in the summary and the Einsatzlog', (
+    tester,
+  ) async {
+    await pumpApp(tester, settings: AppSettings(demoMode: true));
+    await startNow(tester);
+
+    await tester.tap(find.text('+30 s'));
+    await tester.pump();
+    await tester.tap(find.byTooltip('Fall beenden'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Abbruch'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Zusammenfassung'), findsOneWidget);
+    expect(find.text('Demo'), findsOneWidget);
+
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(AppBar),
+            matching: find.byType(BackButton),
+          )
+          .hitTestable(),
+    );
+    await tester.pumpAndSettle();
+
+    await openDrawer(tester);
+    await selectFromDrawer(tester, 'Einsatzlog');
+
+    expect(find.text('Reanimationsfall 08:00:00'), findsOneWidget);
+    expect(find.text('CPR 00:30 · ERC 2025 · Demo'), findsOneWidget);
+  });
+
+  testWidgets('hides the Demo-Modus toggle while an active case is shown', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await tester.tap(find.byType(BackButton));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Aktiver Reanimationsfall'), findsOneWidget);
+    expect(find.text('Demo-Modus'), findsNothing);
+  });
+
+  testWidgets('does not persist the Demo-Modus toggle across an app restart', (
+    tester,
+  ) async {
+    final settings = AppSettings();
+    await pumpApp(tester, settings: settings);
+
+    await tester.tap(find.text('Demo-Modus'));
+    await tester.pump();
+    expect(settings.demoMode, isTrue);
+
+    await pumpApp(tester);
+
+    expect(
+      tester
+          .widget<SwitchListTile>(
+            find.widgetWithText(SwitchListTile, 'Demo-Modus'),
+          )
+          .value,
+      isFalse,
+    );
+  });
+
+  testWidgets('keeps the demo action inside a compact landscape phone', (
+    tester,
+  ) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(568, 320);
+
+    await pumpApp(tester, settings: AppSettings(demoMode: true));
+
+    expectInsideViewport(
+      tester,
+      find.widgetWithText(SwitchListTile, 'Demo-Modus'),
+    );
+    expect(find.text('Zeit im Fall zum Testen vorspulen.'), findsNothing);
+    expect(tester.takeException(), isNull);
+
+    await startNow(tester);
+
+    expect(find.text('+30 s'), findsOneWidget);
+    expectInsideViewport(tester, find.text('+30 s'));
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.text('Analyse starten'));
+    await tester.pump();
+
+    expect(find.text('+30 s'), findsOneWidget);
+    expectInsideViewport(tester, find.text('+30 s'));
+    expect(tester.takeException(), isNull);
+  });
 }

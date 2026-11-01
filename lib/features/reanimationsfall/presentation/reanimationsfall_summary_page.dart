@@ -9,6 +9,7 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/end_reanimationsfa
 import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_format.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
+import 'package:hp_cpr/ui/demo_modus_chip.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 import 'package:hp_cpr/ui/navigation/app_drawer.dart';
 import 'package:hp_cpr/ui/navigation/app_routes.dart';
@@ -76,8 +77,15 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        LeitlinienprofilChip(
-                          leitlinienprofil: snapshot.leitlinienprofil,
+                        Wrap(
+                          spacing: PageLayout.space8,
+                          runSpacing: PageLayout.space8,
+                          children: [
+                            LeitlinienprofilChip(
+                              leitlinienprofil: snapshot.leitlinienprofil,
+                            ),
+                            if (snapshot.demoMode) const DemoModusChip(),
+                          ],
                         ),
                         const SizedBox(height: PageLayout.space12),
                         _SummaryRow(

@@ -98,6 +98,30 @@
       }
     }
   },
+  "demoModusToggleLabel": "Demo-Modus",
+  "@demoModusToggleLabel": {
+    "description": "Beschriftung des Demo-Modus-Schalters auf der Startseite"
+  },
+  "demoModusToggleDescription": "Zeit im Fall zum Testen vorspulen.",
+  "@demoModusToggleDescription": {
+    "description": "Erklärung des Demo-Modus-Schalters auf der Startseite"
+  },
+  "demoModusLabel": "Demo",
+  "@demoModusLabel": {
+    "description": "Kurzstatus für einen Reanimationsfall im Demo-Modus"
+  },
+  "demoModusTooltip": "Demo-Modus: Die Zeit dieses Falls kann manuell vorgespult werden.",
+  "@demoModusTooltip": {
+    "description": "Tooltip für die Demo-Modus-Kennzeichnung"
+  },
+  "demoModusAdvanceButton": "+30 s",
+  "@demoModusAdvanceButton": {
+    "description": "Schaltfläche zum Vorspulen der Fallzeit im Demo-Modus"
+  },
+  "demoModusAdvanceTooltip": "30 Sekunden vorspulen",
+  "@demoModusAdvanceTooltip": {
+    "description": "Tooltip der Demo-Modus-Vorspulschaltfläche"
+  },
   "phaseDruckphase": "Druckphase",
   "@phaseDruckphase": {
     "description": "Name der aktiven Phase mit Thoraxkompressionen"

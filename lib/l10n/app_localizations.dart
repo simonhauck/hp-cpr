@@ -226,6 +226,42 @@ abstract class AppLocalizations {
   /// **'Startzeit {time}'**
   String startzeitValue(String time);
 
+  /// Beschriftung des Demo-Modus-Schalters auf der Startseite
+  ///
+  /// In de, this message translates to:
+  /// **'Demo-Modus'**
+  String get demoModusToggleLabel;
+
+  /// Erklärung des Demo-Modus-Schalters auf der Startseite
+  ///
+  /// In de, this message translates to:
+  /// **'Zeit im Fall zum Testen vorspulen.'**
+  String get demoModusToggleDescription;
+
+  /// Kurzstatus für einen Reanimationsfall im Demo-Modus
+  ///
+  /// In de, this message translates to:
+  /// **'Demo'**
+  String get demoModusLabel;
+
+  /// Tooltip für die Demo-Modus-Kennzeichnung
+  ///
+  /// In de, this message translates to:
+  /// **'Demo-Modus: Die Zeit dieses Falls kann manuell vorgespult werden.'**
+  String get demoModusTooltip;
+
+  /// Schaltfläche zum Vorspulen der Fallzeit im Demo-Modus
+  ///
+  /// In de, this message translates to:
+  /// **'+30 s'**
+  String get demoModusAdvanceButton;
+
+  /// Tooltip der Demo-Modus-Vorspulschaltfläche
+  ///
+  /// In de, this message translates to:
+  /// **'30 Sekunden vorspulen'**
+  String get demoModusAdvanceTooltip;
+
   /// Name der aktiven Phase mit Thoraxkompressionen
   ///
   /// In de, this message translates to:

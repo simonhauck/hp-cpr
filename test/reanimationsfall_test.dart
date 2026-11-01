@@ -1103,4 +1103,147 @@ void main() {
       );
     });
   });
+
+  group('Demo-Modus', () {
+    test('advances all derived timers by the simulated amount', () {
+      final clock = FakeClock();
+      final reanimationsfall = Reanimationsfall.start(
+        clock: clock,
+        demoMode: true,
+      );
+
+      reanimationsfall.advanceDemoTime(const Duration(seconds: 30));
+
+      final snapshot = reanimationsfall.snapshot();
+      expect(snapshot.demoMode, isTrue);
+      expect(snapshot.reanimationsdauer, const Duration(seconds: 30));
+      expect(
+        snapshot.compressionRemaining,
+        const Duration(minutes: 1, seconds: 30),
+      );
+      expect(snapshot.isRhythmusanalyseDue, isFalse);
+
+      reanimationsfall.advanceDemoTime(const Duration(minutes: 1, seconds: 30));
+
+      final due = reanimationsfall.snapshot();
+      expect(due.reanimationsdauer, const Duration(minutes: 2));
+      expect(due.compressionRemaining, Duration.zero);
+      expect(due.isRhythmusanalyseDue, isTrue);
+    });
+
+    test('advances the Adrenalin Zeitfenster', () {
+      final clock = FakeClock();
+      final reanimationsfall = Reanimationsfall.start(
+        clock: clock,
+        demoMode: true,
+      );
+      reanimationsfall.recordAdrenalin();
+
+      reanimationsfall.advanceDemoTime(const Duration(minutes: 3));
+
+      final snapshot = reanimationsfall.snapshot();
+      expect(snapshot.adrenalinSeitLetzterGabe, const Duration(minutes: 3));
+      expect(
+        snapshot.adrenalinZeitfensterZustand,
+        AdrenalinZeitfensterZustand.faellig,
+      );
+    });
+
+    test('advances the Analysephase pause without restarting the cycle', () {
+      final clock = FakeClock();
+      final reanimationsfall = Reanimationsfall.start(
+        clock: clock,
+        demoMode: true,
+      );
+      clock.advance(const Duration(seconds: 30));
+      reanimationsfall.enterAnalysephase();
+
+      reanimationsfall.advanceDemoTime(const Duration(seconds: 30));
+
+      final snapshot = reanimationsfall.snapshot();
+      expect(snapshot.phase, Reanimationsphase.analysephase);
+      expect(snapshot.pauseDuration, const Duration(seconds: 30));
+      expect(snapshot.isPauseOverdue, isTrue);
+      expect(
+        snapshot.compressionRemaining,
+        const Duration(minutes: 1, seconds: 30),
+      );
+      expect(snapshot.reanimationsdauer, const Duration(minutes: 1));
+    });
+
+    test('works during ROSC and keeps the case interrupted', () {
+      final clock = FakeClock();
+      final reanimationsfall = Reanimationsfall.start(
+        clock: clock,
+        demoMode: true,
+      );
+      clock.advance(const Duration(seconds: 30));
+      reanimationsfall.recordRosc();
+
+      reanimationsfall.advanceDemoTime(const Duration(minutes: 1));
+
+      final snapshot = reanimationsfall.snapshot();
+      expect(snapshot.istRosc, isTrue);
+      expect(
+        snapshot.reanimationsdauer,
+        const Duration(minutes: 1, seconds: 30),
+      );
+      expect(snapshot.cprDauer, const Duration(seconds: 30));
+    });
+
+    test(
+      'rejects simulated time outside Demo-Modus or after the case ends',
+      () {
+        final clock = FakeClock();
+        final normal = Reanimationsfall.start(clock: clock);
+
+        expect(
+          () => normal.advanceDemoTime(const Duration(seconds: 30)),
+          throwsStateError,
+        );
+
+        final demo = Reanimationsfall.start(clock: clock, demoMode: true);
+        demo.endReanimationsfall(Beendigungsgrund.uebergabe);
+
+        expect(
+          () => demo.advanceDemoTime(const Duration(seconds: 30)),
+          throwsStateError,
+        );
+      },
+    );
+
+    test('rejects a non-positive simulated duration', () {
+      final clock = FakeClock();
+      final reanimationsfall = Reanimationsfall.start(
+        clock: clock,
+        demoMode: true,
+      );
+
+      expect(
+        () => reanimationsfall.advanceDemoTime(Duration.zero),
+        throwsArgumentError,
+      );
+      expect(
+        () => reanimationsfall.advanceDemoTime(const Duration(seconds: -1)),
+        throwsArgumentError,
+      );
+    });
+
+    test('keeps the demo offset when reconciling a device sleep', () {
+      final clock = FakeClock();
+      final reanimationsfall = Reanimationsfall.start(
+        clock: clock,
+        demoMode: true,
+      );
+      reanimationsfall.advanceDemoTime(const Duration(minutes: 10));
+
+      clock.advanceWallClockOnly(const Duration(minutes: 3));
+      reanimationsfall.reconcileWithWallClock();
+
+      expect(
+        reanimationsfall.snapshot().reanimationsdauer,
+        const Duration(minutes: 13),
+      );
+    });
+  });
 }
