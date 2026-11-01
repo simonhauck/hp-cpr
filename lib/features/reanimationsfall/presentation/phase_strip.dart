@@ -64,13 +64,24 @@ class PhaseStrip extends StatelessWidget {
             color: theme.colorScheme.secondaryContainer,
             borderRadius: BorderRadius.circular(PageLayout.radius16),
           ),
-          child: Text(
-            l10n.schockCountChip(snapshot.schockAnzahl),
-            style: theme.textTheme.labelLarge?.copyWith(
-              color: theme.colorScheme.onSecondaryContainer,
-              fontWeight: FontWeight.w700,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.bolt,
+                size: PageLayout.iconSmall,
+                color: theme.colorScheme.onSecondaryContainer,
+              ),
+              const SizedBox(width: PageLayout.space4),
+              Text(
+                l10n.schockCountChip(snapshot.schockAnzahl),
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.onSecondaryContainer,
+                  fontWeight: FontWeight.w700,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
           ),
         ),
       ],

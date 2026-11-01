@@ -66,12 +66,6 @@ class AppDrawer extends StatelessWidget {
             ),
             _destination(
               context,
-              AppDestination.rechtliches,
-              icon: Icons.gavel_outlined,
-              label: l10n.legalTitle,
-            ),
-            _destination(
-              context,
               AppDestination.ueber,
               icon: Icons.info_outline,
               label: l10n.aboutTitle,

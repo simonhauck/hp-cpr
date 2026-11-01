@@ -36,7 +36,6 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
       for (final notiz in snapshot.notizen)
         _SummaryNote(zeitpunkt: notiz.zeitpunkt, text: notiz.text),
     ]..sort((a, b) => a.zeitpunkt.compareTo(b.zeitpunkt));
-
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -217,6 +216,17 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
                               ),
                             ),
                             title: Text(note.text),
+                            subtitle: Text(
+                              formatWallTime(
+                                snapshot.startzeit.add(note.zeitpunkt),
+                              ),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontFeatures: const [
+                                  FontFeature.tabularFigures(),
+                                ],
+                              ),
+                            ),
                           ),
                       ],
                     ),
@@ -237,6 +247,7 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
       events.add(
         _SummaryEvent(
           zeitpunkt: zeitpunkt,
+          wallTime: snapshot.startzeit.add(zeitpunkt),
           order: order++,
           icon: icon,
           text: text,
@@ -251,7 +262,7 @@ class ReanimationsfallSummaryPage extends StatelessWidget {
       final energie = schock.energieJoule;
       add(
         schock.zeitpunkt,
-        Icons.bolt_outlined,
+        Icons.bolt,
         energie == null
             ? l10n.eventSchock(index + 1)
             : l10n.eventSchockWithEnergy(index + 1, energie),
@@ -395,6 +406,7 @@ class _SummaryRow extends StatelessWidget {
 class _SummaryEvent {
   const _SummaryEvent({
     required this.zeitpunkt,
+    required this.wallTime,
     required this.order,
     required this.icon,
     required this.text,
@@ -402,6 +414,7 @@ class _SummaryEvent {
   });
 
   final Duration zeitpunkt;
+  final DateTime wallTime;
   final int order;
   final IconData icon;
   final String text;
@@ -424,12 +437,24 @@ class _TimelineRow extends StatelessWidget {
         children: [
           SizedBox(
             width: PageLayout.timelineTimeWidth,
-            child: Text(
-              formatReanimationsdauer(event.zeitpunkt),
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  formatReanimationsdauer(event.zeitpunkt),
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+                Text(
+                  formatWallTime(event.wallTime),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
             ),
           ),
           Icon(

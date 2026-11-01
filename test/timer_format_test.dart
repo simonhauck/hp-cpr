@@ -34,4 +34,8 @@ void main() {
   test('wall-clock time is shown with seconds', () {
     expect(formatWallTime(DateTime(2026, 10, 25, 7, 5, 9)), '07:05:09');
   });
+
+  test('wall-clock time without seconds is shown as hours and minutes', () {
+    expect(formatWallTimeMinutes(DateTime(2026, 10, 25, 7, 5, 9)), '07:05');
+  });
 }

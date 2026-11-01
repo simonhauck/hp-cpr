@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:hp_cpr/core/app_info.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
@@ -7,7 +8,9 @@ import 'package:hp_cpr/ui/navigation/app_destination.dart';
 import 'package:hp_cpr/ui/navigation/app_drawer.dart';
 import 'package:hp_cpr/ui/navigation/app_routes.dart';
 
-/// The app name, installed version, description, and copyright.
+const _githubUrl = 'https://github.com/simonhauck/hp-cpr';
+
+/// The app name, installed version, description, copyright, and links.
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key, required this.routes});
 
@@ -20,11 +23,23 @@ class AboutPage extends StatefulWidget {
 class _AboutPageState extends State<AboutPage> {
   late final Future<AppInfo?> _appInfo = AppInfo.load();
 
-  void _openLegal() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => widget.routes.page(AppDestination.rechtliches),
-      ),
+  Future<void> _openGithub() async {
+    await launchUrl(
+      Uri.parse(_githubUrl),
+      mode: LaunchMode.externalApplication,
+    );
+  }
+
+  Future<void> _openLicenses() async {
+    final info = await _appInfo;
+    if (!mounted) return;
+
+    final l10n = AppLocalizations.of(context);
+    showLicensePage(
+      context: context,
+      applicationName: l10n.appTitle,
+      applicationVersion: info?.versionLabel(l10n.versionWithBuild),
+      applicationLegalese: l10n.licensesLegalese,
     );
   }
 
@@ -94,11 +109,24 @@ class _AboutPageState extends State<AboutPage> {
                 const SizedBox(height: PageLayout.space24),
                 Card(
                   clipBehavior: Clip.antiAlias,
-                  child: ListTile(
-                    leading: const Icon(Icons.gavel_outlined),
-                    title: Text(l10n.legalTitle),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: _openLegal,
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.code),
+                        title: Text(l10n.aboutGithubTitle),
+                        subtitle: Text(l10n.aboutGithubDescription),
+                        trailing: const Icon(Icons.open_in_new),
+                        onTap: _openGithub,
+                      ),
+                      const Divider(height: PageLayout.dividerHeight),
+                      ListTile(
+                        leading: const Icon(Icons.description_outlined),
+                        title: Text(l10n.aboutLicensesTile),
+                        subtitle: Text(l10n.aboutLicensesDescription),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: _openLicenses,
+                      ),
+                    ],
                   ),
                 ),
               ],

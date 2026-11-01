@@ -15,13 +15,46 @@ class RhythmusanalyseAbschluss {
   final bool schockAbgegeben;
 }
 
+/// Asks for confirmation before ROSC is recorded.
+Future<bool?> showRoscConfirmDialog(BuildContext context) {
+  final l10n = AppLocalizations.of(context);
+  return showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Text(l10n.roscConfirmTitle),
+      content: Text(l10n.roscConfirmDescription),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(false),
+          child: Text(l10n.cancelButton),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(dialogContext).pop(true),
+          child: Text(l10n.roscConfirmButton),
+        ),
+      ],
+    ),
+  );
+}
+
 /// The guided selection of a Rhythmusanalyse result.
 ///
 /// The flow branches from the rhythm category to the rhythm and, for a
 /// shockable rhythm, to the shock confirmation. ROSC asks for confirmation
 /// before it is recorded.
+///
+/// When [initialKategorie] is set, the dialog starts at the rhythm step for
+/// that category. Only [RhythmusanalyseKategorie.schockbar] and
+/// [RhythmusanalyseKategorie.nichtSchockbar] are valid starting categories.
 class RhythmusanalyseDialog extends StatefulWidget {
-  const RhythmusanalyseDialog({super.key});
+  const RhythmusanalyseDialog({super.key, this.initialKategorie})
+    : assert(
+        initialKategorie == null ||
+            initialKategorie == RhythmusanalyseKategorie.schockbar ||
+            initialKategorie == RhythmusanalyseKategorie.nichtSchockbar,
+      );
+
+  final RhythmusanalyseKategorie? initialKategorie;
 
   @override
   State<RhythmusanalyseDialog> createState() => _RhythmusanalyseDialogState();
@@ -34,10 +67,19 @@ class _RhythmusanalyseDialogState extends State<RhythmusanalyseDialog> {
   RhythmusanalyseKategorie? _kategorie;
   RhythmusanalyseErgebnis? _ergebnis;
 
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialKategorie;
+    if (initial == null) return;
+    _kategorie = initial;
+    _step = _Step.rhythm;
+  }
+
   Future<void> _selectKategorie(RhythmusanalyseKategorie kategorie) async {
     switch (kategorie) {
       case RhythmusanalyseKategorie.rosc:
-        final confirmed = await _confirmRosc();
+        final confirmed = await showRoscConfirmDialog(context);
         if (!mounted) return;
         if (confirmed == true) {
           _finish(RhythmusanalyseErgebnis.rosc);
@@ -52,27 +94,6 @@ class _RhythmusanalyseDialogState extends State<RhythmusanalyseDialog> {
           _step = _Step.rhythm;
         });
     }
-  }
-
-  Future<bool?> _confirmRosc() {
-    final l10n = AppLocalizations.of(context);
-    return showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.roscConfirmTitle),
-        content: Text(l10n.roscConfirmDescription),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.cancelButton),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l10n.roscConfirmButton),
-          ),
-        ],
-      ),
-    );
   }
 
   void _selectRhythmus(RhythmusanalyseErgebnis ergebnis) {

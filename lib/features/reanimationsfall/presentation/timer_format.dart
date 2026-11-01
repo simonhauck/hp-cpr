@@ -28,6 +28,11 @@ String formatWallTime(DateTime time) {
       '${_twoDigits(time.second)}';
 }
 
+/// Formats a wall-clock time as `HH:MM`.
+String formatWallTimeMinutes(DateTime time) {
+  return '${_twoDigits(time.hour)}:${_twoDigits(time.minute)}';
+}
+
 String _minutesAndSeconds(int totalSeconds) {
   return '${_twoDigits(totalSeconds ~/ 60)}:${_twoDigits(totalSeconds % 60)}';
 }

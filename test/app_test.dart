@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:hp_cpr/app.dart';
+import 'package:hp_cpr/features/about/presentation/about_page.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_store.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
@@ -125,6 +126,7 @@ void main() {
     expect(find.text('Nächste Analyse'), findsOneWidget);
     expect(find.text('02:00'), findsOneWidget);
     expect(find.text('ERC 2025'), findsOneWidget);
+    expect(find.byIcon(Icons.bolt), findsOneWidget);
     expect(wakeLock.enabled, isTrue);
   });
 
@@ -148,8 +150,15 @@ void main() {
     await tester.pump();
 
     expect(find.text('Analysephase · Jetzt Rhythmus prüfen'), findsOneWidget);
-    expect(find.text('Ergebnis erfassen'), findsOneWidget);
+    expect(find.text('Schockbar'), findsOneWidget);
+    expect(find.text('Nicht schockbar'), findsOneWidget);
+    expect(find.text('ROSC'), findsOneWidget);
+    expect(find.text('Unklar'), findsOneWidget);
     expect(find.text('Überspringen'), findsOneWidget);
+    expect(find.byIcon(Icons.bolt), findsNWidgets(2));
+    expect(find.byIcon(Icons.flash_off), findsOneWidget);
+    expect(find.byIcon(Icons.monitor_heart_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.question_mark), findsOneWidget);
     expect(find.text('Aktionen'), findsOneWidget);
     expect(find.text('Schock (0)'), findsNothing);
 
@@ -181,7 +190,7 @@ void main() {
 
     expect(find.text('01:00'), findsOneWidget);
     expect(find.text('02:00'), findsOneWidget);
-    expect(find.text('Letzte Gabe 00:00'), findsOneWidget);
+    expect(find.text('Letzte Gabe: 08:00 Uhr, vor 01:00'), findsOneWidget);
     expect(find.text('wartet'), findsOneWidget);
 
     clock.advance(const Duration(minutes: 2));
@@ -231,6 +240,58 @@ void main() {
     expect(find.text('02:05'), findsOneWidget);
   });
 
+  testWidgets('keeps the manual Analyse starten action available before it is '
+      'due', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    expect(find.text('Analyse starten'), findsOneWidget);
+
+    clock.advance(const Duration(minutes: 1, seconds: 50));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('Analyse starten'), findsOneWidget);
+    expect(find.text('Analyse in 00:10'), findsNothing);
+
+    clock.advance(const Duration(seconds: 10));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('Analyse fällig'), findsOneWidget);
+    expect(find.text('Analyse starten'), findsOneWidget);
+  });
+
+  testWidgets('records an AED advisory from the inlined Analysephase choices', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Analyse starten'));
+    await tester.pump();
+
+    await tester.tap(find.text('Nicht schockbar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Unbekannt (AED)'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.text('Nächste Analyse'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Fall beenden'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Abbruch'));
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.text('Rhythmusanalyse: Nicht schockbar – Unbekannt (AED)'),
+      200,
+    );
+    expect(
+      find.text('Rhythmusanalyse: Nicht schockbar – Unbekannt (AED)'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('enters the Analysephase from the due Druckphase and pauses the '
       'compression timer', (tester) async {
     await pumpApp(tester);
@@ -262,8 +323,6 @@ void main() {
     await tester.tap(find.text('Analyse starten'));
     await tester.pump();
 
-    await tester.tap(find.text('Ergebnis erfassen'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Schockbar'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Kammerflimmern (VF)'));
@@ -287,8 +346,6 @@ void main() {
     await tester.tap(find.text('Analyse starten'));
     await tester.pump();
 
-    await tester.tap(find.text('Ergebnis erfassen'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Schockbar'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Kammerflimmern (VF)'));
@@ -328,8 +385,6 @@ void main() {
     await tester.pump(const Duration(milliseconds: 250));
     await tester.tap(find.text('Analyse starten'));
     await tester.pump();
-    await tester.tap(find.text('Ergebnis erfassen'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('ROSC'));
     await tester.pumpAndSettle();
 
@@ -337,12 +392,9 @@ void main() {
     await tester.tap(find.text('Abbrechen').last);
     await tester.pumpAndSettle();
 
-    expect(find.text('Rhythmusart'), findsOneWidget);
-    expect(find.text('Kreislauf zurückgekehrt'), findsNothing);
-
-    await tester.tap(find.text('Abbrechen'));
-    await tester.pumpAndSettle();
     expect(find.text('Analysephase'), findsOneWidget);
+    expect(find.text('Schockbar'), findsOneWidget);
+    expect(find.text('Kreislauf zurückgekehrt'), findsNothing);
   });
 
   testWidgets('opens settings from the Leitlinienprofil chip and applies the '
@@ -420,8 +472,6 @@ void main() {
     await tester.tap(find.text('Analyse starten'));
     await tester.pump();
 
-    await tester.tap(find.text('Ergebnis erfassen'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Unklar'));
     await tester.pumpAndSettle();
 
@@ -469,8 +519,6 @@ void main() {
     await tester.tap(find.text('Analyse starten'));
     await tester.pump();
 
-    await tester.tap(find.text('Ergebnis erfassen'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Nicht schockbar'));
     await tester.pumpAndSettle();
 
@@ -486,8 +534,6 @@ void main() {
     await tester.tap(find.text('Analyse starten'));
     await tester.pump();
 
-    await tester.tap(find.text('Ergebnis erfassen'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('ROSC'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('ROSC bestätigen'));
@@ -631,8 +677,6 @@ void main() {
     await tester.pump();
     expect(find.text('Schocks: 0'), findsOneWidget);
 
-    await tester.tap(find.text('Ergebnis erfassen'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Schockbar'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Kammerflimmern (VF)'));
@@ -660,8 +704,6 @@ void main() {
 
     await tester.tap(find.text('Analyse starten'));
     await tester.pump();
-    await tester.tap(find.text('Ergebnis erfassen'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Nicht schockbar'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Asystolie'));
@@ -680,8 +722,6 @@ void main() {
 
     await tester.tap(find.text('Analyse starten'));
     await tester.pump();
-    await tester.tap(find.text('Ergebnis erfassen'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Schockbar'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Kammerflimmern (VF)'));
@@ -713,8 +753,6 @@ void main() {
 
     await tester.tap(find.text('Analyse starten'));
     await tester.pump();
-    await tester.tap(find.text('Ergebnis erfassen'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('Schockbar'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Kammerflimmern (VF)'));
@@ -740,7 +778,7 @@ void main() {
     await tester.tap(find.text('Gabe'));
     await tester.pump();
 
-    expect(find.text('Letzte Gabe 00:00'), findsOneWidget);
+    expect(find.text('Letzte Gabe: 08:00 Uhr, vor 00:00'), findsOneWidget);
     expect(find.text('wartet'), findsOneWidget);
     expect(find.text('03:00'), findsOneWidget);
     expect(find.text('05:00'), findsOneWidget);
@@ -748,19 +786,27 @@ void main() {
     clock.advance(const Duration(minutes: 3));
     await tester.pump(const Duration(milliseconds: 250));
     expect(find.text('fällig'), findsOneWidget);
+    expect(find.text('Letzte Gabe: 08:00 Uhr, vor 03:00'), findsOneWidget);
 
-    clock.advance(const Duration(minutes: 2));
+    clock.advance(const Duration(minutes: 1));
     await tester.pump(const Duration(milliseconds: 250));
     expect(find.text('fällig'), findsOneWidget);
+    expect(find.text('Letzte Gabe: 08:00 Uhr, vor 04:00'), findsOneWidget);
+
+    clock.advance(const Duration(minutes: 1));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(find.text('fällig'), findsOneWidget);
+    expect(find.text('Letzte Gabe: 08:00 Uhr, vor 05:00'), findsOneWidget);
 
     clock.advance(const Duration(seconds: 1));
     await tester.pump(const Duration(milliseconds: 250));
     expect(find.text('überfällig'), findsOneWidget);
+    expect(find.text('Letzte Gabe: 08:00 Uhr, vor 05:01'), findsOneWidget);
 
     await tester.tap(find.text('Gabe'));
     await tester.pump();
 
-    expect(find.text('Letzte Gabe 05:01'), findsOneWidget);
+    expect(find.text('Letzte Gabe: 08:05 Uhr, vor 00:00'), findsOneWidget);
     expect(find.text('wartet'), findsOneWidget);
   });
 
@@ -782,6 +828,30 @@ void main() {
 
     expect(find.text('Analysephase'), findsOneWidget);
     expect(find.text('fällig'), findsOneWidget);
+  });
+
+  testWidgets('keeps the Adrenalin timer inside a compact landscape phone', (
+    tester,
+  ) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(568, 320);
+
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await tester.tap(find.text('Gabe'));
+    await tester.pump();
+    clock.advance(const Duration(minutes: 4));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    expect(find.text('Letzte Gabe: 08:00 Uhr, vor 04:00'), findsOneWidget);
+    expectInsideViewport(
+      tester,
+      find.text('Letzte Gabe: 08:00 Uhr, vor 04:00'),
+    );
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('shows the Amiodaron hint only after the third Schock and '
@@ -920,10 +990,7 @@ void main() {
       expect(tester.takeException(), isNull);
 
       await openDrawer(tester);
-      expectInsideViewport(
-        tester,
-        find.widgetWithText(ListTile, 'Rechtliches'),
-      );
+      expectInsideViewport(tester, find.widgetWithText(ListTile, 'Über'));
       expect(tester.takeException(), isNull);
       await tester.tapAt(Offset(size.width - 20, 20));
       await tester.pumpAndSettle();
@@ -949,23 +1016,27 @@ void main() {
       await tester.pump();
 
       expect(find.text('Analysephase'), findsOneWidget);
-      expect(find.text('Ergebnis erfassen'), findsOneWidget);
+      expect(find.text('Schockbar'), findsOneWidget);
+      expect(find.text('Nicht schockbar'), findsOneWidget);
+      expect(find.text('ROSC'), findsOneWidget);
+      expect(find.text('Unklar'), findsOneWidget);
       expect(find.text('Überspringen'), findsOneWidget);
       expect(find.text('Schocks: 0'), findsOneWidget);
-      expectInsideViewport(tester, find.text('Ergebnis erfassen'));
+      expectInsideViewport(tester, find.text('Schockbar'));
+      expectInsideViewport(tester, find.text('Nicht schockbar'));
+      expectInsideViewport(tester, find.text('ROSC'));
+      expectInsideViewport(tester, find.text('Unklar'));
       expectInsideViewport(tester, find.text('Überspringen'));
       expectInsideViewport(tester, find.text('Schocks: 0'));
       expect(tester.takeException(), isNull, reason: 'size $size');
 
-      await tester.tap(find.text('Ergebnis erfassen'));
+      await tester.tap(find.text('Schockbar'));
       await tester.pumpAndSettle();
-      expect(find.text('Schockbar'), findsOneWidget);
+      expect(find.text('Kammerflimmern (VF)'), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.tap(find.text('Abbrechen'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Ergebnis erfassen'));
-      await tester.pumpAndSettle();
       await tester.tap(find.text('Schockbar'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Kammerflimmern (VF)'));
@@ -1020,8 +1091,6 @@ void main() {
     await tester.pump(const Duration(milliseconds: 250));
     await tester.tap(find.text('Analyse starten'));
     await tester.pump();
-    await tester.tap(find.text('Ergebnis erfassen'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('ROSC'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('ROSC bestätigen'));
@@ -1029,9 +1098,10 @@ void main() {
 
     expect(find.text('ROSC'), findsWidgets);
     expect(find.text('ROSC · Reanimation pausiert'), findsOneWidget);
+    expect(find.byIcon(Icons.monitor_heart_outlined), findsOneWidget);
     expect(find.text('Reanimationswiederbeginn'), findsOneWidget);
     expect(find.text('Aktionen'), findsOneWidget);
-    expect(find.text('Letzte Gabe 00:00'), findsOneWidget);
+    expect(find.text('Letzte Gabe: 08:00 Uhr, vor 02:00'), findsOneWidget);
     expect(
       tester
           .widget<FilledButton>(find.widgetWithText(FilledButton, 'Gabe'))
@@ -1044,7 +1114,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 250));
 
     expect(find.text('fällig'), findsOneWidget);
-    expect(find.text('Letzte Gabe 00:00'), findsOneWidget);
+    expect(find.text('Letzte Gabe: 08:00 Uhr, vor 04:00'), findsOneWidget);
     expect(find.text('Zusammenfassung'), findsNothing);
   });
 
@@ -1058,8 +1128,6 @@ void main() {
     await tester.pump(const Duration(milliseconds: 250));
     await tester.tap(find.text('Analyse starten'));
     await tester.pump();
-    await tester.tap(find.text('Ergebnis erfassen'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('ROSC'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('ROSC bestätigen'));
@@ -1102,6 +1170,10 @@ void main() {
     expect(find.text('Reanimationswiederbeginn'), findsOneWidget);
     expect(find.text('Fall beendet: Übergabe'), findsOneWidget);
     expect(find.text('Übergabe'), findsOneWidget);
+    expect(find.text('08:00:00'), findsNWidgets(2));
+    expect(find.text('08:02:00'), findsNWidgets(2));
+    expect(find.text('08:02:30'), findsOneWidget);
+    expect(find.text('08:02:40'), findsNWidgets(2));
     expect(wakeLock.enabled, isFalse);
   });
 
@@ -1347,16 +1419,8 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> openMesswertDialog(WidgetTester tester) async {
-    await tester.tap(find.text('Messwert erfassen'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 300));
-  }
-
-  Future<void> selectMesswertTyp(WidgetTester tester, String label) async {
-    await tester.tap(
-      find.descendant(of: find.byType(AlertDialog), matching: find.text(label)),
-    );
+  Future<void> openMesswertDialog(WidgetTester tester, String typ) async {
+    await tester.tap(find.text(typ));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
   }
@@ -1408,6 +1472,27 @@ void main() {
 
     await tester.scrollUntilVisible(find.text('Patient kalt'), 200);
     expect(find.text('Patient kalt'), findsOneWidget);
+  });
+
+  testWidgets('ends the Reanimationsfall from Weitere Aktionen', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await openActions(tester);
+    expect(find.text('Fall beenden'), findsOneWidget);
+
+    await tester.tap(find.text('Fall beenden'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Grund'), findsOneWidget);
+    await tester.tap(find.text('Übergabe'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Zusammenfassung'), findsOneWidget);
+    expect(find.text('Fall beendet: Übergabe'), findsOneWidget);
+    expect(wakeLock.enabled, isFalse);
   });
 
   testWidgets('keeps the timer running while Messwerte is open', (
@@ -1485,8 +1570,6 @@ void main() {
     await tester.pump(const Duration(milliseconds: 250));
     await tester.tap(find.text('Analyse starten'));
     await tester.pump();
-    await tester.tap(find.text('Ergebnis erfassen'));
-    await tester.pumpAndSettle();
     await tester.tap(find.text('ROSC'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('ROSC bestätigen'));
@@ -1512,8 +1595,7 @@ void main() {
     expect(find.text('Noch keine Messwerte'), findsOneWidget);
     expect(find.text('Noch keine Notizen'), findsOneWidget);
 
-    await openMesswertDialog(tester);
-    await selectMesswertTyp(tester, 'Temperatur');
+    await openMesswertDialog(tester, 'Temperatur');
     await tester.enterText(find.byType(TextFormField).at(0), '36,5');
     await tester.enterText(find.byType(TextFormField).at(1), 'rektal');
     await saveMesswert(tester);
@@ -1521,23 +1603,20 @@ void main() {
     expect(find.text('36,5 °C'), findsOneWidget);
     expect(find.textContaining('rektal'), findsOneWidget);
 
-    await openMesswertDialog(tester);
-    await selectMesswertTyp(tester, 'Blutdruck');
+    await openMesswertDialog(tester, 'Blutdruck');
     await tester.enterText(find.byType(TextFormField).at(0), '120');
     await tester.enterText(find.byType(TextFormField).at(1), '80');
     await saveMesswert(tester);
 
     expect(find.text('120/80 mmHg'), findsOneWidget);
 
-    await openMesswertDialog(tester);
-    await selectMesswertTyp(tester, 'Blutzucker');
+    await openMesswertDialog(tester, 'Blutzucker');
     await tester.enterText(find.byType(TextFormField).at(0), '100');
     await saveMesswert(tester);
 
     expect(find.text('100 mg/dL'), findsOneWidget);
 
-    await openMesswertDialog(tester);
-    await selectMesswertTyp(tester, 'Herzfrequenz');
+    await openMesswertDialog(tester, 'Herzfrequenz');
     await tester.enterText(find.byType(TextFormField).at(0), '88');
     await saveMesswert(tester);
 
@@ -1561,8 +1640,7 @@ void main() {
     await startNow(tester);
     await openMesswerte(tester);
 
-    await openMesswertDialog(tester);
-    await selectMesswertTyp(tester, 'Herzfrequenz');
+    await openMesswertDialog(tester, 'Herzfrequenz');
     await tester.enterText(find.byType(TextFormField).at(0), '90');
     await saveMesswert(tester);
 
@@ -1581,8 +1659,7 @@ void main() {
     await startNow(tester);
     await openMesswerte(tester);
 
-    await openMesswertDialog(tester);
-    await selectMesswertTyp(tester, 'Temperatur');
+    await openMesswertDialog(tester, 'Temperatur');
     await tester.enterText(find.byType(TextFormField).at(0), '37,2');
     await saveMesswert(tester);
 
@@ -1619,7 +1696,14 @@ void main() {
     expect(find.text('37,2 °C'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Nach der Übergabe'), 200);
     expect(find.text('Nach der Übergabe'), findsOneWidget);
-    expect(find.text('Messwert erfassen'), findsNothing);
+    for (final typ in [
+      'Temperatur',
+      'Blutzucker',
+      'Blutdruck',
+      'Herzfrequenz',
+    ]) {
+      expect(find.text(typ), findsNothing);
+    }
     expect(find.text('Notiz erfassen'), findsNothing);
 
     await tester.tap(
@@ -1648,7 +1732,7 @@ void main() {
     expect(find.text('Menü'), findsOneWidget);
     expect(find.widgetWithText(ListTile, 'Einsatzlog'), findsOneWidget);
     expect(find.widgetWithText(ListTile, 'Einstellungen'), findsOneWidget);
-    expect(find.widgetWithText(ListTile, 'Rechtliches'), findsOneWidget);
+    expect(find.widgetWithText(ListTile, 'Rechtliches'), findsNothing);
     expect(find.widgetWithText(ListTile, 'Über'), findsOneWidget);
     expect(
       tester
@@ -1677,33 +1761,36 @@ void main() {
     expect(find.text('Menü'), findsNothing);
   });
 
-  testWidgets('opens Rechtliches and Über from the drawer', (tester) async {
+  testWidgets('opens Über from the drawer with the licenses entry', (
+    tester,
+  ) async {
     await pumpApp(tester);
 
     await openDrawer(tester);
-    await selectFromDrawer(tester, 'Rechtliches');
-
-    expect(find.text('Rechtliches'), findsOneWidget);
-    expect(find.text('Rechtliche Informationen zu HP-CPR.'), findsOneWidget);
-    expect(find.text('Lizenzen'), findsOneWidget);
-
-    await openDrawer(tester);
+    expect(find.widgetWithText(ListTile, 'Rechtliches'), findsNothing);
     await selectFromDrawer(tester, 'Über');
 
     expect(find.text('Über'), findsOneWidget);
-    expect(find.text('HP-CPR'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AboutPage),
+        matching: find.text('HP-CPR'),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('Version 0.1.0 (Build 1)'), findsOneWidget);
     expect(
       find.text('Begleit-App für den High-Performance-CPR-Standard'),
       findsOneWidget,
     );
     expect(find.text('© 2026 Simon Hauck'), findsOneWidget);
-
-    await tester.tap(find.text('Rechtliches').hitTestable());
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-
+    expect(find.text('GitHub'), findsOneWidget);
+    expect(find.text('Quellcode und Issues'), findsOneWidget);
     expect(find.text('Lizenzen'), findsOneWidget);
+    expect(
+      find.text('Lizenztexte der App und ihrer Bibliotheken'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('opens the license page with the app and package licenses', (
@@ -1721,7 +1808,7 @@ void main() {
     await pumpApp(tester);
 
     await openDrawer(tester);
-    await selectFromDrawer(tester, 'Rechtliches');
+    await selectFromDrawer(tester, 'Über');
     await tester.tap(find.text('Lizenzen'));
     await tester.pumpAndSettle();
 

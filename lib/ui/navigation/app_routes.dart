@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:hp_cpr/core/clock.dart';
 import 'package:hp_cpr/features/about/presentation/about_page.dart';
 import 'package:hp_cpr/features/einsatzlog/presentation/einsatzlog_page.dart';
-import 'package:hp_cpr/features/legal/presentation/legal_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
 import 'package:hp_cpr/features/settings/presentation/settings_page.dart';
@@ -29,7 +28,6 @@ class AppRoutes {
       settings: settings,
       routes: this,
     ),
-    AppDestination.rechtliches => LegalPage(routes: this),
     AppDestination.ueber => AboutPage(routes: this),
   };
 }

@@ -94,6 +94,24 @@ class AdrenalinPanel extends StatelessWidget {
                 ),
                 const SizedBox(height: PageLayout.space2),
                 if (lastDose != null && sinceLastDose != null) ...[
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      l10n.adrenalinLastDoseAt(
+                        formatWallTimeMinutes(
+                          snapshot.startzeit.add(lastDose.zeitpunkt),
+                        ),
+                        formatElapsed(sinceLastDose),
+                      ),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: stateColor,
+                        fontWeight: FontWeight.w700,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: PageLayout.space2),
                   _ZeitfensterBar(
                     seitLetzterGabe: sinceLastDose,
                     startFraction: startFraction,
@@ -113,20 +131,6 @@ class AdrenalinPanel extends StatelessWidget {
                         return Stack(
                           clipBehavior: Clip.none,
                           children: [
-                            Positioned(
-                              left: 0,
-                              right:
-                                  width * (1 - startFraction) +
-                                  PageLayout.space16,
-                              child: Text(
-                                l10n.adrenalinLastDose(
-                                  formatReanimationsdauer(lastDose.zeitpunkt),
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: labelStyle,
-                              ),
-                            ),
                             Positioned(
                               left: width * startFraction - PageLayout.space14,
                               child: Text(

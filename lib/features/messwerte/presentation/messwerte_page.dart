@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/features/messwerte/presentation/messwert_erfassen_dialog.dart';
+import 'package:hp_cpr/features/messwerte/presentation/messwert_format.dart';
 import 'package:hp_cpr/features/messwerte/presentation/messwert_tile.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
+import 'package:hp_cpr/features/reanimationsfall/domain/messwert.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
@@ -42,10 +44,10 @@ class _MesswertePageState extends State<MesswertePage> {
   late ReanimationsfallSnapshot _snapshot =
       widget.reanimationsfall?.snapshot() ?? widget.snapshot;
 
-  Future<void> _recordMesswert() async {
+  Future<void> _recordMesswert(MesswertTyp typ) async {
     final eingabe = await showDialog<MesswertEingabe>(
       context: context,
-      builder: (_) => const MesswertErfassenDialog(),
+      builder: (_) => MesswertErfassenDialog(typ: typ),
     );
     if (eingabe == null || !mounted) return;
 
@@ -121,11 +123,12 @@ class _MesswertePageState extends State<MesswertePage> {
                     spacing: PageLayout.space12,
                     runSpacing: PageLayout.space8,
                     children: [
-                      FilledButton.icon(
-                        onPressed: _recordMesswert,
-                        icon: const Icon(Icons.add),
-                        label: Text(l10n.messwertErfassenButton),
-                      ),
+                      for (final typ in MesswertTyp.values)
+                        FilledButton.tonalIcon(
+                          onPressed: () => _recordMesswert(typ),
+                          icon: Icon(messwertIcon(typ)),
+                          label: Text(messwertTypLabel(l10n, typ)),
+                        ),
                       OutlinedButton.icon(
                         onPressed: _recordNotiz,
                         icon: const Icon(Icons.notes),

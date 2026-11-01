@@ -1,30 +1,29 @@
 import 'package:flutter/material.dart';
 
-import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 
 enum PhaseActionEmphasis { filled, outlined }
 
-/// The phase-dependent actions for the running Reanimationsfall.
+/// The secondary actions for the running Reanimationsfall.
+///
+/// Phase-specific primary actions live in the timer panel; this bar keeps the
+/// compact Überspringen fallback, the Aktionen entry point, and the Demo-Modus
+/// control within reach.
 class PhaseActionBar extends StatelessWidget {
   const PhaseActionBar({
     super.key,
-    required this.snapshot,
     required this.layout,
-    required this.onEnterAnalysephase,
-    required this.onRecordRhythmusanalyse,
-    required this.onSkipRhythmusanalyse,
     required this.onOpenActions,
+    this.onSkipRhythmusanalyse,
     this.onAdvanceDemoTime,
   });
 
-  final ReanimationsfallSnapshot snapshot;
   final PageLayout layout;
-  final VoidCallback onEnterAnalysephase;
-  final VoidCallback onRecordRhythmusanalyse;
-  final VoidCallback onSkipRhythmusanalyse;
   final VoidCallback onOpenActions;
+
+  /// Shown only on compact layouts, where the timer panel has no room for it.
+  final VoidCallback? onSkipRhythmusanalyse;
 
   /// Advances the simulated case time; null outside Demo-Modus.
   final VoidCallback? onAdvanceDemoTime;
@@ -32,37 +31,20 @@ class PhaseActionBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isAnalysephase = snapshot.phase == Reanimationsphase.analysephase;
-
-    final phaseButtons = <Widget>[
-      if (isAnalysephase) ...[
-        PhaseActionButton(
-          layout: layout,
-          label: l10n.rhythmusanalyseRecordButton,
-          icon: Icons.fact_check_outlined,
-          onPressed: onRecordRhythmusanalyse,
-        ),
-        PhaseActionButton(
-          layout: layout,
-          emphasis: PhaseActionEmphasis.outlined,
-          label: l10n.skipAnalysisButton,
-          icon: Icons.skip_next_outlined,
-          onPressed: onSkipRhythmusanalyse,
-        ),
-      ] else
-        PhaseActionButton(
-          layout: layout,
-          label: l10n.analyseButton,
-          icon: Icons.monitor_heart_outlined,
-          onPressed: onEnterAnalysephase,
-        ),
-    ];
+    final skipRhythmusanalyse = onSkipRhythmusanalyse;
     final advanceDemoTime = onAdvanceDemoTime;
 
     return PhaseActionRow(
       layout: layout,
       buttons: [
-        ...phaseButtons,
+        if (skipRhythmusanalyse != null)
+          PhaseActionButton(
+            layout: layout,
+            emphasis: PhaseActionEmphasis.outlined,
+            label: l10n.skipAnalysisButton,
+            icon: Icons.skip_next_outlined,
+            onPressed: skipRhythmusanalyse,
+          ),
         if (advanceDemoTime != null)
           DemoAdvanceButton(layout: layout, onPressed: advanceDemoTime),
       ],

@@ -9,6 +9,7 @@ import 'package:hp_cpr/features/messwerte/presentation/messwerte_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/amiodaron.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
+import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/actions_sheet.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/adrenalin_panel.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/amiodaron_panel.dart';
@@ -117,6 +118,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
       context,
       onOpenMesswerte: _openMesswerte,
       onRecordNotiz: _recordNotiz,
+      onEndCase: _endReanimationsfall,
       onRecordSchock: snapshot.istLaufend ? _recordSchock : null,
       onRestartDruckphase: snapshot.kannDruckphaseNeuStarten
           ? _restartDruckphase
@@ -213,10 +215,12 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     Navigator.of(context).pop();
   }
 
-  Future<void> _recordRhythmusanalyse() async {
+  Future<void> _recordRhythmusanalyse(
+    RhythmusanalyseKategorie kategorie,
+  ) async {
     final abschluss = await showDialog<RhythmusanalyseAbschluss>(
       context: context,
-      builder: (_) => const RhythmusanalyseDialog(),
+      builder: (_) => RhythmusanalyseDialog(initialKategorie: kategorie),
     );
     if (abschluss == null || !mounted) return;
 
@@ -229,6 +233,25 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
         _amiodaronHinweisAusgeblendet = false;
       }
     });
+  }
+
+  Future<void> _recordRosc() async {
+    final confirmed = await showRoscConfirmDialog(context);
+    if (confirmed != true || !mounted) return;
+
+    _mutate(
+      () => widget.reanimationsfall.completeRhythmusanalyse(
+        RhythmusanalyseErgebnis.rosc,
+      ),
+    );
+  }
+
+  void _recordUnklar() {
+    _mutate(
+      () => widget.reanimationsfall.completeRhythmusanalyse(
+        RhythmusanalyseErgebnis.unklar,
+      ),
+    );
   }
 
   void _skipRhythmusanalyse() {
@@ -259,7 +282,15 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
           snapshot: snapshot,
           layout: layout,
         );
-        final timer = _PhaseTimerPanel(snapshot: snapshot, layout: layout);
+        final timer = _PhaseTimerPanel(
+          snapshot: snapshot,
+          layout: layout,
+          onEnterAnalysephase: _enterAnalysephase,
+          onRecordRhythmusanalyse: _recordRhythmusanalyse,
+          onRecordRosc: _recordRosc,
+          onRecordUnklar: _recordUnklar,
+          onSkipRhythmusanalyse: _skipRhythmusanalyse,
+        );
 
         final main = layout.isLandscape
             ? Row(
@@ -319,12 +350,13 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
               onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
             )
           : PhaseActionBar(
-              snapshot: snapshot,
               layout: layout,
-              onEnterAnalysephase: _enterAnalysephase,
-              onRecordRhythmusanalyse: _recordRhythmusanalyse,
-              onSkipRhythmusanalyse: _skipRhythmusanalyse,
               onOpenActions: _openActions,
+              onSkipRhythmusanalyse:
+                  layout.isCompact &&
+                      snapshot.phase == Reanimationsphase.analysephase
+                  ? _skipRhythmusanalyse
+                  : null,
               onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
             ),
     );
@@ -448,10 +480,23 @@ class _ReanimationsdauerPanel extends StatelessWidget {
 }
 
 class _PhaseTimerPanel extends StatelessWidget {
-  const _PhaseTimerPanel({required this.snapshot, required this.layout});
+  const _PhaseTimerPanel({
+    required this.snapshot,
+    required this.layout,
+    required this.onEnterAnalysephase,
+    required this.onRecordRhythmusanalyse,
+    required this.onRecordRosc,
+    required this.onRecordUnklar,
+    required this.onSkipRhythmusanalyse,
+  });
 
   final ReanimationsfallSnapshot snapshot;
   final PageLayout layout;
+  final VoidCallback onEnterAnalysephase;
+  final ValueChanged<RhythmusanalyseKategorie> onRecordRhythmusanalyse;
+  final VoidCallback onRecordRosc;
+  final VoidCallback onRecordUnklar;
+  final VoidCallback onSkipRhythmusanalyse;
 
   @override
   Widget build(BuildContext context) {
@@ -463,10 +508,15 @@ class _PhaseTimerPanel extends StatelessWidget {
       Reanimationsphase.druckphase => _DruckphaseTimerPanel(
         snapshot: snapshot,
         layout: layout,
+        onEnterAnalysephase: onEnterAnalysephase,
       ),
       Reanimationsphase.analysephase => _AnalysephaseTimerPanel(
         snapshot: snapshot,
         layout: layout,
+        onRecordRhythmusanalyse: onRecordRhythmusanalyse,
+        onRecordRosc: onRecordRosc,
+        onRecordUnklar: onRecordUnklar,
+        onSkipRhythmusanalyse: onSkipRhythmusanalyse,
       ),
     };
   }
@@ -492,16 +542,27 @@ class _RoscPanel extends StatelessWidget {
         children: [
           FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text(
-              l10n.rhythmusanalyseRosc,
-              style:
-                  (layout.isCompact
-                          ? theme.textTheme.headlineMedium
-                          : theme.textTheme.displaySmall)
-                      ?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w800,
-                      ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.monitor_heart_outlined,
+                  size: PageLayout.iconLarge,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: PageLayout.space8),
+                Text(
+                  l10n.rhythmusanalyseRosc,
+                  style:
+                      (layout.isCompact
+                              ? theme.textTheme.headlineMedium
+                              : theme.textTheme.displaySmall)
+                          ?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w800,
+                          ),
+                ),
+              ],
             ),
           ),
           const SizedBox(height: PageLayout.space8),
@@ -610,10 +671,15 @@ class _PhasePanel extends StatelessWidget {
 }
 
 class _DruckphaseTimerPanel extends StatelessWidget {
-  const _DruckphaseTimerPanel({required this.snapshot, required this.layout});
+  const _DruckphaseTimerPanel({
+    required this.snapshot,
+    required this.layout,
+    required this.onEnterAnalysephase,
+  });
 
   final ReanimationsfallSnapshot snapshot;
   final PageLayout layout;
+  final VoidCallback onEnterAnalysephase;
 
   @override
   Widget build(BuildContext context) {
@@ -624,6 +690,77 @@ class _DruckphaseTimerPanel extends StatelessWidget {
         ? theme.colorScheme.onErrorContainer
         : theme.colorScheme.onSurface;
     final label = isDue ? l10n.analysisDue : l10n.nextAnalysisLabel;
+    final timerText = isDue
+        ? l10n.overdueTimer(formatElapsed(snapshot.rhythmusanalyseOverdue))
+        : formatCountdown(snapshot.compressionRemaining);
+    final action = PhaseActionButton(
+      layout: layout,
+      label: l10n.analyseButton,
+      icon: Icons.monitor_heart_outlined,
+      onPressed: onEnterAnalysephase,
+      emphasis: isDue
+          ? PhaseActionEmphasis.filled
+          : PhaseActionEmphasis.outlined,
+    );
+
+    if (layout.isCompact) {
+      return _PhasePanel(
+        isAlert: isDue,
+        layout: layout,
+        snapshot: snapshot,
+        child: Row(
+          children: [
+            Expanded(
+              flex: 5,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (isDue) ...[
+                          Icon(Icons.priority_high_rounded, color: foreground),
+                          const SizedBox(width: PageLayout.space4),
+                        ],
+                        Text(
+                          label,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: foreground,
+                            fontWeight: isDue
+                                ? FontWeight.w800
+                                : FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: PageLayout.space2),
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        timerText,
+                        style: TextStyle(
+                          fontSize: PageLayout.druckphaseTimerFontSize,
+                          height: PageLayout.timerLineHeight,
+                          fontWeight: FontWeight.w800,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                          color: foreground,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(width: layout.sectionGap),
+            Expanded(flex: 4, child: action),
+          ],
+        ),
+      );
+    }
 
     return _PhasePanel(
       isAlert: isDue,
@@ -643,16 +780,10 @@ class _DruckphaseTimerPanel extends StatelessWidget {
                 ],
                 Text(
                   label,
-                  style:
-                      (layout.isCompact
-                              ? theme.textTheme.titleMedium
-                              : theme.textTheme.headlineMedium)
-                          ?.copyWith(
-                            color: foreground,
-                            fontWeight: isDue
-                                ? FontWeight.w800
-                                : FontWeight.w500,
-                          ),
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    color: foreground,
+                    fontWeight: isDue ? FontWeight.w800 : FontWeight.w500,
+                  ),
                 ),
               ],
             ),
@@ -662,11 +793,7 @@ class _DruckphaseTimerPanel extends StatelessWidget {
             child: FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
-                isDue
-                    ? l10n.overdueTimer(
-                        formatElapsed(snapshot.rhythmusanalyseOverdue),
-                      )
-                    : formatCountdown(snapshot.compressionRemaining),
+                timerText,
                 style: TextStyle(
                   fontSize: PageLayout.druckphaseTimerFontSize,
                   height: PageLayout.timerLineHeight,
@@ -677,6 +804,8 @@ class _DruckphaseTimerPanel extends StatelessWidget {
               ),
             ),
           ),
+          SizedBox(height: layout.sectionGap),
+          action,
         ],
       ),
     );
@@ -684,10 +813,21 @@ class _DruckphaseTimerPanel extends StatelessWidget {
 }
 
 class _AnalysephaseTimerPanel extends StatelessWidget {
-  const _AnalysephaseTimerPanel({required this.snapshot, required this.layout});
+  const _AnalysephaseTimerPanel({
+    required this.snapshot,
+    required this.layout,
+    required this.onRecordRhythmusanalyse,
+    required this.onRecordRosc,
+    required this.onRecordUnklar,
+    required this.onSkipRhythmusanalyse,
+  });
 
   final ReanimationsfallSnapshot snapshot;
   final PageLayout layout;
+  final ValueChanged<RhythmusanalyseKategorie> onRecordRhythmusanalyse;
+  final VoidCallback onRecordRosc;
+  final VoidCallback onRecordUnklar;
+  final VoidCallback onSkipRhythmusanalyse;
 
   @override
   Widget build(BuildContext context) {
@@ -697,65 +837,276 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
     final foreground = isOverdue
         ? theme.colorScheme.onErrorContainer
         : theme.colorScheme.onSurface;
+    final choices = <Widget>[
+      _RhythmusanalyseChoiceButton(
+        layout: layout,
+        icon: Icons.bolt,
+        label: l10n.rhythmusanalyseSchockbar,
+        onPressed: () =>
+            onRecordRhythmusanalyse(RhythmusanalyseKategorie.schockbar),
+      ),
+      _RhythmusanalyseChoiceButton(
+        layout: layout,
+        icon: Icons.flash_off,
+        label: l10n.rhythmusanalyseNichtSchockbar,
+        onPressed: () =>
+            onRecordRhythmusanalyse(RhythmusanalyseKategorie.nichtSchockbar),
+      ),
+      _RhythmusanalyseChoiceButton(
+        layout: layout,
+        icon: Icons.monitor_heart_outlined,
+        label: l10n.rhythmusanalyseRosc,
+        onPressed: onRecordRosc,
+        emphasis: PhaseActionEmphasis.outlined,
+      ),
+      _RhythmusanalyseChoiceButton(
+        layout: layout,
+        icon: Icons.question_mark,
+        label: l10n.rhythmusanalyseUnklar,
+        onPressed: onRecordUnklar,
+        emphasis: PhaseActionEmphasis.outlined,
+      ),
+    ];
 
     return _PhasePanel(
       isAlert: isOverdue,
       layout: layout,
       snapshot: snapshot,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            l10n.pauseLabel,
-            style:
-                (layout.isCompact
-                        ? theme.textTheme.labelLarge
-                        : theme.textTheme.titleMedium)
-                    ?.copyWith(
-                      color: isOverdue
-                          ? foreground
-                          : theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
-          ),
-          const SizedBox(height: PageLayout.space4),
-          Flexible(
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                formatElapsed(snapshot.pauseDuration),
-                style: TextStyle(
-                  fontSize: PageLayout.analysephaseTimerFontSize,
-                  height: PageLayout.timerLineHeight,
-                  fontWeight: isOverdue ? FontWeight.w700 : FontWeight.w500,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                  color: isOverdue
-                      ? foreground
-                      : theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
+      child: layout.isCompact
+          ? _buildCompactContent(
+              l10n: l10n,
+              theme: theme,
+              isOverdue: isOverdue,
+              foreground: foreground,
+              choices: choices,
+            )
+          : _buildRegularContent(
+              l10n: l10n,
+              theme: theme,
+              isOverdue: isOverdue,
+              foreground: foreground,
+              choices: choices,
             ),
+    );
+  }
+
+  Widget _buildRegularContent({
+    required AppLocalizations l10n,
+    required ThemeData theme,
+    required bool isOverdue,
+    required Color foreground,
+    required List<Widget> choices,
+  }) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          l10n.pauseLabel,
+          style: theme.textTheme.titleMedium?.copyWith(
+            color: isOverdue ? foreground : theme.colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
           ),
-          if (isOverdue) ...[
-            const SizedBox(height: PageLayout.space8),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.warning_amber_rounded, color: foreground),
-                  const SizedBox(width: PageLayout.space6),
-                  Text(
-                    _pauseOverdueHint(l10n, snapshot.leitlinienprofil),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: foreground,
-                      fontWeight: FontWeight.w800,
+        ),
+        const SizedBox(height: PageLayout.space4),
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: _timerText(theme, isOverdue, foreground),
+          ),
+        ),
+        if (isOverdue) ...[
+          const SizedBox(height: PageLayout.space8),
+          _overdueHint(l10n, theme, foreground),
+        ],
+        const SizedBox(height: PageLayout.space8),
+        _choiceGrid(choices),
+        const SizedBox(height: PageLayout.space4),
+        TextButton(
+          onPressed: onSkipRhythmusanalyse,
+          child: Text(l10n.skipAnalysisButton),
+        ),
+      ],
+    );
+  }
+
+  Widget _choiceGrid(List<Widget> choices) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(child: choices[0]),
+            SizedBox(width: layout.actionWrapSpacing),
+            Expanded(child: choices[1]),
+          ],
+        ),
+        SizedBox(height: layout.actionWrapRunSpacing),
+        Row(
+          children: [
+            Expanded(child: choices[2]),
+            SizedBox(width: layout.actionWrapSpacing),
+            Expanded(child: choices[3]),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCompactContent({
+    required AppLocalizations l10n,
+    required ThemeData theme,
+    required bool isOverdue,
+    required Color foreground,
+    required List<Widget> choices,
+  }) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Flexible(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (isOverdue)
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      _pauseOverdueHint(l10n, snapshot.leitlinienprofil),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: foreground,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                ],
+                )
+              else
+                Text(
+                  l10n.pauseLabel,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              const SizedBox(width: PageLayout.space8),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: _timerText(theme, isOverdue, foreground),
+                ),
               ),
-            ),
+            ],
+          ),
+        ),
+        const SizedBox(height: PageLayout.space4),
+        Row(
+          children: [
+            for (var i = 0; i < choices.length; i++) ...[
+              if (i > 0) SizedBox(width: layout.rhythmusanalyseChoiceSpacing),
+              Expanded(child: choices[i]),
+            ],
           ],
+        ),
+      ],
+    );
+  }
+
+  Widget _timerText(ThemeData theme, bool isOverdue, Color foreground) {
+    return Text(
+      formatElapsed(snapshot.pauseDuration),
+      style: TextStyle(
+        fontSize: PageLayout.analysephaseTimerFontSize,
+        height: PageLayout.timerLineHeight,
+        fontWeight: isOverdue ? FontWeight.w700 : FontWeight.w500,
+        fontFeatures: const [FontFeature.tabularFigures()],
+        color: isOverdue ? foreground : theme.colorScheme.onSurfaceVariant,
+      ),
+    );
+  }
+
+  Widget _overdueHint(
+    AppLocalizations l10n,
+    ThemeData theme,
+    Color foreground,
+  ) {
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.warning_amber_rounded, color: foreground),
+          const SizedBox(width: PageLayout.space6),
+          Text(
+            _pauseOverdueHint(l10n, snapshot.leitlinienprofil),
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: foreground,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RhythmusanalyseChoiceButton extends StatelessWidget {
+  const _RhythmusanalyseChoiceButton({
+    required this.layout,
+    required this.label,
+    required this.onPressed,
+    this.icon,
+    this.emphasis = PhaseActionEmphasis.filled,
+  });
+
+  final PageLayout layout;
+  final String label;
+  final VoidCallback onPressed;
+  final IconData? icon;
+  final PhaseActionEmphasis emphasis;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final minimumSize = Size(PageLayout.space0, layout.actionHeight);
+    final padding = layout.rhythmusanalyseChoicePadding;
+    final textStyle = layout.isCompact
+        ? theme.textTheme.labelMedium
+        : theme.textTheme.titleSmall;
+
+    return switch (emphasis) {
+      PhaseActionEmphasis.filled => FilledButton.tonal(
+        onPressed: onPressed,
+        style: FilledButton.styleFrom(
+          minimumSize: minimumSize,
+          padding: padding,
+          textStyle: textStyle,
+        ),
+        child: _content(),
+      ),
+      PhaseActionEmphasis.outlined => OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          minimumSize: minimumSize,
+          padding: padding,
+          textStyle: textStyle,
+        ),
+        child: _content(),
+      ),
+    };
+  }
+
+  Widget _content() {
+    final icon = this.icon;
+    if (icon == null || layout.isCompact) {
+      return FittedBox(fit: BoxFit.scaleDown, child: Text(label));
+    }
+
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: PageLayout.iconSmall),
+          const SizedBox(width: PageLayout.space8),
+          Text(label),
         ],
       ),
     );
