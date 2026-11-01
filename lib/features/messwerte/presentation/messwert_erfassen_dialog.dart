@@ -41,9 +41,11 @@ final class HerzfrequenzEingabe extends MesswertEingabe {
   final int proMinute;
 }
 
-/// Selects a Messwert type, validates the value, and returns a [MesswertEingabe].
+/// Validates the value for [typ] and returns a [MesswertEingabe].
 class MesswertErfassenDialog extends StatefulWidget {
-  const MesswertErfassenDialog({super.key});
+  const MesswertErfassenDialog({super.key, required this.typ});
+
+  final MesswertTyp typ;
 
   @override
   State<MesswertErfassenDialog> createState() => _MesswertErfassenDialogState();
@@ -54,7 +56,6 @@ class _MesswertErfassenDialogState extends State<MesswertErfassenDialog> {
   final _valueController = TextEditingController();
   final _diastolicController = TextEditingController();
   final _noteController = TextEditingController();
-  MesswertTyp? _typ;
 
   @override
   void dispose() {
@@ -69,7 +70,7 @@ class _MesswertErfassenDialogState extends State<MesswertErfassenDialog> {
 
     final note = _noteController.text;
     final notiz = note.trim().isEmpty ? null : note;
-    final eingabe = switch (_typ!) {
+    final eingabe = switch (widget.typ) {
       MesswertTyp.temperatur => TemperaturEingabe(
         celsius: double.parse(_valueController.text.replaceAll(',', '.')),
         notiz: notiz,
@@ -94,47 +95,7 @@ class _MesswertErfassenDialogState extends State<MesswertErfassenDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final typ = _typ;
-
-    if (typ == null) {
-      return AlertDialog(
-        scrollable: true,
-        title: Text(l10n.messwertErfassenTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              l10n.messwertTypLabel,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: PageLayout.space8),
-            for (final option in MesswertTyp.values) ...[
-              OutlinedButton.icon(
-                onPressed: () => setState(() => _typ = option),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(
-                    PageLayout.dialogOptionHeight,
-                  ),
-                ),
-                icon: Icon(messwertIcon(option)),
-                label: Text(messwertTypLabel(l10n, option)),
-              ),
-              if (option != MesswertTyp.values.last)
-                const SizedBox(height: PageLayout.space8),
-            ],
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n.cancelButton),
-          ),
-        ],
-      );
-    }
+    final typ = widget.typ;
 
     return AlertDialog(
       scrollable: true,
@@ -229,8 +190,8 @@ class _MesswertErfassenDialogState extends State<MesswertErfassenDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () => setState(() => _typ = null),
-          child: Text(l10n.backButton),
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.cancelButton),
         ),
         FilledButton(onPressed: _save, child: Text(l10n.saveButton)),
       ],

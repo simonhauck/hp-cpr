@@ -514,12 +514,6 @@ abstract class AppLocalizations {
   /// **'Unbekannt (AED)'**
   String get rhythmusanalyseUnbekanntAed;
 
-  /// Schaltfläche zum Erfassen des Rhythmusanalyse-Ergebnisses
-  ///
-  /// In de, this message translates to:
-  /// **'Ergebnis erfassen'**
-  String get rhythmusanalyseRecordButton;
-
   /// Schaltfläche zum Überspringen der Rhythmusanalyse
   ///
   /// In de, this message translates to:
@@ -568,11 +562,11 @@ abstract class AppLocalizations {
   /// **'überfällig'**
   String get adrenalinStateOverdue;
 
-  /// Zeitpunkt der letzten Adrenalin-Gabe
+  /// Uhrzeit und verstrichene Zeit seit der letzten Adrenalin-Gabe
   ///
   /// In de, this message translates to:
-  /// **'Letzte Gabe {time}'**
-  String adrenalinLastDose(String time);
+  /// **'Letzte Gabe: {time} Uhr, vor {since}'**
+  String adrenalinLastDoseAt(String time, String since);
 
   /// Schaltfläche zum Speichern eines Dialogs
   ///
@@ -652,30 +646,6 @@ abstract class AppLocalizations {
   /// **'Menü öffnen'**
   String get menuOpenTooltip;
 
-  /// Titel der Seite mit rechtlichen Informationen
-  ///
-  /// In de, this message translates to:
-  /// **'Rechtliches'**
-  String get legalTitle;
-
-  /// Einleitung auf der Rechtliches-Seite
-  ///
-  /// In de, this message translates to:
-  /// **'Rechtliche Informationen zu HP-CPR.'**
-  String get legalDescription;
-
-  /// Eintrag zu den Lizenztexten
-  ///
-  /// In de, this message translates to:
-  /// **'Lizenzen'**
-  String get legalLicensesTile;
-
-  /// Erklärung des Lizenzen-Eintrags
-  ///
-  /// In de, this message translates to:
-  /// **'Lizenztexte der App und ihrer Bibliotheken'**
-  String get legalLicensesDescription;
-
   /// Copyright-Hinweis auf der Lizenzseite
   ///
   /// In de, this message translates to:
@@ -705,6 +675,30 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'© 2026 Simon Hauck'**
   String get aboutCopyright;
+
+  /// Titel des GitHub-Eintrags auf der Über-Seite
+  ///
+  /// In de, this message translates to:
+  /// **'GitHub'**
+  String get aboutGithubTitle;
+
+  /// Untertitel des GitHub-Eintrags auf der Über-Seite
+  ///
+  /// In de, this message translates to:
+  /// **'Quellcode und Issues'**
+  String get aboutGithubDescription;
+
+  /// Eintrag zu den Lizenztexten auf der Über-Seite
+  ///
+  /// In de, this message translates to:
+  /// **'Lizenzen'**
+  String get aboutLicensesTile;
+
+  /// Erklärung des Lizenzen-Eintrags auf der Über-Seite
+  ///
+  /// In de, this message translates to:
+  /// **'Lizenztexte der App und ihrer Bibliotheken'**
+  String get aboutLicensesDescription;
 
   /// Beschriftung des Amiodaron-Hinweises
   ///
@@ -1036,23 +1030,11 @@ abstract class AppLocalizations {
   /// **'Messwerte öffnen'**
   String get messwerteOpenButton;
 
-  /// Schaltfläche zum Erfassen eines Messwerts
-  ///
-  /// In de, this message translates to:
-  /// **'Messwert erfassen'**
-  String get messwertErfassenButton;
-
   /// Titel des Dialogs für einen Messwert
   ///
   /// In de, this message translates to:
   /// **'Messwert erfassen'**
   String get messwertErfassenTitle;
-
-  /// Beschriftung der Messwert-Auswahl
-  ///
-  /// In de, this message translates to:
-  /// **'Messwert'**
-  String get messwertTypLabel;
 
   /// Name des Temperatur-Messwerts
   ///

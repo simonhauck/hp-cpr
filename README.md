@@ -189,11 +189,9 @@ lib/
 │   └── wake_lock.dart                          # keeps the screen awake during a case
 ├── features/
 │   ├── about/
-│   │   └── presentation/about_page.dart         # app name, version, copyright
+│   │   └── presentation/about_page.dart         # app info, copyright, and licenses
 │   ├── einsatzlog/
 │   │   └── presentation/einsatzlog_page.dart    # local case log + deletion
-│   ├── legal/
-│   │   └── presentation/legal_page.dart         # Rechtliches and the license page
 │   ├── messwerte/
 │   │   └── presentation/
 │   │       ├── messwert_erfassen_dialog.dart    # two-step measurement entry

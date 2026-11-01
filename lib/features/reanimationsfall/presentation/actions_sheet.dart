@@ -8,6 +8,7 @@ Future<void> showActionsSheet(
   BuildContext context, {
   required VoidCallback onOpenMesswerte,
   required VoidCallback onRecordNotiz,
+  required VoidCallback onEndCase,
   VoidCallback? onRecordSchock,
   VoidCallback? onRestartDruckphase,
 }) {
@@ -18,6 +19,7 @@ Future<void> showActionsSheet(
     builder: (_) => ActionsSheet(
       onOpenMesswerte: onOpenMesswerte,
       onRecordNotiz: onRecordNotiz,
+      onEndCase: onEndCase,
       onRecordSchock: onRecordSchock,
       onRestartDruckphase: onRestartDruckphase,
     ),
@@ -34,12 +36,14 @@ class ActionsSheet extends StatelessWidget {
     super.key,
     required this.onOpenMesswerte,
     required this.onRecordNotiz,
+    required this.onEndCase,
     this.onRecordSchock,
     this.onRestartDruckphase,
   });
 
   final VoidCallback onOpenMesswerte;
   final VoidCallback onRecordNotiz;
+  final VoidCallback onEndCase;
   final VoidCallback? onRecordSchock;
   final VoidCallback? onRestartDruckphase;
 
@@ -63,7 +67,7 @@ class ActionsSheet extends StatelessWidget {
       ),
       if (recordSchock != null)
         _SheetAction(
-          icon: Icons.bolt_outlined,
+          icon: Icons.bolt,
           label: l10n.actionsSchock,
           onPressed: recordSchock,
         ),
@@ -73,6 +77,11 @@ class ActionsSheet extends StatelessWidget {
           label: l10n.actionsRestartDruckphase,
           onPressed: restartDruckphase,
         ),
+      _SheetAction(
+        icon: Icons.stop_circle_outlined,
+        label: l10n.endCaseButton,
+        onPressed: onEndCase,
+      ),
     ];
 
     return SafeArea(

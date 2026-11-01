@@ -239,9 +239,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rhythmusanalyseUnbekanntAed => 'Unbekannt (AED)';
 
   @override
-  String get rhythmusanalyseRecordButton => 'Ergebnis erfassen';
-
-  @override
   String get skipAnalysisButton => 'Überspringen';
 
   @override
@@ -266,8 +263,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get adrenalinStateOverdue => 'überfällig';
 
   @override
-  String adrenalinLastDose(String time) {
-    return 'Letzte Gabe $time';
+  String adrenalinLastDoseAt(String time, String since) {
+    return 'Letzte Gabe: $time Uhr, vor $since';
   }
 
   @override
@@ -311,19 +308,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get menuOpenTooltip => 'Menü öffnen';
 
   @override
-  String get legalTitle => 'Rechtliches';
-
-  @override
-  String get legalDescription => 'Rechtliche Informationen zu HP-CPR.';
-
-  @override
-  String get legalLicensesTile => 'Lizenzen';
-
-  @override
-  String get legalLicensesDescription =>
-      'Lizenztexte der App und ihrer Bibliotheken';
-
-  @override
   String get licensesLegalese => 'MIT-Lizenz · © 2026 Simon Hauck';
 
   @override
@@ -340,6 +324,19 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get aboutCopyright => '© 2026 Simon Hauck';
+
+  @override
+  String get aboutGithubTitle => 'GitHub';
+
+  @override
+  String get aboutGithubDescription => 'Quellcode und Issues';
+
+  @override
+  String get aboutLicensesTile => 'Lizenzen';
+
+  @override
+  String get aboutLicensesDescription =>
+      'Lizenztexte der App und ihrer Bibliotheken';
 
   @override
   String get amiodaronLabel => 'Amiodaron';
@@ -530,13 +527,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get messwerteOpenButton => 'Messwerte öffnen';
 
   @override
-  String get messwertErfassenButton => 'Messwert erfassen';
-
-  @override
   String get messwertErfassenTitle => 'Messwert erfassen';
-
-  @override
-  String get messwertTypLabel => 'Messwert';
 
   @override
   String get messwertTemperatur => 'Temperatur';

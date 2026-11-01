@@ -310,10 +310,6 @@
   "@rhythmusanalyseUnbekanntAed": {
     "description": "Rhythmus unbekannt, Ergebnis stammt aus einer AED-Empfehlung"
   },
-  "rhythmusanalyseRecordButton": "Ergebnis erfassen",
-  "@rhythmusanalyseRecordButton": {
-    "description": "Schaltfläche zum Erfassen des Rhythmusanalyse-Ergebnisses"
-  },
   "skipAnalysisButton": "Überspringen",
   "@skipAnalysisButton": {
     "description": "Schaltfläche zum Überspringen der Rhythmusanalyse"
@@ -346,11 +342,14 @@
   "@adrenalinStateOverdue": {
     "description": "Zustand des Adrenalin-Zeitfensters nach 5 Minuten"
   },
-  "adrenalinLastDose": "Letzte Gabe {time}",
-  "@adrenalinLastDose": {
-    "description": "Zeitpunkt der letzten Adrenalin-Gabe",
+  "adrenalinLastDoseAt": "Letzte Gabe: {time} Uhr, vor {since}",
+  "@adrenalinLastDoseAt": {
+    "description": "Uhrzeit und verstrichene Zeit seit der letzten Adrenalin-Gabe",
     "placeholders": {
       "time": {
+        "type": "String"
+      },
+      "since": {
         "type": "String"
       }
     }
@@ -407,22 +406,6 @@
   "@menuOpenTooltip": {
     "description": "Tooltip der Menü-Schaltfläche"
   },
-  "legalTitle": "Rechtliches",
-  "@legalTitle": {
-    "description": "Titel der Seite mit rechtlichen Informationen"
-  },
-  "legalDescription": "Rechtliche Informationen zu HP-CPR.",
-  "@legalDescription": {
-    "description": "Einleitung auf der Rechtliches-Seite"
-  },
-  "legalLicensesTile": "Lizenzen",
-  "@legalLicensesTile": {
-    "description": "Eintrag zu den Lizenztexten"
-  },
-  "legalLicensesDescription": "Lizenztexte der App und ihrer Bibliotheken",
-  "@legalLicensesDescription": {
-    "description": "Erklärung des Lizenzen-Eintrags"
-  },
   "licensesLegalese": "MIT-Lizenz · © 2026 Simon Hauck",
   "@licensesLegalese": {
     "description": "Copyright-Hinweis auf der Lizenzseite"
@@ -447,6 +430,22 @@
   "aboutCopyright": "© 2026 Simon Hauck",
   "@aboutCopyright": {
     "description": "Copyright-Hinweis auf der Über-Seite"
+  },
+  "aboutGithubTitle": "GitHub",
+  "@aboutGithubTitle": {
+    "description": "Titel des GitHub-Eintrags auf der Über-Seite"
+  },
+  "aboutGithubDescription": "Quellcode und Issues",
+  "@aboutGithubDescription": {
+    "description": "Untertitel des GitHub-Eintrags auf der Über-Seite"
+  },
+  "aboutLicensesTile": "Lizenzen",
+  "@aboutLicensesTile": {
+    "description": "Eintrag zu den Lizenztexten auf der Über-Seite"
+  },
+  "aboutLicensesDescription": "Lizenztexte der App und ihrer Bibliotheken",
+  "@aboutLicensesDescription": {
+    "description": "Erklärung des Lizenzen-Eintrags auf der Über-Seite"
   },
   "amiodaronLabel": "Amiodaron",
   "@amiodaronLabel": {
@@ -724,17 +723,9 @@
   "@messwerteOpenButton": {
     "description": "Schaltfläche zum Öffnen der Messwerte aus der Zusammenfassung"
   },
-  "messwertErfassenButton": "Messwert erfassen",
-  "@messwertErfassenButton": {
-    "description": "Schaltfläche zum Erfassen eines Messwerts"
-  },
   "messwertErfassenTitle": "Messwert erfassen",
   "@messwertErfassenTitle": {
     "description": "Titel des Dialogs für einen Messwert"
-  },
-  "messwertTypLabel": "Messwert",
-  "@messwertTypLabel": {
-    "description": "Beschriftung der Messwert-Auswahl"
   },
   "messwertTemperatur": "Temperatur",
   "@messwertTemperatur": {

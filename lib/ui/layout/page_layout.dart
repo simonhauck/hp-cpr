@@ -146,6 +146,13 @@ class PageLayout {
   EdgeInsets get actionsButtonPadding =>
       EdgeInsets.symmetric(horizontal: isCompact ? space8 : space12);
 
+  /// The horizontal padding of the inlined Rhythmusanalyse choices.
+  EdgeInsets get rhythmusanalyseChoicePadding =>
+      EdgeInsets.symmetric(horizontal: isCompact ? space4 : space12);
+
+  /// The spacing between the inlined Rhythmusanalyse choices.
+  double get rhythmusanalyseChoiceSpacing => space4;
+
   /// The padding inside a phase timer panel.
   EdgeInsets get phasePanelPadding =>
       EdgeInsets.all(isCompact ? space4 : space20);
