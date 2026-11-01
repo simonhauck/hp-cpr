@@ -1,0 +1,9 @@
+# Demo-Modus advances a virtual case clock
+
+**Status:** accepted
+
+Testing the timing behaviour of a Reanimationsfall requires waiting minutes for the next Druckphase, Rhythmusanalyse, or Adrenalin Zeitfenster. A Demo-Modus lets the Zeitnehmer advance time in 30-second steps without duplicating any timer logic. A Reanimationsfall started in Demo-Modus keeps a persisted virtual offset on its monotonic timeline. Every timer and every recorded event timestamp derives from that shifted timeline, so the Reanimationsdauer, compression cycle, Analysephase pause, and medication Zeitfenster all move together. Wall-clock reconciliation compares the real monotonic elapsed time without the demo offset, so a simulated advance is never mistaken for device sleep. The mode is snapshotted per Reanimationsfall; demo cases are marked in the running case, the summary, and the Einsatzlog, and remain in the log until deleted.
+
+**Considered options:** A demo `AppClock` wrapper was rejected because it would be shared across cases and would also move the Startzeit of a later case. Special-casing the compression countdown was rejected because it would not exercise the medication windows, the pause, or the elapsed time. Recording every 30-second step as a timeline event was rejected because it would bloat the case and add a non-clinical event type; the case-level Demo-Modus marker and the persisted offset carry the same information. Keeping demo cases out of the Einsatzlog was rejected because the log itself must remain testable.
+
+**Consequences:** `ReanimationsfallState` gains `demoMode` and `demoOffset`, with defaults for older stored states. The real Startzeit is never rewritten, so a demo case's simulated end time can lie ahead of the real wall clock; the Demo-Modus marker makes that explicit. The toggle that enables the mode is not persisted and applies to new cases only. There is no undo: a mis-tap is recovered by restarting the demo case.

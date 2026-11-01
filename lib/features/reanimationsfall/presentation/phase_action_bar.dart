@@ -16,6 +16,7 @@ class PhaseActionBar extends StatelessWidget {
     required this.onRecordRhythmusanalyse,
     required this.onSkipRhythmusanalyse,
     required this.onOpenActions,
+    this.onAdvanceDemoTime,
   });
 
   final ReanimationsfallSnapshot snapshot;
@@ -24,6 +25,9 @@ class PhaseActionBar extends StatelessWidget {
   final VoidCallback onRecordRhythmusanalyse;
   final VoidCallback onSkipRhythmusanalyse;
   final VoidCallback onOpenActions;
+
+  /// Advances the simulated case time; null outside Demo-Modus.
+  final VoidCallback? onAdvanceDemoTime;
 
   @override
   Widget build(BuildContext context) {
@@ -53,17 +57,41 @@ class PhaseActionBar extends StatelessWidget {
           onPressed: onEnterAnalysephase,
         ),
     ];
-    final actionsButton = ActionsButton(
-      layout: layout,
-      onPressed: onOpenActions,
-    );
+    final advanceDemoTime = onAdvanceDemoTime;
 
+    return PhaseActionRow(
+      layout: layout,
+      buttons: [
+        ...phaseButtons,
+        if (advanceDemoTime != null)
+          DemoAdvanceButton(layout: layout, onPressed: advanceDemoTime),
+      ],
+      actionsButton: ActionsButton(layout: layout, onPressed: onOpenActions),
+    );
+  }
+}
+
+/// The shared responsive row for phase actions and the Aktionen entry point.
+class PhaseActionRow extends StatelessWidget {
+  const PhaseActionRow({
+    super.key,
+    required this.layout,
+    required this.buttons,
+    required this.actionsButton,
+  });
+
+  final PageLayout layout;
+  final List<Widget> buttons;
+  final Widget actionsButton;
+
+  @override
+  Widget build(BuildContext context) {
     if (layout.isCompact) {
       return Row(
         children: [
-          for (var i = 0; i < phaseButtons.length; i++) ...[
+          for (var i = 0; i < buttons.length; i++) ...[
             if (i > 0) SizedBox(width: layout.compactActionGap),
-            Expanded(child: phaseButtons[i]),
+            Expanded(child: buttons[i]),
           ],
           SizedBox(width: layout.compactActionGap),
           actionsButton,
@@ -76,7 +104,35 @@ class PhaseActionBar extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       spacing: layout.actionWrapSpacing,
       runSpacing: layout.actionWrapRunSpacing,
-      children: [...phaseButtons, actionsButton],
+      children: [...buttons, actionsButton],
+    );
+  }
+}
+
+/// The Demo-Modus action that advances the simulated case time.
+class DemoAdvanceButton extends StatelessWidget {
+  const DemoAdvanceButton({
+    super.key,
+    required this.layout,
+    required this.onPressed,
+  });
+
+  final PageLayout layout;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return Tooltip(
+      message: l10n.demoModusAdvanceTooltip,
+      child: PhaseActionButton(
+        layout: layout,
+        label: l10n.demoModusAdvanceButton,
+        icon: Icons.fast_forward,
+        onPressed: onPressed,
+        emphasis: PhaseActionEmphasis.outlined,
+      ),
     );
   }
 }

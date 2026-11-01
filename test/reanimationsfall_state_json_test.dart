@@ -179,4 +179,58 @@ void main() {
     expect(snapshot.pauseDuration, const Duration(seconds: 15));
     expect(snapshot.compressionRemaining, const Duration(seconds: 90));
   });
+
+  test('round-trips Demo-Modus and its simulated offset', () {
+    final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
+    final reanimationsfall = Reanimationsfall.start(
+      clock: clock,
+      demoMode: true,
+    );
+    reanimationsfall.advanceDemoTime(const Duration(seconds: 30));
+    clock.advance(const Duration(seconds: 10));
+    reanimationsfall.advanceDemoTime(const Duration(seconds: 30));
+
+    final state = reanimationsfall.exportState();
+    expect(state.demoMode, isTrue);
+    expect(state.demoOffset, const Duration(seconds: 60));
+
+    final decoded = reanimationsfallStateFromJson(
+      jsonDecode(jsonEncode(reanimationsfallStateToJson(state)))
+          as Map<String, dynamic>,
+    );
+    expect(decoded.demoMode, isTrue);
+    expect(decoded.demoOffset, const Duration(seconds: 60));
+
+    final restored = Reanimationsfall.restore(
+      clock: FakeClock(wallTime: clock.now()),
+      state: decoded,
+    );
+    final snapshot = restored.snapshot();
+    expect(snapshot.demoMode, isTrue);
+    expect(snapshot.reanimationsdauer, const Duration(minutes: 1, seconds: 10));
+    expect(snapshot.compressionRemaining, const Duration(seconds: 50));
+
+    restored.advanceDemoTime(const Duration(seconds: 30));
+    expect(
+      restored.snapshot().reanimationsdauer,
+      const Duration(minutes: 1, seconds: 40),
+    );
+    expect(
+      restored.snapshot().compressionRemaining,
+      const Duration(seconds: 20),
+    );
+  });
+
+  test('defaults missing Demo-Modus fields for older states', () {
+    final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
+    final state = Reanimationsfall.start(clock: clock).exportState();
+    final encoded = reanimationsfallStateToJson(state)
+      ..remove('demoMode')
+      ..remove('demoOffset');
+
+    final decoded = reanimationsfallStateFromJson(encoded);
+
+    expect(decoded.demoMode, isFalse);
+    expect(decoded.demoOffset, Duration.zero);
+  });
 }

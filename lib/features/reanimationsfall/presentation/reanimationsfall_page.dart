@@ -19,6 +19,7 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/reanimationsfall_s
 import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
+import 'package:hp_cpr/ui/demo_modus_chip.dart';
 import 'package:hp_cpr/ui/dialogs/notiz_erfassen_dialog.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 import 'package:hp_cpr/ui/layout/page_scaffold.dart';
@@ -125,6 +126,13 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
 
   void _restartDruckphase() {
     _mutate(widget.reanimationsfall.restartDruckphase);
+  }
+
+  void _advanceDemoTime() {
+    _mutate(
+      () =>
+          widget.reanimationsfall.advanceDemoTime(const Duration(seconds: 30)),
+    );
   }
 
   Future<void> _recordNotiz() async {
@@ -249,6 +257,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
       content: (context, layout) {
         final reanimationsdauerPanel = _ReanimationsdauerPanel(
           snapshot: snapshot,
+          layout: layout,
         );
         final timer = _PhaseTimerPanel(snapshot: snapshot, layout: layout);
 
@@ -307,6 +316,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
               onResumeResuscitation: _resumeResuscitation,
               onEndCase: _endReanimationsfall,
               onOpenActions: _openActions,
+              onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
             )
           : PhaseActionBar(
               snapshot: snapshot,
@@ -315,6 +325,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
               onRecordRhythmusanalyse: _recordRhythmusanalyse,
               onSkipRhythmusanalyse: _skipRhythmusanalyse,
               onOpenActions: _openActions,
+              onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
             ),
     );
   }
@@ -389,9 +400,10 @@ class _ReanimationsfallHeader extends StatelessWidget {
 }
 
 class _ReanimationsdauerPanel extends StatelessWidget {
-  const _ReanimationsdauerPanel({required this.snapshot});
+  const _ReanimationsdauerPanel({required this.snapshot, required this.layout});
 
   final ReanimationsfallSnapshot snapshot;
+  final PageLayout layout;
 
   @override
   Widget build(BuildContext context) {
@@ -424,6 +436,10 @@ class _ReanimationsdauerPanel extends StatelessWidget {
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
+            if (snapshot.demoMode) ...[
+              const SizedBox(height: PageLayout.space4),
+              DemoModusChip(compact: layout.isCompact),
+            ],
           ],
         ),
       ),
@@ -510,12 +526,14 @@ class _RoscActionBar extends StatelessWidget {
     required this.onResumeResuscitation,
     required this.onEndCase,
     required this.onOpenActions,
+    this.onAdvanceDemoTime,
   });
 
   final PageLayout layout;
   final VoidCallback onResumeResuscitation;
   final VoidCallback onEndCase;
   final VoidCallback onOpenActions;
+  final VoidCallback? onAdvanceDemoTime;
 
   @override
   Widget build(BuildContext context) {
@@ -533,26 +551,17 @@ class _RoscActionBar extends StatelessWidget {
       onPressed: onEndCase,
       emphasis: PhaseActionEmphasis.outlined,
     );
-    final actions = ActionsButton(layout: layout, onPressed: onOpenActions);
+    final advanceDemoTime = onAdvanceDemoTime;
 
-    if (layout.isCompact) {
-      return Row(
-        children: [
-          Expanded(child: resume),
-          SizedBox(width: layout.compactActionGap),
-          Expanded(child: end),
-          SizedBox(width: layout.compactActionGap),
-          actions,
-        ],
-      );
-    }
-
-    return Wrap(
-      alignment: WrapAlignment.end,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      spacing: layout.actionWrapSpacing,
-      runSpacing: layout.actionWrapRunSpacing,
-      children: [end, resume, actions],
+    return PhaseActionRow(
+      layout: layout,
+      buttons: [
+        resume,
+        end,
+        if (advanceDemoTime != null)
+          DemoAdvanceButton(layout: layout, onPressed: advanceDemoTime),
+      ],
+      actionsButton: ActionsButton(layout: layout, onPressed: onOpenActions),
     );
   }
 }

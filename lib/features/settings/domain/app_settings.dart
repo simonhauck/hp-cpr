@@ -4,25 +4,28 @@ import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 
 /// App-wide settings.
 ///
-/// A Reanimationsfall snapshots the Leitlinienprofil when it starts, so
-/// changing the setting later never rewrites an active or completed
+/// A Reanimationsfall snapshots the Leitlinienprofil and Demo-Modus when it
+/// starts, so changing a setting later never rewrites an active or completed
 /// Reanimationsfall.
 class AppSettings extends ChangeNotifier {
   AppSettings({
     Leitlinienprofil leitlinienprofil = Leitlinienprofil.erc2025,
     bool vibrationEnabled = true,
     bool soundEnabled = false,
-  }) : this._(leitlinienprofil, vibrationEnabled, soundEnabled);
+    bool demoMode = false,
+  }) : this._(leitlinienprofil, vibrationEnabled, soundEnabled, demoMode);
 
   AppSettings._(
     this._leitlinienprofil,
     this._vibrationEnabled,
     this._soundEnabled,
+    this._demoMode,
   );
 
   Leitlinienprofil _leitlinienprofil;
   bool _vibrationEnabled;
   bool _soundEnabled;
+  bool _demoMode;
 
   Leitlinienprofil get leitlinienprofil => _leitlinienprofil;
 
@@ -45,6 +48,15 @@ class AppSettings extends ChangeNotifier {
   set soundEnabled(bool value) {
     if (_soundEnabled == value) return;
     _soundEnabled = value;
+    notifyListeners();
+  }
+
+  /// Whether new Reanimationsfälle start in Demo-Modus.
+  bool get demoMode => _demoMode;
+
+  set demoMode(bool value) {
+    if (_demoMode == value) return;
+    _demoMode = value;
     notifyListeners();
   }
 }

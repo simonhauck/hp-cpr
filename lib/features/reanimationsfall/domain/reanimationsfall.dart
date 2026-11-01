@@ -85,6 +85,7 @@ class Reanimationsfall {
     this.leitlinienprofil = Leitlinienprofil.erc2025,
     this.vibrationEnabled = true,
     this.soundEnabled = false,
+    this.demoMode = false,
     Duration backdate = Duration.zero,
   }) : _clock = clock,
        _monotonicStartOffset = clock.monotonicNow() - backdate,
@@ -120,11 +121,13 @@ class Reanimationsfall {
        leitlinienprofil = state.leitlinienprofil,
        vibrationEnabled = state.vibrationEnabled,
        soundEnabled = state.soundEnabled,
+       demoMode = state.demoMode,
        startzeit = state.startzeit,
        startzeitUtc = state.startzeitUtc,
        utcOffsetMinutes = state.utcOffsetMinutes {
     _zustand = state.zustand;
     _phase = state.phase;
+    _demoOffset = state.demoOffset;
     _compressionCycleStartOffset =
         _monotonicStartOffset + state.compressionCycleStartOffset;
     _compressionRemainingAtPause = state.compressionRemainingAtPause;
@@ -153,6 +156,7 @@ class Reanimationsfall {
 
   final AppClock _clock;
   Duration _monotonicAdjustment = Duration.zero;
+  Duration _demoOffset = Duration.zero;
 
   final Duration _monotonicStartOffset;
 
@@ -167,6 +171,9 @@ class Reanimationsfall {
 
   /// Whether sound was enabled when the Reanimationsfall started.
   final bool soundEnabled;
+
+  /// Whether the Reanimationsfall was started in Demo-Modus.
+  final bool demoMode;
 
   /// The corrected wall-clock time zero of the Reanimationsfall.
   final DateTime startzeit;
@@ -201,20 +208,24 @@ class Reanimationsfall {
   RhythmusanalyseErgebnis? _adrenalinAusloesendesErgebnis;
   bool _ersteAdrenalinGabeFaellig = false;
 
-  /// The monotonic timeline shifted by intervals recovered from the wall clock.
-  Duration _monotonicNow() => _clock.monotonicNow() + _monotonicAdjustment;
+  /// The monotonic timeline shifted by recovered wall-clock intervals and
+  /// Demo-Modus time.
+  Duration _monotonicNow() =>
+      _clock.monotonicNow() + _monotonicAdjustment + _demoOffset;
 
   /// Recovers time that passed while the device was suspended.
   ///
   /// A monotonic clock can stop during device sleep. On resume, a larger
   /// wall-clock delta is trusted to restore the missing interval. The wall
   /// clock never shortens the Reanimationsdauer, so a backwards clock change
-  /// is ignored.
+  /// is ignored. Demo-Modus time is excluded so a simulated advance is not
+  /// mistaken for device sleep.
   void reconcileWithWallClock() {
     final wallElapsed = _clock.now().toUtc().difference(startzeitUtc);
-    final elapsed = _monotonicNow() - _monotonicStartOffset;
-    if (wallElapsed > elapsed) {
-      _monotonicAdjustment += wallElapsed - elapsed;
+    final realElapsed =
+        _clock.monotonicNow() + _monotonicAdjustment - _monotonicStartOffset;
+    if (wallElapsed > realElapsed) {
+      _monotonicAdjustment += wallElapsed - realElapsed;
     }
   }
 
@@ -333,6 +344,22 @@ class Reanimationsfall {
   void _resetCompressionCycle() {
     _compressionCycleStartOffset = _monotonicNow();
     _compressionRemainingAtPause = Duration.zero;
+  }
+
+  /// Advances the simulated case timeline in Demo-Modus.
+  ///
+  /// This is a test aid: it moves every derived timer forward by [amount]
+  /// without recording a clinical event. It works while the case is running
+  /// or interrupted by ROSC, and only for a case started in Demo-Modus.
+  void advanceDemoTime(Duration amount) {
+    if (!demoMode) {
+      throw StateError('the Reanimationsfall is not in Demo-Modus');
+    }
+    _requireOpen();
+    if (amount <= Duration.zero) {
+      throw ArgumentError.value(amount, 'amount', 'must be positive');
+    }
+    _demoOffset += amount;
   }
 
   void _updateAdrenalinGabeFaelligkeit() {
@@ -580,6 +607,7 @@ class Reanimationsfall {
       leitlinienprofil: leitlinienprofil,
       vibrationEnabled: vibrationEnabled,
       soundEnabled: soundEnabled,
+      demoMode: demoMode,
       startzeit: startzeit,
       reanimationsdauer: elapsed,
       cprDauer: cprDauer,
@@ -672,6 +700,8 @@ class Reanimationsfall {
       leitlinienprofil: leitlinienprofil,
       vibrationEnabled: vibrationEnabled,
       soundEnabled: soundEnabled,
+      demoMode: demoMode,
+      demoOffset: _demoOffset,
       zustand: _zustand,
       phase: _phase,
       compressionCycleStartOffset:
@@ -729,6 +759,7 @@ class ReanimationsfallSnapshot {
     required this.leitlinienprofil,
     required this.vibrationEnabled,
     required this.soundEnabled,
+    required this.demoMode,
     required this.startzeit,
     required this.reanimationsdauer,
     required this.cprDauer,
@@ -764,6 +795,10 @@ class ReanimationsfallSnapshot {
   final Leitlinienprofil leitlinienprofil;
   final bool vibrationEnabled;
   final bool soundEnabled;
+
+  /// Whether the Reanimationsfall was started in Demo-Modus.
+  final bool demoMode;
+
   final DateTime startzeit;
 
   /// The time since the Startzeit, including ROSC pauses.
@@ -882,6 +917,8 @@ class ReanimationsfallState {
     required this.leitlinienprofil,
     required this.vibrationEnabled,
     required this.soundEnabled,
+    required this.demoMode,
+    required this.demoOffset,
     required this.zustand,
     required this.phase,
     required this.compressionCycleStartOffset,
@@ -910,6 +947,11 @@ class ReanimationsfallState {
   final Leitlinienprofil leitlinienprofil;
   final bool vibrationEnabled;
   final bool soundEnabled;
+  final bool demoMode;
+
+  /// The accumulated simulated time added by Demo-Modus.
+  final Duration demoOffset;
+
   final ReanimationsfallZustand zustand;
   final Reanimationsphase phase;
   final Duration compressionCycleStartOffset;

@@ -1,4 +1,4 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 /// The layout decisions and shared design tokens for the app.
 ///
@@ -86,7 +86,18 @@ class PageLayout {
   /// The gap between the two main panels in landscape.
   double get panelGap => isCompact ? space12 : space16;
 
-  EdgeInsets get cardPadding => EdgeInsets.all(isCompact ? space10 : space16);
+  /// Whether settings descriptions fit alongside their control.
+  bool get showSettingDescriptions => !isCompact;
+
+  /// The density of the Demo-Modus toggle on the start screen.
+  VisualDensity get demoModeToggleDensity =>
+      isCompact ? VisualDensity.compact : VisualDensity.standard;
+
+  /// The density of the backdate chips on the start screen.
+  VisualDensity get backdateChipDensity =>
+      isCompact ? VisualDensity.compact : VisualDensity.standard;
+
+  EdgeInsets get cardPadding => EdgeInsets.all(isCompact ? space6 : space16);
 
   double get primaryActionHeight => isCompact ? 52 : 60;
 
@@ -98,10 +109,10 @@ class PageLayout {
   double get cardTitleGap => isCompact ? space2 : space4;
 
   /// The gap between a card subtitle and its controls.
-  double get cardLabelGap => isCompact ? space6 : space8;
+  double get cardLabelGap => isCompact ? space2 : space8;
 
   /// The gap between a card's controls and its primary action.
-  double get cardActionGap => isCompact ? space6 : space12;
+  double get cardActionGap => isCompact ? space0 : space12;
 
   /// The gap between the main content and a full-width status strip.
   double get contentGap => isCompact ? space4 : space10;

@@ -79,6 +79,7 @@ class _StartPageState extends State<StartPage> {
       leitlinienprofil: settings.leitlinienprofil,
       vibrationEnabled: settings.vibrationEnabled,
       soundEnabled: settings.soundEnabled,
+      demoMode: settings.demoMode,
       backdate: backdate,
     );
 
@@ -98,6 +99,12 @@ class _StartPageState extends State<StartPage> {
     return PageScaffold(
       maxWidth: PageLayout.maxContentWidth,
       drawer: AppDrawer(routes: widget.routes),
+      footer: !_loading && _activeFall == null
+          ? (context, layout) => _DemoModusToggle(
+              settings: widget.routes.settings,
+              layout: layout,
+            )
+          : null,
       header: (context, layout) => _StartHeader(
         layout: layout,
         settings: widget.routes.settings,
@@ -292,6 +299,43 @@ class _StartHeader extends StatelessWidget {
   }
 }
 
+class _DemoModusToggle extends StatelessWidget {
+  const _DemoModusToggle({required this.settings, required this.layout});
+
+  final AppSettings settings;
+  final PageLayout layout;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return AnimatedBuilder(
+      animation: settings,
+      builder: (context, _) {
+        return Align(
+          alignment: Alignment.center,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: PageLayout.activeCaseMaxWidth,
+            ),
+            child: SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              visualDensity: layout.demoModeToggleDensity,
+              title: Text(l10n.demoModusToggleLabel),
+              subtitle: layout.showSettingDescriptions
+                  ? Text(l10n.demoModusToggleDescription)
+                  : null,
+              value: settings.demoMode,
+              onChanged: (value) => settings.demoMode = value,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _StartNowCard extends StatelessWidget {
   const _StartNowCard({required this.layout, required this.onStart});
 
@@ -394,6 +438,7 @@ class _RunningReanimationsfallCard extends StatelessWidget {
                   vertical: PageLayout.space4,
                 ),
                 tooltip: l10n.backdateChip(backdate.inMinutes),
+                visualDensity: layout.backdateChipDensity,
                 onPressed: () => onStartBackdated(backdate),
               ),
           ],
