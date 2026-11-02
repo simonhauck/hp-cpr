@@ -436,12 +436,6 @@ abstract class AppLocalizations {
   /// **'Entfernt'**
   String get protokollRemoved;
 
-  /// Beschriftung des ursprünglichen Werts im Änderungsverlauf
-  ///
-  /// In de, this message translates to:
-  /// **'Ursprünglich'**
-  String get protokollOriginal;
-
   /// Titel des Dialogs für den korrigierten Zeitpunkt
   ///
   /// In de, this message translates to:

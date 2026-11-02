@@ -196,9 +196,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get protokollRemoved => 'Entfernt';
 
   @override
-  String get protokollOriginal => 'Ursprünglich';
-
-  @override
   String get protokollTimeTitle => 'Zeitpunkt korrigieren';
 
   @override

@@ -1,14 +1,17 @@
+import 'package:hp_cpr/features/reanimationsfall/domain/protokoll_ereignis.dart';
+
 /// The supported Messwerte types.
 enum MesswertTyp { temperatur, blutzucker, blutdruck, herzfrequenz }
 
 /// A timestamped patient observation recorded during a Reanimationsfall.
-sealed class Messwert {
+sealed class Messwert implements ProtokollEreignis {
   const Messwert({required this.id, required this.zeitpunkt, this.notiz});
 
-  /// The stable identity of this event in the Protokoll.
+  @override
   final String id;
 
   /// The elapsed time since the Startzeit when the value was recorded.
+  @override
   final Duration zeitpunkt;
 
   /// The optional note recorded with the value.
@@ -80,17 +83,18 @@ final class HerzfrequenzMesswert extends Messwert {
 }
 
 /// A free-text note recorded during a Reanimationsfall.
-class ReanimationsfallNotiz {
+class ReanimationsfallNotiz implements ProtokollEreignis {
   const ReanimationsfallNotiz({
     required this.id,
     required this.zeitpunkt,
     required this.text,
   });
 
-  /// The stable identity of this event in the Protokoll.
+  @override
   final String id;
 
   /// The elapsed time since the Startzeit when the note was recorded.
+  @override
   final Duration zeitpunkt;
 
   final String text;

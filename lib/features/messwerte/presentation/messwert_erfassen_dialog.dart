@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/features/messwerte/presentation/messwert_format.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/messwert.dart';
-import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_zeitpunkt_fields.dart';
+import 'package:hp_cpr/ui/dialogs/protokoll_zeitpunkt_fields.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 
@@ -53,7 +53,7 @@ final class HerzfrequenzEingabe extends MesswertEingabe {
 }
 
 /// Builds a [Messwert] for an edit correction, keeping the original [id].
-Messwert messwertAusEingabe(String id, MesswertEingabe eingabe) {
+Messwert buildMesswertFromEingabe(String id, MesswertEingabe eingabe) {
   final zeitpunkt = eingabe.zeitpunkt ?? Duration.zero;
   final notiz = eingabe.notiz?.trim();
   final normalisierteNotiz = notiz == null || notiz.isEmpty ? null : notiz;

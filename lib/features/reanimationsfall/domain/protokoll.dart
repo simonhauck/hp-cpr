@@ -3,7 +3,7 @@ import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 
 /// The kind of an entry in a [Protokoll].
 enum ProtokollEintragTyp {
-  fallStart,
+  startzeit,
   schock,
   adrenalin,
   amiodaron,
@@ -14,8 +14,8 @@ enum ProtokollEintragTyp {
   wiederbeginn,
   messwert,
   notiz,
-  fallEnde,
-  fallVerworfen;
+  reanimationsfallEnde,
+  verworfen;
 
   /// Whether the entry changes the running case state and is therefore locked
   /// while the case is open.
@@ -30,7 +30,7 @@ enum ProtokollEintragTyp {
 
   /// Whether the entry belongs to the case lifecycle rather than clinical data.
   bool get istLebenszyklus => switch (this) {
-    fallStart || fallEnde || fallVerworfen => true,
+    startzeit || reanimationsfallEnde || verworfen => true,
     _ => false,
   };
 
@@ -170,7 +170,7 @@ class ProtokollEintrag {
     required this.istKorrigiert,
     required this.istBearbeitbar,
     required this.istWiederherstellbar,
-    required this.order,
+    required this.reihenfolge,
     this.nummer,
   });
 
@@ -185,13 +185,20 @@ class ProtokollEintrag {
   final bool istBearbeitbar;
   final bool istWiederherstellbar;
 
-  /// The stable recording order used as a tie-breaker for equal times.
-  final int order;
+  /// The recording order used as a tie-breaker for equal times.
+  final int reihenfolge;
 
   /// The chronological shock number for a Schock entry, otherwise null.
   final int? nummer;
 
   bool get istLebenszyklus => typ.istLebenszyklus;
+
+  /// Whether the entry is a structural event locked by the running case.
+  bool get istGesperrt =>
+      typ.istStrukturell &&
+      !istBearbeitbar &&
+      !istWiederherstellbar &&
+      !istEntfernt;
 
   ProtokollEintrag withNummer(int? nummer) {
     return ProtokollEintrag(
@@ -205,7 +212,7 @@ class ProtokollEintrag {
       istKorrigiert: istKorrigiert,
       istBearbeitbar: istBearbeitbar,
       istWiederherstellbar: istWiederherstellbar,
-      order: order,
+      reihenfolge: reihenfolge,
       nummer: nummer,
     );
   }

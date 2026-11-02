@@ -5,6 +5,7 @@ import 'package:hp_cpr/features/reanimationsfall/domain/amiodaron.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/ereignisse.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/messwert.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/protokoll.dart';
+import 'package:hp_cpr/features/reanimationsfall/domain/protokoll_ereignis.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/schock.dart';
 
@@ -254,7 +255,8 @@ class Reanimationsfall {
   /// dose on its own; this command is only called when one was actually given.
   void recordAmiodaron() {
     _requireLaufend();
-    if (_amiodaronGaben.length >= 2) {
+    final gaben = _effektiveAmiodaronGaben(_korrekturZustaende());
+    if (gaben.length >= 2) {
       throw StateError('at most two Amiodaron doses are supported');
     }
 
@@ -262,7 +264,7 @@ class Reanimationsfall {
       AmiodaronGabe(
         id: _newEreignisId(),
         zeitpunkt: _monotonicNow() - _monotonicStartOffset,
-        dosisMg: _amiodaronGaben.isEmpty
+        dosisMg: gaben.isEmpty
             ? AmiodaronHinweis.ersteGabe.dosisMg!
             : AmiodaronHinweis.zweiteGabe.dosisMg!,
       ),
@@ -770,9 +772,9 @@ class Reanimationsfall {
         ref.id,
         (e) => e.id,
       ),
-      ProtokollEintragTyp.fallStart ||
-      ProtokollEintragTyp.fallEnde ||
-      ProtokollEintragTyp.fallVerworfen => null,
+      ProtokollEintragTyp.startzeit ||
+      ProtokollEintragTyp.reanimationsfallEnde ||
+      ProtokollEintragTyp.verworfen => null,
     };
   }
 
@@ -977,208 +979,263 @@ class Reanimationsfall {
     return states;
   }
 
+  SchockEreignis _applySchock(
+    SchockEreignis original,
+    ProtokollKorrektur? korrektur,
+  ) {
+    if (korrektur is SchockKorrigiert) {
+      return SchockEreignis(
+        id: original.id,
+        zeitpunkt: korrektur.zeitpunkt,
+        energieJoule: korrektur.energieJoule,
+      );
+    }
+    return original;
+  }
+
+  AdrenalinGabe _applyAdrenalin(
+    AdrenalinGabe original,
+    ProtokollKorrektur? korrektur,
+  ) {
+    if (korrektur is AdrenalinKorrigiert) {
+      return AdrenalinGabe(
+        id: original.id,
+        zeitpunkt: korrektur.zeitpunkt,
+        dosisMg: korrektur.dosisMg,
+      );
+    }
+    return original;
+  }
+
+  AmiodaronGabe _applyAmiodaron(
+    AmiodaronGabe original,
+    ProtokollKorrektur? korrektur,
+  ) {
+    if (korrektur is AmiodaronKorrigiert) {
+      return AmiodaronGabe(
+        id: original.id,
+        zeitpunkt: korrektur.zeitpunkt,
+        dosisMg: korrektur.dosisMg,
+      );
+    }
+    return original;
+  }
+
+  Messwert _applyMesswert(Messwert original, ProtokollKorrektur? korrektur) {
+    if (korrektur is MesswertKorrigiert) return korrektur.ersatz;
+    return original;
+  }
+
+  ReanimationsfallNotiz _applyNotiz(
+    ReanimationsfallNotiz original,
+    ProtokollKorrektur? korrektur,
+  ) {
+    if (korrektur is NotizKorrigiert) {
+      return ReanimationsfallNotiz(
+        id: original.id,
+        zeitpunkt: korrektur.zeitpunkt,
+        text: korrektur.text.trim(),
+      );
+    }
+    return original;
+  }
+
+  RhythmusanalyseEintrag _applyRhythmusanalyse(
+    RhythmusanalyseEintrag original,
+    ProtokollKorrektur? korrektur,
+  ) {
+    return switch (korrektur) {
+      RhythmusanalyseKorrigiert(:final zeitpunkt, :final ergebnis) =>
+        RhythmusanalyseEintrag(
+          id: original.id,
+          zeitpunkt: zeitpunkt,
+          ergebnis: ergebnis,
+        ),
+      ZeitpunktKorrigiert(:final zeitpunkt) => RhythmusanalyseEintrag(
+        id: original.id,
+        zeitpunkt: zeitpunkt,
+        ergebnis: original.ergebnis,
+      ),
+      _ => original,
+    };
+  }
+
+  RhythmusanalyseUeberspringung _applyUeberspringung(
+    RhythmusanalyseUeberspringung original,
+    ProtokollKorrektur? korrektur,
+  ) {
+    if (korrektur is ZeitpunktKorrigiert) {
+      return RhythmusanalyseUeberspringung(
+        id: original.id,
+        zeitpunkt: korrektur.zeitpunkt,
+      );
+    }
+    return original;
+  }
+
+  DruckphaseNeustart _applyDruckphaseNeustart(
+    DruckphaseNeustart original,
+    ProtokollKorrektur? korrektur,
+  ) {
+    if (korrektur is ZeitpunktKorrigiert) {
+      return DruckphaseNeustart(
+        id: original.id,
+        zeitpunkt: korrektur.zeitpunkt,
+      );
+    }
+    return original;
+  }
+
+  RoscEreignis _applyRosc(
+    RoscEreignis original,
+    ProtokollKorrektur? korrektur,
+  ) {
+    if (korrektur is RoscKorrigiert) {
+      return RoscEreignis(
+        id: original.id,
+        zeitpunkt: korrektur.zeitpunkt,
+        rhythmusanalyseId: original.rhythmusanalyseId,
+      );
+    }
+    return original;
+  }
+
+  Reanimationswiederbeginn _applyWiederbeginn(
+    Reanimationswiederbeginn original,
+    ProtokollKorrektur? korrektur,
+  ) {
+    if (korrektur is ZeitpunktKorrigiert) {
+      return Reanimationswiederbeginn(
+        id: original.id,
+        zeitpunkt: korrektur.zeitpunkt,
+      );
+    }
+    return original;
+  }
+
+  List<T> _effektiveListe<T extends ProtokollEreignis>({
+    required ProtokollEintragTyp typ,
+    required List<T> original,
+    required T Function(T, ProtokollKorrektur?) apply,
+    required Map<ProtokollEintragRef, _KorrekturZustand> states,
+  }) {
+    final result = <T>[];
+    for (final item in original) {
+      final state = states[_ref(typ, item.id)];
+      if (state?.entfernt ?? false) continue;
+      result.add(apply(item, state?.letzteKorrektur));
+    }
+    return result;
+  }
+
   List<SchockEreignis> _effektiveSchocks(
     Map<ProtokollEintragRef, _KorrekturZustand> states,
   ) {
-    return [
-      for (final original in _schocks)
-        if (!(states[_ref(ProtokollEintragTyp.schock, original.id)]?.entfernt ??
-            false))
-          switch (states[_ref(ProtokollEintragTyp.schock, original.id)]
-              ?.letzteKorrektur) {
-            SchockKorrigiert(:final zeitpunkt, :final energieJoule) =>
-              SchockEreignis(
-                id: original.id,
-                zeitpunkt: zeitpunkt,
-                energieJoule: energieJoule,
-              ),
-            _ => original,
-          },
-    ];
+    return _effektiveListe(
+      typ: ProtokollEintragTyp.schock,
+      original: _schocks,
+      apply: _applySchock,
+      states: states,
+    );
   }
 
   List<AdrenalinGabe> _effektiveAdrenalinGaben(
     Map<ProtokollEintragRef, _KorrekturZustand> states,
   ) {
-    return [
-      for (final original in _adrenalinGaben)
-        if (!(states[_ref(ProtokollEintragTyp.adrenalin, original.id)]
-                ?.entfernt ??
-            false))
-          switch (states[_ref(ProtokollEintragTyp.adrenalin, original.id)]
-              ?.letzteKorrektur) {
-            AdrenalinKorrigiert(:final zeitpunkt, :final dosisMg) =>
-              AdrenalinGabe(
-                id: original.id,
-                zeitpunkt: zeitpunkt,
-                dosisMg: dosisMg,
-              ),
-            _ => original,
-          },
-    ];
+    return _effektiveListe(
+      typ: ProtokollEintragTyp.adrenalin,
+      original: _adrenalinGaben,
+      apply: _applyAdrenalin,
+      states: states,
+    );
   }
 
   List<AmiodaronGabe> _effektiveAmiodaronGaben(
     Map<ProtokollEintragRef, _KorrekturZustand> states,
   ) {
-    return [
-      for (final original in _amiodaronGaben)
-        if (!(states[_ref(ProtokollEintragTyp.amiodaron, original.id)]
-                ?.entfernt ??
-            false))
-          switch (states[_ref(ProtokollEintragTyp.amiodaron, original.id)]
-              ?.letzteKorrektur) {
-            AmiodaronKorrigiert(:final zeitpunkt, :final dosisMg) =>
-              AmiodaronGabe(
-                id: original.id,
-                zeitpunkt: zeitpunkt,
-                dosisMg: dosisMg,
-              ),
-            _ => original,
-          },
-    ];
+    return _effektiveListe(
+      typ: ProtokollEintragTyp.amiodaron,
+      original: _amiodaronGaben,
+      apply: _applyAmiodaron,
+      states: states,
+    );
   }
 
   List<Messwert> _effektiveMesswerte(
     Map<ProtokollEintragRef, _KorrekturZustand> states,
   ) {
-    return [
-      for (final original in _messwerte)
-        if (!(states[_ref(ProtokollEintragTyp.messwert, original.id)]
-                ?.entfernt ??
-            false))
-          switch (states[_ref(ProtokollEintragTyp.messwert, original.id)]
-              ?.letzteKorrektur) {
-            MesswertKorrigiert(:final ersatz) => ersatz,
-            _ => original,
-          },
-    ];
+    return _effektiveListe(
+      typ: ProtokollEintragTyp.messwert,
+      original: _messwerte,
+      apply: _applyMesswert,
+      states: states,
+    );
   }
 
   List<ReanimationsfallNotiz> _effektiveNotizen(
     Map<ProtokollEintragRef, _KorrekturZustand> states,
   ) {
-    return [
-      for (final original in _notizen)
-        if (!(states[_ref(ProtokollEintragTyp.notiz, original.id)]?.entfernt ??
-            false))
-          switch (states[_ref(ProtokollEintragTyp.notiz, original.id)]
-              ?.letzteKorrektur) {
-            NotizKorrigiert(:final zeitpunkt, :final text) =>
-              ReanimationsfallNotiz(
-                id: original.id,
-                zeitpunkt: zeitpunkt,
-                text: text.trim(),
-              ),
-            _ => original,
-          },
-    ];
+    return _effektiveListe(
+      typ: ProtokollEintragTyp.notiz,
+      original: _notizen,
+      apply: _applyNotiz,
+      states: states,
+    );
   }
 
   List<RhythmusanalyseEintrag> _effektiveRhythmusanalysen(
     Map<ProtokollEintragRef, _KorrekturZustand> states,
   ) {
-    return [
-      for (final original in _rhythmusanalyseEintraege)
-        if (!(states[_ref(ProtokollEintragTyp.rhythmusanalyse, original.id)]
-                ?.entfernt ??
-            false))
-          switch (states[_ref(ProtokollEintragTyp.rhythmusanalyse, original.id)]
-              ?.letzteKorrektur) {
-            RhythmusanalyseKorrigiert(:final zeitpunkt, :final ergebnis) =>
-              RhythmusanalyseEintrag(
-                id: original.id,
-                zeitpunkt: zeitpunkt,
-                ergebnis: ergebnis,
-              ),
-            ZeitpunktKorrigiert(:final zeitpunkt) => RhythmusanalyseEintrag(
-              id: original.id,
-              zeitpunkt: zeitpunkt,
-              ergebnis: original.ergebnis,
-            ),
-            _ => original,
-          },
-    ];
+    return _effektiveListe(
+      typ: ProtokollEintragTyp.rhythmusanalyse,
+      original: _rhythmusanalyseEintraege,
+      apply: _applyRhythmusanalyse,
+      states: states,
+    );
   }
 
   List<RhythmusanalyseUeberspringung> _effektiveUeberspringungen(
     Map<ProtokollEintragRef, _KorrekturZustand> states,
   ) {
-    return [
-      for (final original in _uebersprungeneRhythmusanalysen)
-        if (!(states[_ref(ProtokollEintragTyp.ueberspringung, original.id)]
-                ?.entfernt ??
-            false))
-          switch (states[_ref(ProtokollEintragTyp.ueberspringung, original.id)]
-              ?.letzteKorrektur) {
-            ZeitpunktKorrigiert(:final zeitpunkt) =>
-              RhythmusanalyseUeberspringung(
-                id: original.id,
-                zeitpunkt: zeitpunkt,
-              ),
-            _ => original,
-          },
-    ];
+    return _effektiveListe(
+      typ: ProtokollEintragTyp.ueberspringung,
+      original: _uebersprungeneRhythmusanalysen,
+      apply: _applyUeberspringung,
+      states: states,
+    );
   }
 
   List<DruckphaseNeustart> _effektiveDruckphaseNeustarts(
     Map<ProtokollEintragRef, _KorrekturZustand> states,
   ) {
-    return [
-      for (final original in _druckphaseNeustarts)
-        if (!(states[_ref(ProtokollEintragTyp.druckphaseNeustart, original.id)]
-                ?.entfernt ??
-            false))
-          switch (states[_ref(
-                ProtokollEintragTyp.druckphaseNeustart,
-                original.id,
-              )]
-              ?.letzteKorrektur) {
-            ZeitpunktKorrigiert(:final zeitpunkt) => DruckphaseNeustart(
-              id: original.id,
-              zeitpunkt: zeitpunkt,
-            ),
-            _ => original,
-          },
-    ];
+    return _effektiveListe(
+      typ: ProtokollEintragTyp.druckphaseNeustart,
+      original: _druckphaseNeustarts,
+      apply: _applyDruckphaseNeustart,
+      states: states,
+    );
   }
 
   List<RoscEreignis> _effektiveRosc(
     Map<ProtokollEintragRef, _KorrekturZustand> states,
   ) {
-    return [
-      for (final original in _roscEreignisse)
-        if (!(states[_ref(ProtokollEintragTyp.rosc, original.id)]?.entfernt ??
-            false))
-          switch (states[_ref(ProtokollEintragTyp.rosc, original.id)]
-              ?.letzteKorrektur) {
-            RoscKorrigiert(:final zeitpunkt) => RoscEreignis(
-              id: original.id,
-              zeitpunkt: zeitpunkt,
-              rhythmusanalyseId: original.rhythmusanalyseId,
-            ),
-            _ => original,
-          },
-    ];
+    return _effektiveListe(
+      typ: ProtokollEintragTyp.rosc,
+      original: _roscEreignisse,
+      apply: _applyRosc,
+      states: states,
+    );
   }
 
   List<Reanimationswiederbeginn> _effektiveWiederbeginn(
     Map<ProtokollEintragRef, _KorrekturZustand> states,
   ) {
-    return [
-      for (final original in _wiederbeginnEreignisse)
-        if (!(states[_ref(ProtokollEintragTyp.wiederbeginn, original.id)]
-                ?.entfernt ??
-            false))
-          switch (states[_ref(ProtokollEintragTyp.wiederbeginn, original.id)]
-              ?.letzteKorrektur) {
-            ZeitpunktKorrigiert(:final zeitpunkt) => Reanimationswiederbeginn(
-              id: original.id,
-              zeitpunkt: zeitpunkt,
-            ),
-            _ => original,
-          },
-    ];
+    return _effektiveListe(
+      typ: ProtokollEintragTyp.wiederbeginn,
+      original: _wiederbeginnEreignisse,
+      apply: _applyWiederbeginn,
+      states: states,
+    );
   }
 
   ProtokollEintragRef _ref(ProtokollEintragTyp typ, String id) =>
@@ -1187,8 +1244,10 @@ class Reanimationsfall {
   ReanimationsfallSnapshot snapshot() {
     final states = _korrekturZustaende();
     final schocks = _effektiveSchocks(states);
-    final adrenalinGaben = _effektiveAdrenalinGaben(states);
-    final amiodaronGaben = _effektiveAmiodaronGaben(states);
+    final adrenalinGaben = _effektiveAdrenalinGaben(states)
+      ..sort((a, b) => a.zeitpunkt.compareTo(b.zeitpunkt));
+    final amiodaronGaben = _effektiveAmiodaronGaben(states)
+      ..sort((a, b) => a.zeitpunkt.compareTo(b.zeitpunkt));
     final messwerte = _effektiveMesswerte(states);
     final notizen = _effektiveNotizen(states);
     final rhythmusanalysen = _effektiveRhythmusanalysen(states);
@@ -1320,16 +1379,9 @@ class Reanimationsfall {
           start = null;
         }
       } else {
-        if (start != null) {
-          abschnitte.add(
-            Reanimationsabschnitt(
-              index: index++,
-              start: start,
-              ende: boundary.zeitpunkt,
-            ),
-          );
-        }
-        start = boundary.zeitpunkt;
+        // A Reanimationswiederbeginn starts a new segment only after ROSC.
+        // Without a preceding ROSC, the CPR period stays continuous.
+        start ??= boundary.zeitpunkt;
       }
     }
 
@@ -1355,16 +1407,14 @@ class Reanimationsfall {
     Map<ProtokollEintragRef, _KorrekturZustand> states,
   ) {
     final eintraege = <ProtokollEintrag>[];
-    var order = 0;
+    var legacyOrder = 0;
 
-    ProtokollEintrag build<T extends Object>({
+    ProtokollEintrag build<T extends ProtokollEreignis>({
       required ProtokollEintragTyp typ,
       required T original,
-      required String id,
-      required Duration Function(T) zeitpunktOf,
       required T Function(T, ProtokollKorrektur?) apply,
     }) {
-      final ref = _ref(typ, id);
+      final ref = _ref(typ, original.id);
       final state = states[ref];
       final daten = apply(original, state?.letzteKorrektur);
       final istEntfernt = state?.entfernt ?? false;
@@ -1373,25 +1423,25 @@ class Reanimationsfall {
       return ProtokollEintrag(
         ref: ref,
         typ: typ,
-        zeitpunkt: zeitpunktOf(daten),
-        originalZeitpunkt: zeitpunktOf(original),
+        zeitpunkt: daten.zeitpunkt,
+        originalZeitpunkt: original.zeitpunkt,
         daten: daten,
         originalDaten: original,
         istEntfernt: istEntfernt,
         istKorrigiert: istKorrigiert,
         istBearbeitbar: !istEntfernt && canEdit,
         istWiederherstellbar: istEntfernt && canEdit,
-        order: order++,
+        reihenfolge: _ereignisReihenfolge(original.id, legacyOrder++),
       );
     }
 
     eintraege.add(
       ProtokollEintrag(
         ref: const ProtokollEintragRef(
-          typ: ProtokollEintragTyp.fallStart,
-          id: 'fall-start',
+          typ: ProtokollEintragTyp.startzeit,
+          id: 'startzeit',
         ),
-        typ: ProtokollEintragTyp.fallStart,
+        typ: ProtokollEintragTyp.startzeit,
         zeitpunkt: Duration.zero,
         originalZeitpunkt: Duration.zero,
         daten: startzeit,
@@ -1400,7 +1450,7 @@ class Reanimationsfall {
         istKorrigiert: false,
         istBearbeitbar: false,
         istWiederherstellbar: false,
-        order: order++,
+        reihenfolge: -1,
       ),
     );
 
@@ -1409,18 +1459,7 @@ class Reanimationsfall {
         build(
           typ: ProtokollEintragTyp.schock,
           original: original,
-          id: original.id,
-          zeitpunktOf: (e) => e.zeitpunkt,
-          apply: (original, korrektur) {
-            if (korrektur is SchockKorrigiert) {
-              return SchockEreignis(
-                id: original.id,
-                zeitpunkt: korrektur.zeitpunkt,
-                energieJoule: korrektur.energieJoule,
-              );
-            }
-            return original;
-          },
+          apply: _applySchock,
         ),
       );
     }
@@ -1430,18 +1469,7 @@ class Reanimationsfall {
         build(
           typ: ProtokollEintragTyp.adrenalin,
           original: original,
-          id: original.id,
-          zeitpunktOf: (e) => e.zeitpunkt,
-          apply: (original, korrektur) {
-            if (korrektur is AdrenalinKorrigiert) {
-              return AdrenalinGabe(
-                id: original.id,
-                zeitpunkt: korrektur.zeitpunkt,
-                dosisMg: korrektur.dosisMg,
-              );
-            }
-            return original;
-          },
+          apply: _applyAdrenalin,
         ),
       );
     }
@@ -1451,18 +1479,7 @@ class Reanimationsfall {
         build(
           typ: ProtokollEintragTyp.amiodaron,
           original: original,
-          id: original.id,
-          zeitpunktOf: (e) => e.zeitpunkt,
-          apply: (original, korrektur) {
-            if (korrektur is AmiodaronKorrigiert) {
-              return AmiodaronGabe(
-                id: original.id,
-                zeitpunkt: korrektur.zeitpunkt,
-                dosisMg: korrektur.dosisMg,
-              );
-            }
-            return original;
-          },
+          apply: _applyAmiodaron,
         ),
       );
     }
@@ -1477,24 +1494,7 @@ class Reanimationsfall {
         build(
           typ: ProtokollEintragTyp.rhythmusanalyse,
           original: original,
-          id: original.id,
-          zeitpunktOf: (e) => e.zeitpunkt,
-          apply: (original, korrektur) {
-            return switch (korrektur) {
-              RhythmusanalyseKorrigiert(:final zeitpunkt, :final ergebnis) =>
-                RhythmusanalyseEintrag(
-                  id: original.id,
-                  zeitpunkt: zeitpunkt,
-                  ergebnis: ergebnis,
-                ),
-              ZeitpunktKorrigiert(:final zeitpunkt) => RhythmusanalyseEintrag(
-                id: original.id,
-                zeitpunkt: zeitpunkt,
-                ergebnis: original.ergebnis,
-              ),
-              _ => original,
-            };
-          },
+          apply: _applyRhythmusanalyse,
         ),
       );
     }
@@ -1504,17 +1504,7 @@ class Reanimationsfall {
         build(
           typ: ProtokollEintragTyp.ueberspringung,
           original: original,
-          id: original.id,
-          zeitpunktOf: (e) => e.zeitpunkt,
-          apply: (original, korrektur) {
-            if (korrektur is ZeitpunktKorrigiert) {
-              return RhythmusanalyseUeberspringung(
-                id: original.id,
-                zeitpunkt: korrektur.zeitpunkt,
-              );
-            }
-            return original;
-          },
+          apply: _applyUeberspringung,
         ),
       );
     }
@@ -1524,17 +1514,7 @@ class Reanimationsfall {
         build(
           typ: ProtokollEintragTyp.druckphaseNeustart,
           original: original,
-          id: original.id,
-          zeitpunktOf: (e) => e.zeitpunkt,
-          apply: (original, korrektur) {
-            if (korrektur is ZeitpunktKorrigiert) {
-              return DruckphaseNeustart(
-                id: original.id,
-                zeitpunkt: korrektur.zeitpunkt,
-              );
-            }
-            return original;
-          },
+          apply: _applyDruckphaseNeustart,
         ),
       );
     }
@@ -1544,18 +1524,7 @@ class Reanimationsfall {
         build(
           typ: ProtokollEintragTyp.rosc,
           original: original,
-          id: original.id,
-          zeitpunktOf: (e) => e.zeitpunkt,
-          apply: (original, korrektur) {
-            if (korrektur is RoscKorrigiert) {
-              return RoscEreignis(
-                id: original.id,
-                zeitpunkt: korrektur.zeitpunkt,
-                rhythmusanalyseId: original.rhythmusanalyseId,
-              );
-            }
-            return original;
-          },
+          apply: _applyRosc,
         ),
       );
     }
@@ -1565,17 +1534,7 @@ class Reanimationsfall {
         build(
           typ: ProtokollEintragTyp.wiederbeginn,
           original: original,
-          id: original.id,
-          zeitpunktOf: (e) => e.zeitpunkt,
-          apply: (original, korrektur) {
-            if (korrektur is ZeitpunktKorrigiert) {
-              return Reanimationswiederbeginn(
-                id: original.id,
-                zeitpunkt: korrektur.zeitpunkt,
-              );
-            }
-            return original;
-          },
+          apply: _applyWiederbeginn,
         ),
       );
     }
@@ -1585,12 +1544,7 @@ class Reanimationsfall {
         build(
           typ: ProtokollEintragTyp.messwert,
           original: original,
-          id: original.id,
-          zeitpunktOf: (e) => e.zeitpunkt,
-          apply: (original, korrektur) => switch (korrektur) {
-            MesswertKorrigiert(:final ersatz) => ersatz,
-            _ => original,
-          },
+          apply: _applyMesswert,
         ),
       );
     }
@@ -1600,18 +1554,7 @@ class Reanimationsfall {
         build(
           typ: ProtokollEintragTyp.notiz,
           original: original,
-          id: original.id,
-          zeitpunktOf: (e) => e.zeitpunkt,
-          apply: (original, korrektur) {
-            if (korrektur is NotizKorrigiert) {
-              return ReanimationsfallNotiz(
-                id: original.id,
-                zeitpunkt: korrektur.zeitpunkt,
-                text: korrektur.text.trim(),
-              );
-            }
-            return original;
-          },
+          apply: _applyNotiz,
         ),
       );
     }
@@ -1620,10 +1563,10 @@ class Reanimationsfall {
       eintraege.add(
         ProtokollEintrag(
           ref: const ProtokollEintragRef(
-            typ: ProtokollEintragTyp.fallEnde,
-            id: 'fall-ende',
+            typ: ProtokollEintragTyp.reanimationsfallEnde,
+            id: 'reanimationsfall-ende',
           ),
-          typ: ProtokollEintragTyp.fallEnde,
+          typ: ProtokollEintragTyp.reanimationsfallEnde,
           zeitpunkt: _ende!.zeitpunkt,
           originalZeitpunkt: _ende!.zeitpunkt,
           daten: _ende!,
@@ -1632,7 +1575,7 @@ class Reanimationsfall {
           istKorrigiert: false,
           istBearbeitbar: false,
           istWiederherstellbar: false,
-          order: order++,
+          reihenfolge: 1 << 30,
         ),
       );
     }
@@ -1640,10 +1583,10 @@ class Reanimationsfall {
       eintraege.add(
         ProtokollEintrag(
           ref: const ProtokollEintragRef(
-            typ: ProtokollEintragTyp.fallVerworfen,
-            id: 'fall-verworfen',
+            typ: ProtokollEintragTyp.verworfen,
+            id: 'verworfen',
           ),
-          typ: ProtokollEintragTyp.fallVerworfen,
+          typ: ProtokollEintragTyp.verworfen,
           zeitpunkt: _verworfenAm!,
           originalZeitpunkt: _verworfenAm!,
           daten: _verworfenAm!,
@@ -1652,7 +1595,7 @@ class Reanimationsfall {
           istKorrigiert: false,
           istBearbeitbar: false,
           istWiederherstellbar: false,
-          order: order++,
+          reihenfolge: 1 << 30,
         ),
       );
     }
@@ -1685,10 +1628,18 @@ class Reanimationsfall {
     );
   }
 
+  int _ereignisReihenfolge(String id, int fallback) {
+    if (id.startsWith('e')) {
+      final parsed = int.tryParse(id.substring(1));
+      if (parsed != null) return parsed;
+    }
+    return (1 << 30) + fallback;
+  }
+
   int _compareEintraege(ProtokollEintrag a, ProtokollEintrag b) {
     final byTime = a.zeitpunkt.compareTo(b.zeitpunkt);
     if (byTime != 0) return byTime;
-    return a.order.compareTo(b.order);
+    return a.reihenfolge.compareTo(b.reihenfolge);
   }
 
   bool _kannKorrigieren(ProtokollEintragTyp typ) {

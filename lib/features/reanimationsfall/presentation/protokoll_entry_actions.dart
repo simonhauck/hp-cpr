@@ -12,7 +12,7 @@ enum _EintragAktion { bearbeiten, entfernen, wiederherstellen }
 ///
 /// [onApply] returns whether the domain accepted the correction. The helper
 /// shows the success snackbar only when it did.
-Future<bool> showProtokollEntryActions(
+Future<bool> showProtokollEintragActions(
   BuildContext context, {
   required ProtokollEintrag eintrag,
   required DateTime startzeit,

@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/adrenalin.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/amiodaron.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/messwert.dart';
@@ -95,6 +96,33 @@ void main() {
     expect(audit.istWiederherstellbar, isTrue);
   });
 
+  test('recomputes the AHA first Adrenalin hint after a shock removal', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(
+      clock: clock,
+      leitlinienprofil: Leitlinienprofil.aha2025,
+    );
+    for (var i = 0; i < 2; i++) {
+      clock.advance(const Duration(seconds: 10));
+      reanimationsfall.recordSchock();
+    }
+    reanimationsfall.enterAnalysephase();
+    reanimationsfall.completeRhythmusanalyse(
+      RhythmusanalyseErgebnis.kammerflimmern,
+    );
+    expect(reanimationsfall.snapshot().istErsteAdrenalinGabeFaellig, isTrue);
+
+    reanimationsfall.applyProtokollKorrektur(
+      ProtokollEintragEntfernt(
+        ziel: allOf(
+          reanimationsfall.snapshot(),
+          ProtokollEintragTyp.schock,
+        ).first.ref,
+      ),
+    );
+    expect(reanimationsfall.snapshot().istErsteAdrenalinGabeFaellig, isFalse);
+  });
+
   test('corrects a live Schock time and energy and clears the energy', () {
     final clock = FakeClock();
     final reanimationsfall = Reanimationsfall.start(clock: clock);
@@ -183,6 +211,40 @@ void main() {
     snapshot = reanimationsfall.snapshot();
     expect(snapshot.letzteAdrenalinGabe, isNull);
     expect(snapshot.istErsteAdrenalinGabeFaellig, isTrue);
+
+    reanimationsfall.applyProtokollKorrektur(
+      ProtokollEintragWiederhergestellt(ziel: gabe.ref),
+    );
+    snapshot = reanimationsfall.snapshot();
+    expect(snapshot.letzteAdrenalinGabe!.dosisMg, 2);
+    expect(snapshot.adrenalinSeitLetzterGabe, const Duration(minutes: 1));
+  });
+
+  test('uses the corrected latest Adrenalin dose for the Zeitfenster', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+    clock.advance(const Duration(minutes: 1));
+    reanimationsfall.recordAdrenalin();
+    final first = single(
+      reanimationsfall.snapshot(),
+      ProtokollEintragTyp.adrenalin,
+    );
+    clock.advance(const Duration(minutes: 1));
+    reanimationsfall.recordAdrenalin();
+    clock.advance(const Duration(minutes: 2));
+
+    reanimationsfall.applyProtokollKorrektur(
+      AdrenalinKorrigiert(
+        ziel: first.ref,
+        zeitpunkt: const Duration(minutes: 4),
+        dosisMg: 2,
+      ),
+    );
+
+    final snapshot = reanimationsfall.snapshot();
+    expect(snapshot.letzteAdrenalinGabe!.id, first.ref.id);
+    expect(snapshot.letzteAdrenalinGabe!.dosisMg, 2);
+    expect(snapshot.adrenalinSeitLetzterGabe, Duration.zero);
   });
 
   test('corrects and removes a live Amiodaron dose', () {
@@ -229,6 +291,61 @@ void main() {
       ),
       throwsStateError,
     );
+
+    reanimationsfall.applyProtokollKorrektur(
+      ProtokollEintragWiederhergestellt(ziel: gabe.ref),
+    );
+    expect(reanimationsfall.snapshot().letzteAmiodaronGabe!.dosisMg, 150);
+  });
+
+  test('records Amiodaron doses from the effective dose count', () {
+    final clock = FakeClock();
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+    for (var i = 0; i < 3; i++) {
+      clock.advance(const Duration(seconds: 10));
+      reanimationsfall.recordSchock();
+    }
+    clock.advance(const Duration(seconds: 10));
+    reanimationsfall.recordAmiodaron();
+    final first = single(
+      reanimationsfall.snapshot(),
+      ProtokollEintragTyp.amiodaron,
+    );
+    reanimationsfall.applyProtokollKorrektur(
+      ProtokollEintragEntfernt(ziel: first.ref),
+    );
+
+    clock.advance(const Duration(seconds: 10));
+    reanimationsfall.recordAmiodaron();
+    expect(reanimationsfall.snapshot().amiodaronGaben.single.dosisMg, 300);
+
+    clock.advance(const Duration(seconds: 10));
+    reanimationsfall.recordAmiodaron();
+    expect(reanimationsfall.snapshot().amiodaronGaben.map((e) => e.dosisMg), [
+      300,
+      150,
+    ]);
+
+    reanimationsfall.applyProtokollKorrektur(
+      ProtokollEintragEntfernt(
+        ziel: reanimationsfall
+            .snapshot()
+            .protokoll
+            .eintraege
+            .firstWhere(
+              (e) =>
+                  e.typ == ProtokollEintragTyp.amiodaron &&
+                  (e.daten as AmiodaronGabe).dosisMg == 300,
+            )
+            .ref,
+      ),
+    );
+    clock.advance(const Duration(seconds: 10));
+    reanimationsfall.recordAmiodaron();
+    expect(reanimationsfall.snapshot().amiodaronGaben.map((e) => e.dosisMg), [
+      150,
+      150,
+    ]);
   });
 
   test('corrects, removes, and restores a live Messwert and Notiz', () {
@@ -351,7 +468,7 @@ void main() {
     snapshot = reanimationsfall.snapshot();
     expect(snapshot.roscEreignisse, isEmpty);
     expect(snapshot.cprDauer, const Duration(minutes: 5));
-    expect(snapshot.abschnitte, hasLength(2));
+    expect(snapshot.abschnitte, hasLength(1));
     expect(
       snapshot.rhythmusanalyseEintraege.where(
         (e) => e.ergebnis == RhythmusanalyseErgebnis.rosc,
@@ -388,6 +505,30 @@ void main() {
       ),
       throwsArgumentError,
     );
+    expect(
+      () => reanimationsfall.applyProtokollKorrektur(
+        RoscKorrigiert(
+          ziel: rosc.ref,
+          zeitpunkt: const Duration(minutes: 4, seconds: 30),
+        ),
+      ),
+      throwsArgumentError,
+    );
+
+    final wiederbeginn = single(snapshot, ProtokollEintragTyp.wiederbeginn);
+    reanimationsfall.applyProtokollKorrektur(
+      ProtokollEintragEntfernt(ziel: wiederbeginn.ref),
+    );
+    snapshot = reanimationsfall.snapshot();
+    expect(snapshot.cprDauer, const Duration(minutes: 2, seconds: 30));
+    expect(snapshot.abschnitte, hasLength(1));
+
+    reanimationsfall.applyProtokollKorrektur(
+      ProtokollEintragWiederhergestellt(ziel: wiederbeginn.ref),
+    );
+    snapshot = reanimationsfall.snapshot();
+    expect(snapshot.cprDauer, const Duration(minutes: 3, seconds: 30));
+    expect(snapshot.abschnitte, hasLength(2));
   });
 
   test('corrects a completed Rhythmusanalyse result but not to ROSC', () {
@@ -425,6 +566,18 @@ void main() {
       ),
       throwsArgumentError,
     );
+
+    reanimationsfall.applyProtokollKorrektur(
+      ProtokollEintragEntfernt(ziel: rhythmusanalyse.ref),
+    );
+    expect(reanimationsfall.snapshot().rhythmusanalyseEintraege, isEmpty);
+    reanimationsfall.applyProtokollKorrektur(
+      ProtokollEintragWiederhergestellt(ziel: rhythmusanalyse.ref),
+    );
+    expect(
+      reanimationsfall.snapshot().rhythmusanalyseEintraege.single.ergebnis,
+      RhythmusanalyseErgebnis.pulsloseKammertachykardie,
+    );
   });
 
   test('allows clinical corrections on a Verworfen case', () {
@@ -456,12 +609,23 @@ void main() {
       reanimationsfall.snapshot().druckphaseNeustarts.single.zeitpunkt,
       const Duration(seconds: 20),
     );
+    reanimationsfall.applyProtokollKorrektur(
+      ProtokollEintragEntfernt(ziel: neustart.ref),
+    );
+    expect(reanimationsfall.snapshot().druckphaseNeustarts, isEmpty);
+    reanimationsfall.applyProtokollKorrektur(
+      ProtokollEintragWiederhergestellt(ziel: neustart.ref),
+    );
+    expect(
+      reanimationsfall.snapshot().druckphaseNeustarts.single.zeitpunkt,
+      const Duration(seconds: 20),
+    );
     expect(
       () => reanimationsfall.applyProtokollKorrektur(
         ProtokollEintragEntfernt(
           ziel: const ProtokollEintragRef(
-            typ: ProtokollEintragTyp.fallEnde,
-            id: 'fall-ende',
+            typ: ProtokollEintragTyp.reanimationsfallEnde,
+            id: 'reanimationsfall-ende',
           ),
         ),
       ),

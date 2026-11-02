@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_chip.dart';
@@ -8,7 +6,7 @@ import 'package:hp_cpr/features/messwerte/presentation/messwerte_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/end_reanimationsfall_dialog.dart';
-import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_entry_actions.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_corrections_mixin.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_liste.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
@@ -36,45 +34,13 @@ class ReanimationsfallSummaryPage extends StatefulWidget {
 }
 
 class _ReanimationsfallSummaryPageState
-    extends State<ReanimationsfallSummaryPage> {
-  bool _apply(ProtokollKorrektur korrektur) {
-    try {
-      setState(() {
-        widget.reanimationsfall.applyProtokollKorrektur(korrektur);
-      });
-      unawaited(widget.session.persist(widget.reanimationsfall));
-      return true;
-    } on ArgumentError {
-      _showError();
-      return false;
-    } on StateError {
-      _showError();
-      return false;
-    }
-  }
+    extends State<ReanimationsfallSummaryPage>
+    with ProtokollCorrectionsMixin<ReanimationsfallSummaryPage> {
+  @override
+  Reanimationsfall get protokollFall => widget.reanimationsfall;
 
-  void _showError() {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppLocalizations.of(context).protokollCorrectionFailed),
-      ),
-    );
-  }
-
-  Future<void> _openEntry(ProtokollEintrag eintrag) async {
-    final snapshot = widget.reanimationsfall.snapshot();
-    await showProtokollEntryActions(
-      context,
-      eintrag: eintrag,
-      startzeit: snapshot.startzeit,
-      maxZeitpunkt:
-          snapshot.ende?.zeitpunkt ??
-          snapshot.verworfenAm ??
-          snapshot.reanimationsdauer,
-      onApply: _apply,
-    );
-  }
+  @override
+  ReanimationsfallSession get protokollSession => widget.session;
 
   void _openMesswerte() {
     Navigator.of(context).push(
@@ -94,6 +60,8 @@ class _ReanimationsfallSummaryPageState
     final snapshot = widget.reanimationsfall.snapshot();
     final ende = snapshot.ende;
     final endZeitpunkt = ende?.zeitpunkt ?? snapshot.verworfenAm;
+    final notizen = [...snapshot.notizen]
+      ..sort((a, b) => a.zeitpunkt.compareTo(b.zeitpunkt));
 
     return Scaffold(
       appBar: AppBar(
@@ -187,7 +155,7 @@ class _ReanimationsfallSummaryPageState
                   protokoll: snapshot.protokoll,
                   startzeit: snapshot.startzeit,
                   isLive: false,
-                  onOpenEntry: _openEntry,
+                  onOpenEintrag: openProtokollEintrag,
                 ),
                 const SizedBox(height: PageLayout.space20),
                 Text(
@@ -234,7 +202,7 @@ class _ReanimationsfallSummaryPageState
                   ),
                 ),
                 const SizedBox(height: PageLayout.space8),
-                if (snapshot.notizen.isEmpty)
+                if (notizen.isEmpty)
                   Text(
                     l10n.summaryNoNotes,
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -245,7 +213,7 @@ class _ReanimationsfallSummaryPageState
                   Card(
                     child: Column(
                       children: [
-                        for (final notiz in snapshot.notizen)
+                        for (final notiz in notizen)
                           ListTile(
                             leading: Text(
                               formatReanimationsdauer(notiz.zeitpunkt),

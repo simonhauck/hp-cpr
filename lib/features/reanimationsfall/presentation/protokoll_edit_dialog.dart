@@ -8,7 +8,7 @@ import 'package:hp_cpr/features/reanimationsfall/domain/messwert.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/protokoll.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/schock.dart';
-import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_zeitpunkt_fields.dart';
+import 'package:hp_cpr/ui/dialogs/protokoll_zeitpunkt_fields.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
@@ -118,7 +118,7 @@ Future<ProtokollKorrektur?> _editMesswert(
 
   return MesswertKorrigiert(
     ziel: eintrag.ref,
-    ersatz: messwertAusEingabe(original.id, eingabe),
+    ersatz: buildMesswertFromEingabe(original.id, eingabe),
   );
 }
 

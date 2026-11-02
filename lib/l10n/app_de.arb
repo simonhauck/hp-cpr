@@ -248,10 +248,6 @@
   "@protokollRemoved": {
     "description": "Status eines entfernten Protokolleintrags"
   },
-  "protokollOriginal": "Ursprünglich",
-  "@protokollOriginal": {
-    "description": "Beschriftung des ursprünglichen Werts im Änderungsverlauf"
-  },
   "protokollTimeTitle": "Zeitpunkt korrigieren",
   "@protokollTimeTitle": {
     "description": "Titel des Dialogs für den korrigierten Zeitpunkt"

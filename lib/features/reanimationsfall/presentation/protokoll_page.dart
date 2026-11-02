@@ -1,10 +1,8 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
-import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_entry_actions.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_corrections_mixin.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_liste.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
@@ -28,45 +26,13 @@ class ProtokollPage extends StatefulWidget {
   State<ProtokollPage> createState() => _ProtokollPageState();
 }
 
-class _ProtokollPageState extends State<ProtokollPage> {
-  bool _apply(ProtokollKorrektur korrektur) {
-    try {
-      setState(() {
-        widget.reanimationsfall.applyProtokollKorrektur(korrektur);
-      });
-      unawaited(widget.session.persist(widget.reanimationsfall));
-      return true;
-    } on ArgumentError {
-      _showError();
-      return false;
-    } on StateError {
-      _showError();
-      return false;
-    }
-  }
+class _ProtokollPageState extends State<ProtokollPage>
+    with ProtokollCorrectionsMixin<ProtokollPage> {
+  @override
+  Reanimationsfall get protokollFall => widget.reanimationsfall;
 
-  void _showError() {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppLocalizations.of(context).protokollCorrectionFailed),
-      ),
-    );
-  }
-
-  Future<void> _openEntry(ProtokollEintrag eintrag) async {
-    final snapshot = widget.reanimationsfall.snapshot();
-    await showProtokollEntryActions(
-      context,
-      eintrag: eintrag,
-      startzeit: snapshot.startzeit,
-      maxZeitpunkt:
-          snapshot.ende?.zeitpunkt ??
-          snapshot.verworfenAm ??
-          snapshot.reanimationsdauer,
-      onApply: _apply,
-    );
-  }
+  @override
+  ReanimationsfallSession get protokollSession => widget.session;
 
   @override
   Widget build(BuildContext context) {
@@ -102,7 +68,7 @@ class _ProtokollPageState extends State<ProtokollPage> {
                   protokoll: snapshot.protokoll,
                   startzeit: snapshot.startzeit,
                   isLive: snapshot.istLaufend || snapshot.istRosc,
-                  onOpenEntry: _openEntry,
+                  onOpenEintrag: openProtokollEintrag,
                 ),
               ],
             ),

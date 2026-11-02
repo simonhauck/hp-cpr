@@ -1,3 +1,7 @@
+import 'package:hp_cpr/ui/format/wall_time_format.dart';
+
+export 'package:hp_cpr/ui/format/wall_time_format.dart';
+
 /// Formats a countdown as `MM:SS`.
 ///
 /// Partial seconds round up so a timer that has just started still reads its
@@ -17,24 +21,11 @@ String formatElapsed(Duration elapsed) {
 String formatReanimationsdauer(Duration duration) {
   if (duration.inHours == 0) return formatElapsed(duration);
 
-  final minutes = _twoDigits(duration.inMinutes.remainder(60));
-  final seconds = _twoDigits(duration.inSeconds.remainder(60));
+  final minutes = twoDigits(duration.inMinutes.remainder(60));
+  final seconds = twoDigits(duration.inSeconds.remainder(60));
   return '${duration.inHours}:$minutes:$seconds';
 }
 
-/// Formats a wall-clock time as `HH:MM:SS`.
-String formatWallTime(DateTime time) {
-  return '${_twoDigits(time.hour)}:${_twoDigits(time.minute)}:'
-      '${_twoDigits(time.second)}';
-}
-
-/// Formats a wall-clock time as `HH:MM`.
-String formatWallTimeMinutes(DateTime time) {
-  return '${_twoDigits(time.hour)}:${_twoDigits(time.minute)}';
-}
-
 String _minutesAndSeconds(int totalSeconds) {
-  return '${_twoDigits(totalSeconds ~/ 60)}:${_twoDigits(totalSeconds % 60)}';
+  return '${twoDigits(totalSeconds ~/ 60)}:${twoDigits(totalSeconds % 60)}';
 }
-
-String _twoDigits(int value) => value.toString().padLeft(2, '0');

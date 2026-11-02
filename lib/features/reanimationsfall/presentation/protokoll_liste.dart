@@ -16,13 +16,13 @@ class ProtokollListe extends StatefulWidget {
     required this.protokoll,
     required this.startzeit,
     required this.isLive,
-    required this.onOpenEntry,
+    required this.onOpenEintrag,
   });
 
   final Protokoll protokoll;
   final DateTime startzeit;
   final bool isLive;
-  final ValueChanged<ProtokollEintrag> onOpenEntry;
+  final ValueChanged<ProtokollEintrag> onOpenEintrag;
 
   @override
   State<ProtokollListe> createState() => _ProtokollListeState();
@@ -82,7 +82,7 @@ class _ProtokollListeState extends State<ProtokollListe> {
                   zeile: zeile,
                   startzeit: widget.startzeit,
                   onTap: zeile.istAktion
-                      ? () => widget.onOpenEntry(zeile.eintrag)
+                      ? () => widget.onOpenEintrag(zeile.eintrag)
                       : null,
                 ),
               ],
@@ -157,7 +157,7 @@ class _ProtokollListeState extends State<ProtokollListe> {
     zeilen.sort((a, b) {
       final byTime = a.zeitpunkt.compareTo(b.zeitpunkt);
       if (byTime != 0) return byTime;
-      final byOrder = a.eintrag.order.compareTo(b.eintrag.order);
+      final byOrder = a.eintrag.reihenfolge.compareTo(b.eintrag.reihenfolge);
       if (byOrder != 0) return byOrder;
       return (a.istOriginal ? 1 : 0).compareTo(b.istOriginal ? 1 : 0);
     });
@@ -209,7 +209,7 @@ class _ProtokollZeile extends StatelessWidget {
     );
     final detail = protokollDatenDetail(zeile.daten);
     final status = zeile.istOriginal
-        ? l10n.protokollOriginal
+        ? l10n.protokollCorrected
         : zeile.istEntfernt
         ? l10n.protokollRemoved
         : zeile.istKorrigiert
@@ -284,12 +284,7 @@ class _ProtokollZeile extends StatelessWidget {
                 size: PageLayout.iconSmall,
                 color: muted,
               )
-            else if (zeile.eintrag.typ.istStrukturell &&
-                !zeile.eintrag.istLebenszyklus &&
-                zeile.eintrag.istBearbeitbar == false &&
-                zeile.eintrag.istWiederherstellbar == false &&
-                !zeile.istOriginal &&
-                !zeile.istEntfernt)
+            else if (zeile.eintrag.istGesperrt && !zeile.istOriginal)
               Tooltip(
                 message: l10n.protokollLockedTooltip,
                 child: Icon(

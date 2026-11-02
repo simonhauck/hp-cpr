@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
+import 'package:hp_cpr/ui/format/wall_time_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 

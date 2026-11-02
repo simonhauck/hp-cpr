@@ -2454,4 +2454,171 @@ void main() {
     expect(find.text('Schock 1'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('opens the Protokoll from the ROSC actions', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Analyse starten'));
+    await tester.pump();
+    await tester.tap(find.text('ROSC'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ROSC bestätigen'));
+    await tester.pumpAndSettle();
+
+    await openActions(tester);
+    await tester.tap(find.text('Protokoll'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reanimationsfall gestartet'), findsOneWidget);
+    expect(find.text('ROSC'), findsOneWidget);
+    expect(
+      find.text(
+        'Im laufenden Fall sind nur Schocks, Medikamente, Messwerte und Notizen korrigierbar.',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'edits, removes, and restores a live Messwert from the Protokoll',
+    (tester) async {
+      await pumpApp(tester);
+      await startNow(tester);
+      clock.advance(const Duration(seconds: 10));
+      await tester.pump(const Duration(milliseconds: 250));
+      await openMesswerte(tester);
+      await openMesswertDialog(tester, 'Temperatur');
+      await tester.enterText(find.byType(TextFormField).at(0), '36,5');
+      await tester.enterText(find.byType(TextFormField).at(1), 'rektal');
+      await saveMesswert(tester);
+
+      await tester.tap(find.byType(BackButton).first);
+      await tester.pumpAndSettle();
+      await openActions(tester);
+      await tester.tap(find.text('Protokoll'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Temperatur: 36,5 °C'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Bearbeiten'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Messwert bearbeiten'), findsOneWidget);
+      final fields = find.byType(TextFormField);
+      await tester.enterText(fields.at(0), '0');
+      await tester.enterText(fields.at(1), '05');
+      await tester.enterText(fields.at(2), '37,2');
+      await tester.enterText(fields.at(3), 'oral');
+      await tester.tap(find.text('Speichern'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Temperatur: 37,2 °C'), findsOneWidget);
+      expect(find.text('oral'), findsOneWidget);
+
+      await tester.tap(find.text('Temperatur: 37,2 °C'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Entfernen'));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 5));
+      expect(find.text('Temperatur: 37,2 °C'), findsNothing);
+
+      await tester.tap(find.text('Änderungsverlauf'));
+      await tester.pumpAndSettle();
+      final entferntRow = find
+          .ancestor(of: find.text('Entfernt'), matching: find.byType(InkWell))
+          .first;
+      await tester.tap(
+        find.descendant(
+          of: entferntRow,
+          matching: find.text('Temperatur: 37,2 °C'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Wiederherstellen'));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 5));
+
+      expect(find.text('Temperatur: 37,2 °C'), findsOneWidget);
+    },
+  );
+
+  testWidgets('refreshes summary Messwerte and Notizen after a correction', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+    clock.advance(const Duration(seconds: 10));
+    await tester.pump(const Duration(milliseconds: 250));
+    await openMesswerte(tester);
+    await openMesswertDialog(tester, 'Temperatur');
+    await tester.enterText(find.byType(TextFormField).at(0), '36,5');
+    await saveMesswert(tester);
+    await tester.tap(find.text('Notiz erfassen'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.enterText(find.byType(TextFormField), 'Patient kalt');
+    await tester.tap(find.text('Speichern'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    await tester.tap(find.byType(BackButton).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Fall beenden'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Übergabe'));
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(find.text('Messwerte öffnen'), 300);
+    expect(find.text('36,5 °C'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Patient kalt'), 300);
+    expect(find.text('Patient kalt'), findsOneWidget);
+
+    await tester.scrollUntilVisible(find.text('Notiz: Patient kalt'), -300);
+    await tester.tap(find.text('Notiz: Patient kalt'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Entfernen'));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 5));
+
+    await tester.scrollUntilVisible(find.text('Keine Notizen'), 300);
+    expect(find.text('Patient kalt'), findsNothing);
+    expect(find.text('Keine Notizen'), findsOneWidget);
+
+    await tester.scrollUntilVisible(find.text('Temperatur: 36,5 °C'), -300);
+    await tester.tap(find.text('Temperatur: 36,5 °C'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Entfernen'));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 5));
+
+    await tester.scrollUntilVisible(find.text('Noch keine Messwerte'), 300);
+    expect(find.text('36,5 °C'), findsNothing);
+    expect(find.text('Noch keine Messwerte'), findsOneWidget);
+  });
+
+  testWidgets('fits the Protokoll into a portrait phone', (tester) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPadding);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(390, 844);
+
+    await pumpApp(tester);
+    await startNow(tester);
+    await recordSchock(tester);
+    await openActions(tester);
+    await tester.tap(find.text('Protokoll'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Schock 1'), findsOneWidget);
+    expect(
+      find.text(
+        'Im laufenden Fall sind nur Schocks, Medikamente, Messwerte und Notizen korrigierbar.',
+      ),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
 }

@@ -1,3 +1,5 @@
+import 'package:hp_cpr/features/reanimationsfall/domain/protokoll_ereignis.dart';
+
 /// The first-step category of a Rhythmusanalyse result.
 enum RhythmusanalyseKategorie { schockbar, nichtSchockbar, rosc, unklar }
 
@@ -23,32 +25,34 @@ enum RhythmusanalyseErgebnis {
 }
 
 /// A Rhythmusanalyse result recorded at a point in the Reanimationsfall.
-class RhythmusanalyseEintrag {
+class RhythmusanalyseEintrag implements ProtokollEreignis {
   const RhythmusanalyseEintrag({
     required this.id,
     required this.zeitpunkt,
     required this.ergebnis,
   });
 
-  /// The stable identity of this event in the Protokoll.
+  @override
   final String id;
 
   /// The elapsed time since the Startzeit when the result was recorded.
+  @override
   final Duration zeitpunkt;
 
   final RhythmusanalyseErgebnis ergebnis;
 }
 
 /// A skipped Rhythmusanalyse.
-class RhythmusanalyseUeberspringung {
+class RhythmusanalyseUeberspringung implements ProtokollEreignis {
   const RhythmusanalyseUeberspringung({
     required this.id,
     required this.zeitpunkt,
   });
 
-  /// The stable identity of this event in the Protokoll.
+  @override
   final String id;
 
   /// The elapsed time since the Startzeit when the analysis was skipped.
+  @override
   final Duration zeitpunkt;
 }
