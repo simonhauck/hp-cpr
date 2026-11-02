@@ -212,6 +212,132 @@
   "@actionsRestartDruckphase": {
     "description": "Aktion zum manuellen Neustart der Druckphase"
   },
+  "actionsProtokoll": "Protokoll",
+  "@actionsProtokoll": {
+    "description": "Aktion zum Öffnen des laufenden Protokolls"
+  },
+  "protokollTitle": "Protokoll",
+  "@protokollTitle": {
+    "description": "Titel des Protokolls und seiner Zusammenfassungssektion"
+  },
+  "protokollAuditToggle": "Änderungsverlauf",
+  "@protokollAuditToggle": {
+    "description": "Schalter zum Anzeigen korrigierter und entfernter Einträge"
+  },
+  "protokollLiveEditHint": "Im laufenden Fall sind nur Schocks, Medikamente, Messwerte und Notizen korrigierbar.",
+  "@protokollLiveEditHint": {
+    "description": "Hinweis auf die gesperrten Strukturereignisse im laufenden Fall"
+  },
+  "protokollEdit": "Bearbeiten",
+  "@protokollEdit": {
+    "description": "Aktion zum Bearbeiten eines Protokolleintrags"
+  },
+  "protokollRemove": "Entfernen",
+  "@protokollRemove": {
+    "description": "Aktion zum Entfernen eines Protokolleintrags"
+  },
+  "protokollRestore": "Wiederherstellen",
+  "@protokollRestore": {
+    "description": "Aktion zum Wiederherstellen eines entfernten Protokolleintrags"
+  },
+  "protokollCorrected": "Korrigiert",
+  "@protokollCorrected": {
+    "description": "Status eines korrigierten Protokolleintrags"
+  },
+  "protokollRemoved": "Entfernt",
+  "@protokollRemoved": {
+    "description": "Status eines entfernten Protokolleintrags"
+  },
+  "protokollOriginal": "Ursprünglich",
+  "@protokollOriginal": {
+    "description": "Beschriftung des ursprünglichen Werts im Änderungsverlauf"
+  },
+  "protokollTimeTitle": "Zeitpunkt korrigieren",
+  "@protokollTimeTitle": {
+    "description": "Titel des Dialogs für den korrigierten Zeitpunkt"
+  },
+  "protokollCaseTime": "Fallzeit",
+  "@protokollCaseTime": {
+    "description": "Beschriftung der fallrelativen Zeit"
+  },
+  "protokollWallTime": "Uhrzeit {time}",
+  "@protokollWallTime": {
+    "description": "Vorschau der Wanduhrzeit eines korrigierten Zeitpunkts",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "protokollDoseTitle": "Dosis korrigieren",
+  "@protokollDoseTitle": {
+    "description": "Titel des Dialogs für eine korrigierte Medikamentendosis"
+  },
+  "protokollDoseLabel": "Dosis (mg)",
+  "@protokollDoseLabel": {
+    "description": "Beschriftung des Dosisfelds"
+  },
+  "protokollEditSchockTitle": "Schock bearbeiten",
+  "@protokollEditSchockTitle": {
+    "description": "Titel des Dialogs zum Bearbeiten eines Schocks"
+  },
+  "protokollEditMesswertTitle": "Messwert bearbeiten",
+  "@protokollEditMesswertTitle": {
+    "description": "Titel des Dialogs zum Bearbeiten eines Messwerts"
+  },
+  "protokollEditNotizTitle": "Notiz bearbeiten",
+  "@protokollEditNotizTitle": {
+    "description": "Titel des Dialogs zum Bearbeiten einer Notiz"
+  },
+  "protokollEditRhythmusanalyseTitle": "Rhythmusanalyse bearbeiten",
+  "@protokollEditRhythmusanalyseTitle": {
+    "description": "Titel des Dialogs zum Bearbeiten eines Rhythmusanalyse-Ergebnisses"
+  },
+  "protokollRemovedSnackbar": "Eintrag entfernt",
+  "@protokollRemovedSnackbar": {
+    "description": "Bestätigung nach dem Entfernen eines Protokolleintrags"
+  },
+  "protokollRestoredSnackbar": "Eintrag wiederhergestellt",
+  "@protokollRestoredSnackbar": {
+    "description": "Bestätigung nach dem Wiederherstellen eines Protokolleintrags"
+  },
+  "protokollLockedTooltip": "Strukturereignis – während des Falls gesperrt",
+  "@protokollLockedTooltip": {
+    "description": "Tooltip für ein gesperrtes Strukturereignis"
+  },
+  "protokollTimeInvalid": "Bitte einen Zeitpunkt innerhalb des Falls eingeben.",
+  "@protokollTimeInvalid": {
+    "description": "Fehlermeldung bei einem Zeitpunkt außerhalb des Falls"
+  },
+  "protokollCorrectionFailed": "Korrektur konnte nicht gespeichert werden.",
+  "@protokollCorrectionFailed": {
+    "description": "Fehlermeldung, wenn die Domäne eine Korrektur ablehnt"
+  },
+  "protokollDoseInvalid": "Bitte eine Dosis größer als 0 eingeben.",
+  "@protokollDoseInvalid": {
+    "description": "Fehlermeldung bei einer ungültigen Dosis"
+  },
+  "protokollEnergyLabel": "Energie (J, optional)",
+  "@protokollEnergyLabel": {
+    "description": "Beschriftung des optionalen Energiefelds"
+  },
+  "protokollEnergyInvalid": "Bitte eine Energie größer als 0 eingeben.",
+  "@protokollEnergyInvalid": {
+    "description": "Fehlermeldung bei einer ungültigen Schockenergie"
+  },
+  "protokollSchockPlain": "Schock",
+  "@protokollSchockPlain": {
+    "description": "Schockeintrag ohne laufende Nummer im Änderungsverlauf"
+  },
+  "protokollSchockWithEnergyPlain": "Schock · {energie} J",
+  "@protokollSchockWithEnergyPlain": {
+    "description": "Schockeintrag ohne laufende Nummer, aber mit Energie",
+    "placeholders": {
+      "energie": {
+        "type": "int"
+      }
+    }
+  },
   "pauseLabel": "Pause",
   "@pauseLabel": {
     "description": "Beschriftung des Pausenzählers in der Analysephase"

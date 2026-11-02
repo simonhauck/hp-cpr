@@ -1171,7 +1171,7 @@ void main() {
     expect(find.text('Fall beendet: Übergabe'), findsOneWidget);
     expect(find.text('Übergabe'), findsOneWidget);
     expect(find.text('08:00:00'), findsNWidgets(2));
-    expect(find.text('08:02:00'), findsNWidgets(2));
+    expect(find.text('08:02:00'), findsOneWidget);
     expect(find.text('08:02:30'), findsOneWidget);
     expect(find.text('08:02:40'), findsNWidgets(2));
     expect(wakeLock.enabled, isFalse);
@@ -2088,6 +2088,370 @@ void main() {
 
     expect(find.text('+30 s'), findsOneWidget);
     expectInsideViewport(tester, find.text('+30 s'));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('edits, removes, and restores a live Schock from the Protokoll', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+    await recordSchock(tester);
+    clock.advance(const Duration(seconds: 30));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    await openActions(tester);
+    await tester.tap(find.text('Protokoll'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reanimationsfall gestartet'), findsOneWidget);
+    expect(find.text('Schock 1'), findsOneWidget);
+    expect(
+      find.text(
+        'Im laufenden Fall sind nur Schocks, Medikamente, Messwerte und Notizen korrigierbar.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Messwert erfassen'), findsNothing);
+
+    await tester.tap(find.text('Schock 1'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Bearbeiten'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Schock bearbeiten'), findsOneWidget);
+    final fields = find.byType(TextFormField);
+    await tester.enterText(fields.at(0), '0');
+    await tester.enterText(fields.at(1), '05');
+    await tester.enterText(fields.at(2), '150');
+    await tester.tap(find.text('Speichern'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Schock 1 · 150 J'), findsOneWidget);
+    expect(find.text('00:05'), findsOneWidget);
+
+    await tester.tap(find.byType(BackButton).first);
+    await tester.pumpAndSettle();
+    expect(find.text('Schocks: 1'), findsOneWidget);
+
+    await openActions(tester);
+    await tester.tap(find.text('Protokoll'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Schock 1 · 150 J'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Entfernen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Eintrag entfernt'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    expect(find.text('Schock 1 · 150 J'), findsNothing);
+
+    await tester.tap(find.text('Änderungsverlauf'));
+    await tester.pumpAndSettle();
+    expect(find.text('Schock'), findsOneWidget);
+    expect(find.text('Schock · 150 J'), findsOneWidget);
+    final entferntRow = find
+        .ancestor(of: find.text('Entfernt'), matching: find.byType(InkWell))
+        .first;
+    await tester.tap(
+      find.descendant(of: entferntRow, matching: find.text('Schock · 150 J')),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Wiederherstellen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Eintrag wiederhergestellt'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    expect(find.text('Schock 1 · 150 J'), findsOneWidget);
+
+    await tester.tap(find.byType(BackButton).first);
+    await tester.pumpAndSettle();
+    expect(find.text('Schocks: 1'), findsOneWidget);
+  });
+
+  testWidgets('locks structural entries in the live Protokoll', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Analyse starten'));
+    await tester.pump();
+    await tester.tap(find.text('Schockbar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Kammerflimmern (VF)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nein'));
+    await tester.pumpAndSettle();
+
+    await openActions(tester);
+    await tester.tap(find.text('Protokoll'));
+    await tester.pumpAndSettle();
+
+    final rhythmusanalyse = find.text(
+      'Rhythmusanalyse: Schockbar – Kammerflimmern (VF)',
+    );
+    expect(rhythmusanalyse, findsOneWidget);
+    expect(
+      find.byTooltip('Strukturereignis – während des Falls gesperrt'),
+      findsOneWidget,
+    );
+
+    await tester.tap(rhythmusanalyse);
+    await tester.pumpAndSettle();
+    expect(find.text('Bearbeiten'), findsNothing);
+  });
+
+  testWidgets('edits and restores a completed Protokoll entry', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+    await recordSchock(tester);
+    clock.advance(const Duration(seconds: 10));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    await tester.tap(find.byTooltip('Fall beenden'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Übergabe'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Schock 1'), findsOneWidget);
+    await tester.tap(find.text('Schock 1'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Entfernen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Schock 1'), findsNothing);
+    final schocksRow = find
+        .ancestor(of: find.text('Schocks'), matching: find.byType(Row))
+        .first;
+    expect(
+      find.descendant(of: schocksRow, matching: find.text('0')),
+      findsOneWidget,
+    );
+
+    await tester.pump(const Duration(seconds: 5));
+    await tester.tap(find.text('Änderungsverlauf'));
+    await tester.pumpAndSettle();
+    expect(find.text('Schock'), findsOneWidget);
+    await tester.tap(find.text('Schock'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Wiederherstellen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Schock 1'), findsOneWidget);
+    expect(
+      find.descendant(of: schocksRow, matching: find.text('1')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('rebuilds CPR duration after a completed ROSC removal and '
+      'refreshes the Einsatzlog', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Analyse starten'));
+    await tester.pump();
+    await tester.tap(find.text('ROSC'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ROSC bestätigen'));
+    await tester.pumpAndSettle();
+    clock.advance(const Duration(minutes: 1));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Reanimationswiederbeginn'));
+    await tester.pump();
+    clock.advance(const Duration(minutes: 1));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.byTooltip('Fall beenden'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Übergabe'));
+    await tester.pumpAndSettle();
+
+    final cprRow = find
+        .ancestor(of: find.text('CPR-Dauer'), matching: find.byType(Row))
+        .first;
+    expect(
+      find.descendant(of: cprRow, matching: find.text('03:00')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('ROSC'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Entfernen'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(of: cprRow, matching: find.text('04:00')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byType(BackButton).first);
+    await tester.pumpAndSettle();
+    await openDrawer(tester);
+    await selectFromDrawer(tester, 'Einsatzlog');
+
+    expect(find.text('CPR 04:00 · ERC 2025'), findsOneWidget);
+  });
+
+  testWidgets('corrects a live Adrenalin dose and time from the Protokoll', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+    await tester.tap(find.text('Gabe'));
+    await tester.pump();
+    clock.advance(const Duration(minutes: 1));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    await openActions(tester);
+    await tester.tap(find.text('Protokoll'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Adrenalin 1 mg'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Bearbeiten'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Dosis korrigieren'), findsOneWidget);
+    final fields = find.byType(TextFormField);
+    await tester.enterText(fields.at(0), '1');
+    await tester.enterText(fields.at(1), '00');
+    await tester.enterText(fields.at(2), '2');
+    await tester.tap(find.text('Speichern'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Adrenalin 2 mg'), findsOneWidget);
+
+    await tester.tap(find.byType(BackButton).first);
+    await tester.pumpAndSettle();
+    expect(find.text('Letzte Gabe: 08:01 Uhr, vor 00:00'), findsOneWidget);
+  });
+
+  testWidgets('validates a corrected Protokoll time against the case bounds', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+    await recordSchock(tester);
+    clock.advance(const Duration(seconds: 10));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    await openActions(tester);
+    await tester.tap(find.text('Protokoll'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Schock 1'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Bearbeiten'));
+    await tester.pumpAndSettle();
+
+    final fields = find.byType(TextFormField);
+    await tester.enterText(fields.at(0), '5');
+    await tester.enterText(fields.at(1), '00');
+    await tester.tap(find.text('Speichern'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Bitte einen Zeitpunkt innerhalb des Falls eingeben.'),
+      findsOneWidget,
+    );
+    expect(find.text('Schock bearbeiten'), findsOneWidget);
+  });
+
+  testWidgets('corrects a Notiz from the live Protokoll', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+    await tester.tap(find.text('Aktionen'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Notiz'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField), 'Erste Notiz');
+    await tester.tap(find.text('Speichern'));
+    await tester.pumpAndSettle();
+    clock.advance(const Duration(seconds: 10));
+    await tester.pump(const Duration(milliseconds: 250));
+
+    await openActions(tester);
+    await tester.tap(find.text('Protokoll'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Notiz: Erste Notiz'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Bearbeiten'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Notiz bearbeiten'), findsOneWidget);
+    final fields = find.byType(TextFormField);
+    await tester.enterText(fields.at(0), '0');
+    await tester.enterText(fields.at(1), '05');
+    await tester.enterText(fields.at(2), 'Korrigierte Notiz');
+    await tester.tap(find.text('Speichern'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Notiz: Korrigierte Notiz'), findsOneWidget);
+    expect(find.text('00:05'), findsOneWidget);
+  });
+
+  testWidgets('corrects a completed Rhythmusanalyse result', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Analyse starten'));
+    await tester.pump();
+    await tester.tap(find.text('Schockbar'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Kammerflimmern (VF)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nein'));
+    await tester.pumpAndSettle();
+    clock.advance(const Duration(seconds: 10));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.byTooltip('Fall beenden'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Übergabe'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.text('Rhythmusanalyse: Schockbar – Kammerflimmern (VF)'),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Bearbeiten'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Schockbar – Pulslose Kammertachykardie (pVT)'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Speichern'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Rhythmusanalyse: Schockbar – Pulslose Kammertachykardie (pVT)',
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('fits the Protokoll into a compact landscape phone', (
+    tester,
+  ) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.view.resetPadding);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(568, 320);
+
+    await pumpApp(tester);
+    await startNow(tester);
+    await recordSchock(tester);
+    await openActions(tester);
+    await tester.tap(find.text('Protokoll'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Im laufenden Fall sind nur Schocks, Medikamente, Messwerte und Notizen korrigierbar.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Schock 1'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
