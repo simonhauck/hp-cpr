@@ -56,8 +56,28 @@ _Avoid_: Arrest segment, run
 The event that starts a new resuscitation segment after ROSC when the patient rearrests.
 _Avoid_: Restart, rearrest in UI copy
 
+**Protokoll**:
+The chronological, correctable record of one Reanimationsfall, including its events, measurements, and notes.
+_Avoid_: Log, Ereignisliste, mission log
+
+**Protokolleintrag**:
+One recorded event in a Protokoll.
+_Avoid_: Event, row, Logeintrag
+
+**Korrektur**:
+An append-only record that supersedes a Protokolleintrag without deleting the original.
+_Avoid_: Edit, Änderung
+
+**Entfernt**:
+The state of a Protokolleintrag that is hidden from the default Protokoll but retained in its Änderungsverlauf.
+_Avoid_: Gelöscht, storniert
+
+**Änderungsverlauf**:
+The audit view of a Protokoll that exposes corrected and removed Protokolleinträge.
+_Avoid_: Audit log, history
+
 **Einsatzlog**:
-The persistent list of completed or discarded resuscitation cases; the only place where a case can be deleted.
+The persistent list of completed or discarded resuscitation cases; the only place where a case can be deleted. It is not the per-case Protokoll.
 _Avoid_: History, archive, mission list
 
 **Verworfen**:

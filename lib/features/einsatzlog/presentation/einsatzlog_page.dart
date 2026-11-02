@@ -37,15 +37,18 @@ class _EinsatzlogPageState extends State<EinsatzlogPage> {
   }
 
   Future<void> _openDetail(ReanimationsfallState state) async {
-    final snapshot = widget.session.snapshotFor(state);
+    final reanimationsfall = widget.session.restore(state);
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => ReanimationsfallSummaryPage(
-          snapshot: snapshot,
+          reanimationsfall: reanimationsfall,
+          session: widget.session,
           routes: widget.routes,
         ),
       ),
     );
+    if (!mounted) return;
+    _reload();
   }
 
   Future<void> _delete(ReanimationsfallState state) async {

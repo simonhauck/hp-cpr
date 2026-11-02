@@ -382,6 +382,174 @@ abstract class AppLocalizations {
   /// **'Druckphase neu starten'**
   String get actionsRestartDruckphase;
 
+  /// Aktion zum Öffnen des laufenden Protokolls
+  ///
+  /// In de, this message translates to:
+  /// **'Protokoll'**
+  String get actionsProtokoll;
+
+  /// Titel des Protokolls und seiner Zusammenfassungssektion
+  ///
+  /// In de, this message translates to:
+  /// **'Protokoll'**
+  String get protokollTitle;
+
+  /// Schalter zum Anzeigen korrigierter und entfernter Einträge
+  ///
+  /// In de, this message translates to:
+  /// **'Änderungsverlauf'**
+  String get protokollAuditToggle;
+
+  /// Hinweis auf die gesperrten Strukturereignisse im laufenden Fall
+  ///
+  /// In de, this message translates to:
+  /// **'Im laufenden Fall sind nur Schocks, Medikamente, Messwerte und Notizen korrigierbar.'**
+  String get protokollLiveEditHint;
+
+  /// Aktion zum Bearbeiten eines Protokolleintrags
+  ///
+  /// In de, this message translates to:
+  /// **'Bearbeiten'**
+  String get protokollEdit;
+
+  /// Aktion zum Entfernen eines Protokolleintrags
+  ///
+  /// In de, this message translates to:
+  /// **'Entfernen'**
+  String get protokollRemove;
+
+  /// Aktion zum Wiederherstellen eines entfernten Protokolleintrags
+  ///
+  /// In de, this message translates to:
+  /// **'Wiederherstellen'**
+  String get protokollRestore;
+
+  /// Status eines korrigierten Protokolleintrags
+  ///
+  /// In de, this message translates to:
+  /// **'Korrigiert'**
+  String get protokollCorrected;
+
+  /// Status eines entfernten Protokolleintrags
+  ///
+  /// In de, this message translates to:
+  /// **'Entfernt'**
+  String get protokollRemoved;
+
+  /// Titel des Dialogs für den korrigierten Zeitpunkt
+  ///
+  /// In de, this message translates to:
+  /// **'Zeitpunkt korrigieren'**
+  String get protokollTimeTitle;
+
+  /// Beschriftung der fallrelativen Zeit
+  ///
+  /// In de, this message translates to:
+  /// **'Fallzeit'**
+  String get protokollCaseTime;
+
+  /// Vorschau der Wanduhrzeit eines korrigierten Zeitpunkts
+  ///
+  /// In de, this message translates to:
+  /// **'Uhrzeit {time}'**
+  String protokollWallTime(String time);
+
+  /// Titel des Dialogs für eine korrigierte Medikamentendosis
+  ///
+  /// In de, this message translates to:
+  /// **'Dosis korrigieren'**
+  String get protokollDoseTitle;
+
+  /// Beschriftung des Dosisfelds
+  ///
+  /// In de, this message translates to:
+  /// **'Dosis (mg)'**
+  String get protokollDoseLabel;
+
+  /// Titel des Dialogs zum Bearbeiten eines Schocks
+  ///
+  /// In de, this message translates to:
+  /// **'Schock bearbeiten'**
+  String get protokollEditSchockTitle;
+
+  /// Titel des Dialogs zum Bearbeiten eines Messwerts
+  ///
+  /// In de, this message translates to:
+  /// **'Messwert bearbeiten'**
+  String get protokollEditMesswertTitle;
+
+  /// Titel des Dialogs zum Bearbeiten einer Notiz
+  ///
+  /// In de, this message translates to:
+  /// **'Notiz bearbeiten'**
+  String get protokollEditNotizTitle;
+
+  /// Titel des Dialogs zum Bearbeiten eines Rhythmusanalyse-Ergebnisses
+  ///
+  /// In de, this message translates to:
+  /// **'Rhythmusanalyse bearbeiten'**
+  String get protokollEditRhythmusanalyseTitle;
+
+  /// Bestätigung nach dem Entfernen eines Protokolleintrags
+  ///
+  /// In de, this message translates to:
+  /// **'Eintrag entfernt'**
+  String get protokollRemovedSnackbar;
+
+  /// Bestätigung nach dem Wiederherstellen eines Protokolleintrags
+  ///
+  /// In de, this message translates to:
+  /// **'Eintrag wiederhergestellt'**
+  String get protokollRestoredSnackbar;
+
+  /// Tooltip für ein gesperrtes Strukturereignis
+  ///
+  /// In de, this message translates to:
+  /// **'Strukturereignis – während des Falls gesperrt'**
+  String get protokollLockedTooltip;
+
+  /// Fehlermeldung bei einem Zeitpunkt außerhalb des Falls
+  ///
+  /// In de, this message translates to:
+  /// **'Bitte einen Zeitpunkt innerhalb des Falls eingeben.'**
+  String get protokollTimeInvalid;
+
+  /// Fehlermeldung, wenn die Domäne eine Korrektur ablehnt
+  ///
+  /// In de, this message translates to:
+  /// **'Korrektur konnte nicht gespeichert werden.'**
+  String get protokollCorrectionFailed;
+
+  /// Fehlermeldung bei einer ungültigen Dosis
+  ///
+  /// In de, this message translates to:
+  /// **'Bitte eine Dosis größer als 0 eingeben.'**
+  String get protokollDoseInvalid;
+
+  /// Beschriftung des optionalen Energiefelds
+  ///
+  /// In de, this message translates to:
+  /// **'Energie (J, optional)'**
+  String get protokollEnergyLabel;
+
+  /// Fehlermeldung bei einer ungültigen Schockenergie
+  ///
+  /// In de, this message translates to:
+  /// **'Bitte eine Energie größer als 0 eingeben.'**
+  String get protokollEnergyInvalid;
+
+  /// Schockeintrag ohne laufende Nummer im Änderungsverlauf
+  ///
+  /// In de, this message translates to:
+  /// **'Schock'**
+  String get protokollSchockPlain;
+
+  /// Schockeintrag ohne laufende Nummer, aber mit Energie
+  ///
+  /// In de, this message translates to:
+  /// **'Schock · {energie} J'**
+  String protokollSchockWithEnergyPlain(int energie);
+
   /// Beschriftung des Pausenzählers in der Analysephase
   ///
   /// In de, this message translates to:

@@ -168,6 +168,99 @@ class AppLocalizationsDe extends AppLocalizations {
   String get actionsRestartDruckphase => 'Druckphase neu starten';
 
   @override
+  String get actionsProtokoll => 'Protokoll';
+
+  @override
+  String get protokollTitle => 'Protokoll';
+
+  @override
+  String get protokollAuditToggle => 'Änderungsverlauf';
+
+  @override
+  String get protokollLiveEditHint =>
+      'Im laufenden Fall sind nur Schocks, Medikamente, Messwerte und Notizen korrigierbar.';
+
+  @override
+  String get protokollEdit => 'Bearbeiten';
+
+  @override
+  String get protokollRemove => 'Entfernen';
+
+  @override
+  String get protokollRestore => 'Wiederherstellen';
+
+  @override
+  String get protokollCorrected => 'Korrigiert';
+
+  @override
+  String get protokollRemoved => 'Entfernt';
+
+  @override
+  String get protokollTimeTitle => 'Zeitpunkt korrigieren';
+
+  @override
+  String get protokollCaseTime => 'Fallzeit';
+
+  @override
+  String protokollWallTime(String time) {
+    return 'Uhrzeit $time';
+  }
+
+  @override
+  String get protokollDoseTitle => 'Dosis korrigieren';
+
+  @override
+  String get protokollDoseLabel => 'Dosis (mg)';
+
+  @override
+  String get protokollEditSchockTitle => 'Schock bearbeiten';
+
+  @override
+  String get protokollEditMesswertTitle => 'Messwert bearbeiten';
+
+  @override
+  String get protokollEditNotizTitle => 'Notiz bearbeiten';
+
+  @override
+  String get protokollEditRhythmusanalyseTitle => 'Rhythmusanalyse bearbeiten';
+
+  @override
+  String get protokollRemovedSnackbar => 'Eintrag entfernt';
+
+  @override
+  String get protokollRestoredSnackbar => 'Eintrag wiederhergestellt';
+
+  @override
+  String get protokollLockedTooltip =>
+      'Strukturereignis – während des Falls gesperrt';
+
+  @override
+  String get protokollTimeInvalid =>
+      'Bitte einen Zeitpunkt innerhalb des Falls eingeben.';
+
+  @override
+  String get protokollCorrectionFailed =>
+      'Korrektur konnte nicht gespeichert werden.';
+
+  @override
+  String get protokollDoseInvalid => 'Bitte eine Dosis größer als 0 eingeben.';
+
+  @override
+  String get protokollEnergyLabel => 'Energie (J, optional)';
+
+  @override
+  String get protokollEnergyInvalid =>
+      'Bitte eine Energie größer als 0 eingeben.';
+
+  @override
+  String get protokollSchockPlain => 'Schock';
+
+  @override
+  String protokollSchockWithEnergyPlain(int energie) {
+    return 'Schock · $energie J';
+  }
+
+  @override
   String get pauseLabel => 'Pause';
 
   @override

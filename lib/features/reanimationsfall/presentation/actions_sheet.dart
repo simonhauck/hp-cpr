@@ -7,6 +7,7 @@ import 'package:hp_cpr/ui/layout/page_layout.dart';
 Future<void> showActionsSheet(
   BuildContext context, {
   required VoidCallback onOpenMesswerte,
+  required VoidCallback onOpenProtokoll,
   required VoidCallback onRecordNotiz,
   required VoidCallback onEndCase,
   VoidCallback? onRecordSchock,
@@ -18,6 +19,7 @@ Future<void> showActionsSheet(
     isScrollControlled: true,
     builder: (_) => ActionsSheet(
       onOpenMesswerte: onOpenMesswerte,
+      onOpenProtokoll: onOpenProtokoll,
       onRecordNotiz: onRecordNotiz,
       onEndCase: onEndCase,
       onRecordSchock: onRecordSchock,
@@ -35,6 +37,7 @@ class ActionsSheet extends StatelessWidget {
   const ActionsSheet({
     super.key,
     required this.onOpenMesswerte,
+    required this.onOpenProtokoll,
     required this.onRecordNotiz,
     required this.onEndCase,
     this.onRecordSchock,
@@ -42,6 +45,7 @@ class ActionsSheet extends StatelessWidget {
   });
 
   final VoidCallback onOpenMesswerte;
+  final VoidCallback onOpenProtokoll;
   final VoidCallback onRecordNotiz;
   final VoidCallback onEndCase;
   final VoidCallback? onRecordSchock;
@@ -64,6 +68,11 @@ class ActionsSheet extends StatelessWidget {
         icon: Icons.notes,
         label: l10n.actionsNotiz,
         onPressed: onRecordNotiz,
+      ),
+      _SheetAction(
+        icon: Icons.receipt_long_outlined,
+        label: l10n.actionsProtokoll,
+        onPressed: onOpenProtokoll,
       ),
       if (recordSchock != null)
         _SheetAction(

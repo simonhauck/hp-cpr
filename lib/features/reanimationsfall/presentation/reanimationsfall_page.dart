@@ -16,6 +16,7 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/amiodaron_panel.da
 import 'package:hp_cpr/features/reanimationsfall/presentation/end_reanimationsfall_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/phase_action_bar.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/phase_strip.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/reanimationsfall_summary_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
@@ -49,7 +50,7 @@ class ReanimationsfallPage extends StatefulWidget {
 class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     with WidgetsBindingObserver {
   Timer? _ticker;
-  bool _amiodaronHinweisAusgeblendet = false;
+  AmiodaronHinweis? _ausgeblendeterAmiodaronHinweis;
 
   @override
   void initState() {
@@ -89,7 +90,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
   void _recordSchock() {
     _mutate(() {
       widget.reanimationsfall.recordSchock();
-      _amiodaronHinweisAusgeblendet = false;
+      _ausgeblendeterAmiodaronHinweis = null;
     });
   }
 
@@ -100,12 +101,16 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
   void _recordAmiodaron() {
     _mutate(() {
       widget.reanimationsfall.recordAmiodaron();
-      _amiodaronHinweisAusgeblendet = false;
+      _ausgeblendeterAmiodaronHinweis = null;
     });
   }
 
   void _dismissAmiodaronHinweis() {
-    setState(() => _amiodaronHinweisAusgeblendet = true);
+    setState(() {
+      _ausgeblendeterAmiodaronHinweis = widget.reanimationsfall
+          .snapshot()
+          .amiodaronHinweis;
+    });
   }
 
   void _resumeResuscitation() {
@@ -117,6 +122,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     await showActionsSheet(
       context,
       onOpenMesswerte: _openMesswerte,
+      onOpenProtokoll: _openProtokoll,
       onRecordNotiz: _recordNotiz,
       onEndCase: _endReanimationsfall,
       onRecordSchock: snapshot.istLaufend ? _recordSchock : null,
@@ -157,6 +163,20 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     );
   }
 
+  Future<void> _openProtokoll() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ProtokollPage(
+          reanimationsfall: widget.reanimationsfall,
+          session: widget.session,
+          routes: widget.routes,
+        ),
+      ),
+    );
+    if (!mounted) return;
+    setState(() {});
+  }
+
   Future<void> _endReanimationsfall() async {
     final choice = await showDialog<ReanimationsfallEndChoice>(
       context: context,
@@ -170,11 +190,11 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
         await widget.session.persist(widget.reanimationsfall);
         if (!mounted) return;
 
-        final snapshot = widget.reanimationsfall.snapshot();
         await Navigator.of(context).pushReplacement(
           MaterialPageRoute<void>(
             builder: (_) => ReanimationsfallSummaryPage(
-              snapshot: snapshot,
+              reanimationsfall: widget.reanimationsfall,
+              session: widget.session,
               routes: widget.routes,
             ),
           ),
@@ -230,7 +250,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
         schockAbgegeben: abschluss.schockAbgegeben,
       );
       if (abschluss.schockAbgegeben) {
-        _amiodaronHinweisAusgeblendet = false;
+        _ausgeblendeterAmiodaronHinweis = null;
       }
     });
   }
@@ -312,10 +332,12 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
                 ],
               );
 
+        final istAmiodaronHinweisAusgeblendet =
+            snapshot.amiodaronHinweis == _ausgeblendeterAmiodaronHinweis;
         final showAmiodaron =
             snapshot.amiodaronGaben.isNotEmpty ||
             (snapshot.amiodaronHinweis != AmiodaronHinweis.keine &&
-                !_amiodaronHinweisAusgeblendet);
+                !istAmiodaronHinweisAusgeblendet);
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -333,7 +355,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
               AmiodaronPanel(
                 snapshot: snapshot,
                 layout: layout,
-                isHintVisible: !_amiodaronHinweisAusgeblendet,
+                isHintVisible: !istAmiodaronHinweisAusgeblendet,
                 onRecordAmiodaron: _recordAmiodaron,
                 onDismiss: _dismissAmiodaronHinweis,
               ),

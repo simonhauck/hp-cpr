@@ -39,9 +39,14 @@ class ReanimationsfallSession {
     ]..sort((a, b) => b.startzeitUtc.compareTo(a.startzeitUtc));
   }
 
+  /// Restores a stored case so its Protokoll can be corrected.
+  Reanimationsfall restore(ReanimationsfallState state) {
+    return Reanimationsfall.restore(clock: clock, state: state);
+  }
+
   /// Reconstructs the summary snapshot of a stored case.
   ReanimationsfallSnapshot snapshotFor(ReanimationsfallState state) {
-    return Reanimationsfall.restore(clock: clock, state: state).snapshot();
+    return restore(state).snapshot();
   }
 
   Future<void> delete(String id) => store.delete(id);
