@@ -25,9 +25,13 @@ enum RhythmusanalyseErgebnis {
 /// A Rhythmusanalyse result recorded at a point in the Reanimationsfall.
 class RhythmusanalyseEintrag {
   const RhythmusanalyseEintrag({
+    required this.id,
     required this.zeitpunkt,
     required this.ergebnis,
   });
+
+  /// The stable identity of this event in the Protokoll.
+  final String id;
 
   /// The elapsed time since the Startzeit when the result was recorded.
   final Duration zeitpunkt;
@@ -37,7 +41,13 @@ class RhythmusanalyseEintrag {
 
 /// A skipped Rhythmusanalyse.
 class RhythmusanalyseUeberspringung {
-  const RhythmusanalyseUeberspringung({required this.zeitpunkt});
+  const RhythmusanalyseUeberspringung({
+    required this.id,
+    required this.zeitpunkt,
+  });
+
+  /// The stable identity of this event in the Protokoll.
+  final String id;
 
   /// The elapsed time since the Startzeit when the analysis was skipped.
   final Duration zeitpunkt;

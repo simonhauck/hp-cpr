@@ -103,8 +103,9 @@ void main() {
     expect(decoded.notizen.single.text, 'Nach ROSC');
     expect(decoded.roscEreignisse, hasLength(1));
     expect(decoded.wiederbeginnEreignisse, hasLength(1));
-    expect(decoded.abschnitte, hasLength(2));
-    expect(decoded.abschnitte.last.ende, isNotNull);
+    expect(encoded.containsKey('abschnitte'), isFalse);
+    expect(decoded.nextEreignisId, state.nextEreignisId);
+    expect(decoded.korrekturen, isEmpty);
 
     final restored = Reanimationsfall.restore(
       clock: FakeClock(wallTime: clock.now()),
@@ -124,6 +125,8 @@ void main() {
     expect(snapshot.messwerte, hasLength(4));
     expect(snapshot.notizen.single.text, 'Nach ROSC');
     expect(snapshot.startzeit, state.startzeit);
+    expect(snapshot.abschnitte, hasLength(2));
+    expect(snapshot.abschnitte.last.ende, isNotNull);
   });
 
   test('round-trips a Verworfen case', () {
@@ -141,7 +144,6 @@ void main() {
 
     expect(decoded.zustand, ReanimationsfallZustand.verworfen);
     expect(decoded.verworfenAm, const Duration(seconds: 30));
-    expect(decoded.abschnitte.single.ende, const Duration(seconds: 30));
 
     final restored = Reanimationsfall.restore(
       clock: FakeClock(wallTime: clock.now()),
@@ -150,6 +152,7 @@ void main() {
     final snapshot = restored.snapshot();
     expect(snapshot.istVerworfen, isTrue);
     expect(snapshot.verworfenAm, const Duration(seconds: 30));
+    expect(snapshot.abschnitte.single.ende, const Duration(seconds: 30));
     expect(snapshot.cprDauer, const Duration(seconds: 30));
   });
 
@@ -218,6 +221,68 @@ void main() {
     expect(
       restored.snapshot().compressionRemaining,
       const Duration(seconds: 20),
+    );
+  });
+
+  test('round-trips Protokoll corrections and stable ids', () {
+    final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+    clock.advance(const Duration(seconds: 10));
+    reanimationsfall.recordSchock(energieJoule: 200);
+    reanimationsfall.recordAdrenalin();
+    reanimationsfall.recordNotiz('Notiz');
+    reanimationsfall.recordTemperatur(36.5);
+
+    final state = reanimationsfall.exportState();
+    final encoded = reanimationsfallStateToJson(state);
+    expect(encoded.containsKey('nextEreignisId'), isTrue);
+    expect(encoded.containsKey('korrekturen'), isTrue);
+    expect(
+      (encoded['schocks'] as List<dynamic>).single as Map<String, dynamic>,
+      containsPair('id', isA<String>()),
+    );
+
+    final snapshot = reanimationsfall.snapshot();
+    final schock = snapshot.protokoll.eintraege.singleWhere(
+      (e) => e.typ == ProtokollEintragTyp.schock,
+    );
+    final notiz = snapshot.protokoll.eintraege.singleWhere(
+      (e) => e.typ == ProtokollEintragTyp.notiz,
+    );
+    reanimationsfall.applyProtokollKorrektur(
+      SchockKorrigiert(
+        ziel: schock.ref,
+        zeitpunkt: const Duration(seconds: 5),
+        energieJoule: 150,
+      ),
+    );
+    reanimationsfall.applyProtokollKorrektur(
+      ProtokollEintragEntfernt(ziel: notiz.ref),
+    );
+
+    final decoded = reanimationsfallStateFromJson(
+      jsonDecode(
+        jsonEncode(reanimationsfallStateToJson(reanimationsfall.exportState())),
+      ) as Map<String, dynamic>,
+    );
+    expect(decoded.korrekturen, hasLength(2));
+
+    final restored = Reanimationsfall.restore(
+      clock: FakeClock(wallTime: clock.now()),
+      state: decoded,
+    );
+    final restoredSnapshot = restored.snapshot();
+    expect(restoredSnapshot.schocks.single.energieJoule, 150);
+    expect(
+      restoredSnapshot.schocks.single.zeitpunkt,
+      const Duration(seconds: 5),
+    );
+    expect(restoredSnapshot.notizen, isEmpty);
+    expect(
+      restoredSnapshot.protokoll.alleEintraege
+          .singleWhere((e) => e.ref == notiz.ref)
+          .istEntfernt,
+      isTrue,
     );
   });
 

@@ -12,7 +12,14 @@ enum AmiodaronHinweis {
 
 /// A recorded Amiodaron dose.
 class AmiodaronGabe {
-  const AmiodaronGabe({required this.zeitpunkt, required this.dosisMg});
+  const AmiodaronGabe({
+    required this.id,
+    required this.zeitpunkt,
+    required this.dosisMg,
+  });
+
+  /// The stable identity of this event in the Protokoll.
+  final String id;
 
   /// The elapsed time since the Startzeit when the dose was recorded.
   final Duration zeitpunkt;

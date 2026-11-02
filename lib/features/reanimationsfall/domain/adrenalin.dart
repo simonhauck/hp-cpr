@@ -3,7 +3,14 @@ enum AdrenalinZeitfensterZustand { keine, wartet, faellig, ueberfaellig }
 
 /// A recorded Adrenalin dose.
 class AdrenalinGabe {
-  const AdrenalinGabe({required this.zeitpunkt, this.dosisMg = 1});
+  const AdrenalinGabe({
+    required this.id,
+    required this.zeitpunkt,
+    this.dosisMg = 1,
+  });
+
+  /// The stable identity of this event in the Protokoll.
+  final String id;
 
   /// The elapsed time since the Startzeit when the dose was recorded.
   final Duration zeitpunkt;

@@ -3,7 +3,10 @@ enum MesswertTyp { temperatur, blutzucker, blutdruck, herzfrequenz }
 
 /// A timestamped patient observation recorded during a Reanimationsfall.
 sealed class Messwert {
-  const Messwert({required this.zeitpunkt, this.notiz});
+  const Messwert({required this.id, required this.zeitpunkt, this.notiz});
+
+  /// The stable identity of this event in the Protokoll.
+  final String id;
 
   /// The elapsed time since the Startzeit when the value was recorded.
   final Duration zeitpunkt;
@@ -17,6 +20,7 @@ sealed class Messwert {
 /// A temperature in degrees Celsius.
 final class TemperaturMesswert extends Messwert {
   const TemperaturMesswert({
+    required super.id,
     required super.zeitpunkt,
     required this.celsius,
     super.notiz,
@@ -31,6 +35,7 @@ final class TemperaturMesswert extends Messwert {
 /// A blood sugar value in mg/dL.
 final class BlutzuckerMesswert extends Messwert {
   const BlutzuckerMesswert({
+    required super.id,
     required super.zeitpunkt,
     required this.mgDl,
     super.notiz,
@@ -45,6 +50,7 @@ final class BlutzuckerMesswert extends Messwert {
 /// A blood pressure in mmHg.
 final class BlutdruckMesswert extends Messwert {
   const BlutdruckMesswert({
+    required super.id,
     required super.zeitpunkt,
     required this.systolisch,
     required this.diastolisch,
@@ -61,6 +67,7 @@ final class BlutdruckMesswert extends Messwert {
 /// A heart rate in beats per minute.
 final class HerzfrequenzMesswert extends Messwert {
   const HerzfrequenzMesswert({
+    required super.id,
     required super.zeitpunkt,
     required this.proMinute,
     super.notiz,
@@ -74,7 +81,14 @@ final class HerzfrequenzMesswert extends Messwert {
 
 /// A free-text note recorded during a Reanimationsfall.
 class ReanimationsfallNotiz {
-  const ReanimationsfallNotiz({required this.zeitpunkt, required this.text});
+  const ReanimationsfallNotiz({
+    required this.id,
+    required this.zeitpunkt,
+    required this.text,
+  });
+
+  /// The stable identity of this event in the Protokoll.
+  final String id;
 
   /// The elapsed time since the Startzeit when the note was recorded.
   final Duration zeitpunkt;
