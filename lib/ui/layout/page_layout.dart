@@ -1,27 +1,75 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
+
+/// The device class used for page layout decisions.
+///
+/// Phones are classified by their shortest side so that rotating a phone does
+/// not turn it into a tablet. Tablets and desktops are classified by width,
+/// because that is what changes the amount of horizontal room.
+enum WindowSizeClass { smallPhone, largePhone, tablet, desktop }
 
 /// The layout decisions and shared design tokens for the app.
 ///
-/// The page has two modes: landscape/portrait, and a compact density for short
-/// viewports. Compact is a height heuristic for landscape phones, not a
-/// phone/tablet device class.
+/// Orientation, device class, and compact height are separate axes:
+/// a tablet can be landscape, and a phone can be short. Compact remains a
+/// height heuristic for short viewports, not a phone/tablet device class.
 ///
 /// Spacing, radii, icon sizes, touch targets, and the timer-page font sizes
 /// live here. Feature widgets must not introduce their own pixel offsets or
-/// compact/regular ternaries; use the shared tokens or a semantic getter.
+/// breakpoint checks; use the shared tokens or a semantic getter.
 @immutable
 class PageLayout {
-  const PageLayout._({required this.isLandscape, required this.isCompact});
+  const PageLayout._({
+    required this.windowSize,
+    required this.isLandscape,
+    required this.isCompact,
+  });
 
   factory PageLayout.from(BoxConstraints constraints) {
+    final width = constraints.maxWidth;
+    final height = constraints.maxHeight;
+    final shortestSide = math.min(width, height);
+    final windowSize = switch (shortestSide) {
+      < smallPhoneMaxWidth => WindowSizeClass.smallPhone,
+      < largePhoneMaxWidth => WindowSizeClass.largePhone,
+      _ when width >= desktopMinWidth => WindowSizeClass.desktop,
+      _ => WindowSizeClass.tablet,
+    };
+
     return PageLayout._(
-      isLandscape: constraints.maxWidth > constraints.maxHeight,
-      isCompact: constraints.maxHeight < compactHeight,
+      windowSize: windowSize,
+      isLandscape: width > height,
+      isCompact: height < compactHeight,
     );
   }
 
+  /// The maximum width of a small phone in portrait.
+  static const double smallPhoneMaxWidth = 390;
+
+  /// The maximum width of a large phone in portrait.
+  static const double largePhoneMaxWidth = 600;
+
+  /// The width from which the desktop layout is used.
+  static const double desktopMinWidth = 1200;
+
   /// The viewport height below which the compact density is used.
   static const double compactHeight = 400;
+
+  /// The phase timer size on phones.
+  static const double phonePhaseTimerFontSize = 64;
+
+  /// The Reanimationsdauer size on phones.
+  static const double phoneElapsedTimerFontSize = 38;
+
+  /// The Reanimationsdauer size on tablets and desktops.
+  static const double wideElapsedTimerFontSize = 45;
+
+  /// The Druckphase timer size on tablets and desktops.
+  static const double wideDruckphaseTimerFontSize = 150;
+
+  /// The Analysephase timer size on tablets and desktops.
+  static const double wideAnalysephaseTimerFontSize = 84;
 
   /// The shared maximum content width for the timer pages.
   static const double maxContentWidth = 1200;
@@ -65,8 +113,6 @@ class PageLayout {
   static const double barOverhang = 2;
 
   // Timer typography.
-  static const double druckphaseTimerFontSize = 150;
-  static const double analysephaseTimerFontSize = 84;
   static const double appTitleLetterSpacing = 1.2;
   static const double timerLineHeight = 1;
 
@@ -74,14 +120,59 @@ class PageLayout {
   static const int elapsedPanelFlex = 4;
   static const int timerPanelFlex = 6;
 
+  final WindowSizeClass windowSize;
   final bool isLandscape;
   final bool isCompact;
+
+  bool get isSmallPhone => windowSize == WindowSizeClass.smallPhone;
+
+  bool get isLargePhone => windowSize == WindowSizeClass.largePhone;
+
+  bool get isPhone => isSmallPhone || isLargePhone;
+
+  bool get isTablet => windowSize == WindowSizeClass.tablet;
+
+  bool get isDesktop => windowSize == WindowSizeClass.desktop;
+
+  /// The Druckphase timer is smaller on phones and uses the full size only
+  /// when there is enough horizontal room.
+  double get druckphaseTimerFontSize =>
+      isPhone ? phonePhaseTimerFontSize : wideDruckphaseTimerFontSize;
+
+  /// The Analysephase timer follows the Druckphase timer on phones.
+  double get analysephaseTimerFontSize =>
+      isPhone ? phonePhaseTimerFontSize : wideAnalysephaseTimerFontSize;
+
+  /// The elapsed Reanimationsdauer is secondary to the phase timer.
+  double get elapsedTimerFontSize =>
+      isPhone ? phoneElapsedTimerFontSize : wideElapsedTimerFontSize;
+
+  /// Whether the Adrenalin card uses the vertical phone layout.
+  ///
+  /// Landscape phones keep the compact side-by-side card so it fits into the
+  /// short viewport.
+  bool get stacksMedicationPanel => isPhone && !isLandscape;
+
+  /// Whether the start page header uses two rows on portrait phones.
+  bool get stacksStartHeader => isPhone && !isLandscape;
+
+  /// Whether the two start choices are shown side by side.
+  bool get usesTwoColumnStartCards => !isPhone || isLandscape;
+
+  /// Whether the header uses the compact Schock count chip.
+  bool get usesCompactHeaderChip => isPhone;
+
+  /// The padding inside the Schock count chip.
+  EdgeInsets get schockChipPadding => EdgeInsets.symmetric(
+    horizontal: usesCompactHeaderChip ? space8 : space10,
+    vertical: usesCompactHeaderChip ? space2 : space4,
+  );
 
   EdgeInsets get pagePadding => isCompact
       ? const EdgeInsets.fromLTRB(space16, space4, space16, space8)
       : const EdgeInsets.fromLTRB(space16, space8, space16, space16);
 
-  double get sectionGap => isCompact ? space8 : space12;
+  double get sectionGap => isCompact || isPhone ? space8 : space12;
 
   /// The gap between the two main panels in landscape.
   double get panelGap => isCompact ? space12 : space16;
@@ -115,10 +206,18 @@ class PageLayout {
   double get cardActionGap => isCompact ? space0 : space12;
 
   /// The gap between the main content and a full-width status strip.
-  double get contentGap => isCompact ? space4 : space10;
+  double get contentGap => isCompact
+      ? space4
+      : isPhone
+      ? space8
+      : space10;
 
   /// The gap between the phase strip and the timer content.
-  double get phaseStripGap => isCompact ? space2 : space8;
+  double get phaseStripGap => isCompact
+      ? space2
+      : isPhone
+      ? space4
+      : space8;
 
   /// The gap after the Rhythmusanalyse result summary.
   double get resultSummaryGap => isCompact ? space2 : space10;
@@ -154,8 +253,13 @@ class PageLayout {
   double get rhythmusanalyseChoiceSpacing => space4;
 
   /// The padding inside a phase timer panel.
-  EdgeInsets get phasePanelPadding =>
-      EdgeInsets.all(isCompact ? space4 : space20);
+  EdgeInsets get phasePanelPadding => EdgeInsets.all(
+    isCompact
+        ? space4
+        : isPhone
+        ? space12
+        : space20,
+  );
 
   /// The padding inside the Adrenalin panel.
   EdgeInsets get medicationPanelPadding => EdgeInsets.symmetric(

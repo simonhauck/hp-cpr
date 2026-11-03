@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/core/wake_lock.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
-import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_chip.dart';
 import 'package:hp_cpr/features/messwerte/presentation/messwerte_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/amiodaron.dart';
@@ -19,9 +18,9 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/phase_strip.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/reanimationsfall_summary_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_dialog.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/schock_count_chip.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
-import 'package:hp_cpr/ui/demo_modus_chip.dart';
 import 'package:hp_cpr/ui/dialogs/notiz_erfassen_dialog.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 import 'package:hp_cpr/ui/layout/page_scaffold.dart';
@@ -50,7 +49,6 @@ class ReanimationsfallPage extends StatefulWidget {
 class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     with WidgetsBindingObserver {
   Timer? _ticker;
-  AmiodaronHinweis? _ausgeblendeterAmiodaronHinweis;
 
   @override
   void initState() {
@@ -88,10 +86,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
   }
 
   void _recordSchock() {
-    _mutate(() {
-      widget.reanimationsfall.recordSchock();
-      _ausgeblendeterAmiodaronHinweis = null;
-    });
+    _mutate(widget.reanimationsfall.recordSchock);
   }
 
   void _recordAdrenalin() {
@@ -99,18 +94,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
   }
 
   void _recordAmiodaron() {
-    _mutate(() {
-      widget.reanimationsfall.recordAmiodaron();
-      _ausgeblendeterAmiodaronHinweis = null;
-    });
-  }
-
-  void _dismissAmiodaronHinweis() {
-    setState(() {
-      _ausgeblendeterAmiodaronHinweis = widget.reanimationsfall
-          .snapshot()
-          .amiodaronHinweis;
-    });
+    _mutate(widget.reanimationsfall.recordAmiodaron);
   }
 
   void _resumeResuscitation() {
@@ -249,9 +233,6 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
         abschluss.ergebnis,
         schockAbgegeben: abschluss.schockAbgegeben,
       );
-      if (abschluss.schockAbgegeben) {
-        _ausgeblendeterAmiodaronHinweis = null;
-      }
     });
   }
 
@@ -292,11 +273,8 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     return PageScaffold(
       maxWidth: PageLayout.maxContentWidth,
       drawer: AppDrawer(routes: widget.routes),
-      header: (context, layout) => _ReanimationsfallHeader(
-        snapshot: snapshot,
-        layout: layout,
-        onEndCase: _endReanimationsfall,
-      ),
+      header: (context, layout) =>
+          _ReanimationsfallHeader(snapshot: snapshot, layout: layout),
       content: (context, layout) {
         final reanimationsdauerPanel = _ReanimationsdauerPanel(
           snapshot: snapshot,
@@ -332,12 +310,10 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
                 ],
               );
 
-        final istAmiodaronHinweisAusgeblendet =
-            snapshot.amiodaronHinweis == _ausgeblendeterAmiodaronHinweis;
-        final showAmiodaron =
-            snapshot.amiodaronGaben.isNotEmpty ||
-            (snapshot.amiodaronHinweis != AmiodaronHinweis.keine &&
-                !istAmiodaronHinweisAusgeblendet);
+        final showAmiodaronHint =
+            snapshot.amiodaronHinweis != AmiodaronHinweis.keine;
+        final showAmiodaronPanel =
+            showAmiodaronHint || snapshot.amiodaronGaben.isNotEmpty;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -350,14 +326,12 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
               onRecordAdrenalin: _recordAdrenalin,
               isRecordingEnabled: snapshot.istLaufend,
             ),
-            if (showAmiodaron) ...[
+            if (showAmiodaronPanel) ...[
               SizedBox(height: layout.contentGap),
               AmiodaronPanel(
                 snapshot: snapshot,
                 layout: layout,
-                isHintVisible: !istAmiodaronHinweisAusgeblendet,
                 onRecordAmiodaron: _recordAmiodaron,
-                onDismiss: _dismissAmiodaronHinweis,
               ),
             ],
           ],
@@ -386,15 +360,10 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
 }
 
 class _ReanimationsfallHeader extends StatelessWidget {
-  const _ReanimationsfallHeader({
-    required this.snapshot,
-    required this.layout,
-    required this.onEndCase,
-  });
+  const _ReanimationsfallHeader({required this.snapshot, required this.layout});
 
   final ReanimationsfallSnapshot snapshot;
   final PageLayout layout;
-  final VoidCallback onEndCase;
 
   @override
   Widget build(BuildContext context) {
@@ -431,21 +400,7 @@ class _ReanimationsfallHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: PageLayout.space12),
-        LeitlinienprofilChip(
-          leitlinienprofil: snapshot.leitlinienprofil,
-          compact: layout.isCompact,
-        ),
-        const SizedBox(width: PageLayout.space8),
-        IconButton(
-          onPressed: onEndCase,
-          tooltip: l10n.endCaseButton,
-          icon: const Icon(Icons.stop_circle_outlined),
-          constraints: const BoxConstraints.tightFor(
-            width: PageLayout.touchTargetSize,
-            height: PageLayout.touchTargetSize,
-          ),
-          padding: EdgeInsets.zero,
-        ),
+        SchockCountChip(count: snapshot.schockAnzahl, layout: layout),
         const SizedBox(width: PageLayout.space8),
         const AppMenuButton(),
       ],
@@ -479,6 +434,7 @@ class _ReanimationsdauerPanel extends StatelessWidget {
             Text(
               formatReanimationsdauer(snapshot.reanimationsdauer),
               style: theme.textTheme.displayMedium?.copyWith(
+                fontSize: layout.elapsedTimerFontSize,
                 fontWeight: FontWeight.w700,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
@@ -490,10 +446,6 @@ class _ReanimationsdauerPanel extends StatelessWidget {
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            if (snapshot.demoMode) ...[
-              const SizedBox(height: PageLayout.space4),
-              DemoModusChip(compact: layout.isCompact),
-            ],
           ],
         ),
       ),
@@ -683,7 +635,7 @@ class _PhasePanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          PhaseStrip(snapshot: snapshot, layout: layout),
+          PhaseStrip(snapshot: snapshot),
           SizedBox(height: layout.phaseStripGap),
           Expanded(child: child),
         ],
@@ -765,7 +717,7 @@ class _DruckphaseTimerPanel extends StatelessWidget {
                       child: Text(
                         timerText,
                         style: TextStyle(
-                          fontSize: PageLayout.druckphaseTimerFontSize,
+                          fontSize: layout.druckphaseTimerFontSize,
                           height: PageLayout.timerLineHeight,
                           fontWeight: FontWeight.w800,
                           fontFeatures: const [FontFeature.tabularFigures()],
@@ -817,7 +769,7 @@ class _DruckphaseTimerPanel extends StatelessWidget {
               child: Text(
                 timerText,
                 style: TextStyle(
-                  fontSize: PageLayout.druckphaseTimerFontSize,
+                  fontSize: layout.druckphaseTimerFontSize,
                   height: PageLayout.timerLineHeight,
                   fontWeight: FontWeight.w800,
                   fontFeatures: const [FontFeature.tabularFigures()],
@@ -1035,7 +987,7 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
     return Text(
       formatElapsed(snapshot.pauseDuration),
       style: TextStyle(
-        fontSize: PageLayout.analysephaseTimerFontSize,
+        fontSize: layout.analysephaseTimerFontSize,
         height: PageLayout.timerLineHeight,
         fontWeight: isOverdue ? FontWeight.w700 : FontWeight.w500,
         fontFeatures: const [FontFeature.tabularFigures()],

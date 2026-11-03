@@ -167,22 +167,6 @@
   "@phaseStripRosc": {
     "description": "Statuszeile im ROSC-Zustand"
   },
-  "phaseStripDruckphaseCompact": "Druckphase · Komprimieren",
-  "@phaseStripDruckphaseCompact": {
-    "description": "Kompakte Aufgabe in der Druckphase"
-  },
-  "phaseStripDruckphaseDueCompact": "Druckphase · Analyse starten",
-  "@phaseStripDruckphaseDueCompact": {
-    "description": "Kompakte Aufgabe, wenn die Rhythmusanalyse fällig ist"
-  },
-  "phaseStripAnalysephaseCompact": "Analysephase · Rhythmus prüfen",
-  "@phaseStripAnalysephaseCompact": {
-    "description": "Kompakte Aufgabe in der Analysephase"
-  },
-  "phaseStripRoscCompact": "ROSC · Pausiert",
-  "@phaseStripRoscCompact": {
-    "description": "Kompakte Statuszeile im ROSC-Zustand"
-  },
   "schockCountChip": "Schocks: {count}",
   "@schockCountChip": {
     "description": "Kompakte Anzeige der Schockanzahl",
@@ -573,9 +557,13 @@
   "@amiodaronLabel": {
     "description": "Beschriftung des Amiodaron-Hinweises"
   },
-  "amiodaronHint": "Amiodaron erwägen – {dosis} mg",
-  "@amiodaronHint": {
-    "description": "Hinweis auf eine mögliche Amiodaron-Gabe",
+  "amiodaronStateConsider": "erwägen",
+  "@amiodaronStateConsider": {
+    "description": "Status des Amiodaron-Hinweises, wenn eine Gabe erwogen werden sollte"
+  },
+  "amiodaronDose": "{dosis} mg",
+  "@amiodaronDose": {
+    "description": "Vorgeschlagene Amiodaron-Dosis",
     "placeholders": {
       "dosis": {
         "type": "int"
@@ -585,10 +573,6 @@
   "amiodaronGiveButton": "Gegeben",
   "@amiodaronGiveButton": {
     "description": "Schaltfläche zum Erfassen einer Amiodaron-Gabe"
-  },
-  "amiodaronDismissButton": "Nicht jetzt",
-  "@amiodaronDismissButton": {
-    "description": "Schaltfläche zum Ausblenden des Amiodaron-Hinweises"
   },
   "amiodaronLastDose": "Letzte Gabe {time}",
   "@amiodaronLastDose": {

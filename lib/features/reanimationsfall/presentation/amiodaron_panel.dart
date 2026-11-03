@@ -6,107 +6,177 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart'
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 
-/// The contextual Amiodaron hint and the last recorded dose.
+/// The Amiodaron hint and the last recorded dose.
+///
+/// The card is only shown while Amiodaron is being considered or after a dose
+/// has been recorded, so it does not take space for the rest of the case.
 class AmiodaronPanel extends StatelessWidget {
   const AmiodaronPanel({
     super.key,
     required this.snapshot,
     required this.layout,
-    required this.isHintVisible,
     required this.onRecordAmiodaron,
-    required this.onDismiss,
   });
 
   final ReanimationsfallSnapshot snapshot;
   final PageLayout layout;
-
-  /// Whether the hint is shown; a dismissed hint keeps the last dose visible.
-  final bool isHintVisible;
-
   final VoidCallback onRecordAmiodaron;
-  final VoidCallback onDismiss;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final hint = snapshot.amiodaronHinweis;
-    final showHint = isHintVisible && hint != AmiodaronHinweis.keine;
     final lastDose = snapshot.letzteAmiodaronGabe;
+    final lastDoseText = lastDose == null
+        ? null
+        : l10n.amiodaronLastDose(formatReanimationsdauer(lastDose.zeitpunkt));
+
+    final decoration = BoxDecoration(
+      color: theme.colorScheme.surfaceContainerHighest,
+      borderRadius: BorderRadius.circular(layout.cardRadius),
+    );
+
+    if (hint == AmiodaronHinweis.keine) {
+      if (lastDoseText == null) return const SizedBox.shrink();
+
+      return Container(
+        padding: layout.medicationPanelPadding,
+        decoration: decoration,
+        child: Row(
+          children: [
+            Icon(
+              Icons.vaccines_outlined,
+              size: PageLayout.iconSmall,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: PageLayout.space6),
+            Expanded(
+              child: Text(
+                '${l10n.amiodaronLabel} · $lastDoseText',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final detail = lastDoseText == null
+        ? l10n.amiodaronDose(hint.dosisMg!)
+        : '${l10n.amiodaronDose(hint.dosisMg!)} · $lastDoseText';
+
+    final giveButton = FilledButton.tonalIcon(
+      onPressed: onRecordAmiodaron,
+      icon: const Icon(Icons.vaccines_outlined),
+      label: Text(l10n.amiodaronGiveButton),
+      style: FilledButton.styleFrom(
+        minimumSize: Size(PageLayout.space0, layout.actionHeight),
+        padding: const EdgeInsets.symmetric(horizontal: PageLayout.space12),
+        textStyle: theme.textTheme.titleSmall,
+      ),
+    );
+
+    if (layout.isCompact) {
+      return Container(
+        padding: layout.medicationPanelPadding,
+        decoration: decoration,
+        child: Row(
+          children: [
+            Icon(
+              Icons.vaccines_outlined,
+              size: PageLayout.iconSmall,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(width: PageLayout.space6),
+            Expanded(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.amiodaronLabel,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(width: PageLayout.space8),
+                    Text(
+                      l10n.amiodaronStateConsider,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(width: PageLayout.space8),
+                    Text(
+                      detail,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: PageLayout.space8),
+            giveButton,
+          ],
+        ),
+      );
+    }
 
     return Container(
       padding: layout.medicationPanelPadding,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(layout.cardRadius),
-      ),
-      child: Row(
+      decoration: decoration,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.vaccines_outlined,
-            size: PageLayout.iconSmall,
-            color: theme.colorScheme.primary,
-          ),
-          const SizedBox(width: PageLayout.space6),
-          Expanded(
-            child: showHint
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          l10n.amiodaronHint(hint.dosisMg!),
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      if (lastDose != null)
-                        Text(
-                          l10n.amiodaronLastDose(
-                            formatReanimationsdauer(lastDose.zeitpunkt),
-                          ),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                    ],
-                  )
-                : lastDose == null
-                ? const SizedBox.shrink()
-                : FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      '${l10n.amiodaronLabel} · '
-                      '${l10n.amiodaronLastDose(formatReanimationsdauer(lastDose.zeitpunkt))}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+          Row(
+            children: [
+              Icon(
+                Icons.vaccines_outlined,
+                size: PageLayout.iconSmall,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: PageLayout.space6),
+              Text(
+                l10n.amiodaronLabel,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(width: PageLayout.space8),
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    l10n.amiodaronStateConsider,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
+                ),
+              ),
+              const SizedBox(width: PageLayout.space8),
+              giveButton,
+            ],
           ),
-          if (showHint) ...[
-            const SizedBox(width: PageLayout.space8),
-            TextButton(
-              onPressed: onDismiss,
-              style: TextButton.styleFrom(
-                minimumSize: Size(PageLayout.space0, layout.actionHeight),
-              ),
-              child: Text(l10n.amiodaronDismissButton),
+          const SizedBox(height: PageLayout.space2),
+          Text(
+            detail,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
-            const SizedBox(width: PageLayout.space8),
-            FilledButton.tonal(
-              onPressed: onRecordAmiodaron,
-              style: FilledButton.styleFrom(
-                minimumSize: Size(PageLayout.space0, layout.actionHeight),
-              ),
-              child: Text(l10n.amiodaronGiveButton),
-            ),
-          ],
+          ),
         ],
       ),
     );

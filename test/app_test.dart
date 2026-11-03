@@ -85,6 +85,15 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> openEndCaseDialog(WidgetTester tester) async {
+    await openActions(tester);
+    final endCase = find.text('Fall beenden');
+    await tester.ensureVisible(endCase);
+    await tester.pumpAndSettle();
+    await tester.tap(endCase);
+    await tester.pumpAndSettle();
+  }
+
   Future<void> recordSchock(WidgetTester tester) async {
     await openActions(tester);
     await tester.scrollUntilVisible(
@@ -125,7 +134,6 @@ void main() {
     expect(find.text('00:00'), findsOneWidget);
     expect(find.text('Nächste Analyse'), findsOneWidget);
     expect(find.text('02:00'), findsOneWidget);
-    expect(find.text('ERC 2025'), findsOneWidget);
     expect(find.byIcon(Icons.bolt), findsOneWidget);
     expect(wakeLock.enabled, isTrue);
   });
@@ -197,7 +205,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 250));
     expect(find.text('fällig'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Fall beenden'));
+    await openEndCaseDialog(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Abbruch'));
     await tester.pumpAndSettle();
@@ -277,7 +285,7 @@ void main() {
     expect(find.text('Druckphase'), findsOneWidget);
     expect(find.text('Nächste Analyse'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Fall beenden'));
+    await openEndCaseDialog(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Abbruch'));
     await tester.pumpAndSettle();
@@ -358,7 +366,7 @@ void main() {
     expect(find.text('02:00'), findsNWidgets(2));
     expect(find.text('CPR fortsetzen'), findsNothing);
 
-    await tester.tap(find.byTooltip('Fall beenden'));
+    await openEndCaseDialog(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Abbruch'));
     await tester.pumpAndSettle();
@@ -437,7 +445,7 @@ void main() {
     expect(find.text('AHA 2025'), findsOneWidget);
 
     await startNow(tester);
-    expect(find.text('AHA 2025'), findsOneWidget);
+    expect(find.text('AHA 2025'), findsNothing);
   });
 
   testWidgets('shows the AHA pause hint only after ten seconds', (
@@ -479,7 +487,7 @@ void main() {
     expect(find.text('Druckphase'), findsOneWidget);
     expect(find.text('Nächste Analyse'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Fall beenden'));
+    await openEndCaseDialog(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Abbruch'));
     await tester.pumpAndSettle();
@@ -594,20 +602,19 @@ void main() {
     final settings = AppSettings();
     await pumpApp(tester, settings: settings);
     await startNow(tester);
-    expect(find.text('ERC 2025'), findsOneWidget);
 
     settings.leitlinienprofil = Leitlinienprofil.aha2025;
     await tester.pump();
 
-    expect(find.text('ERC 2025'), findsOneWidget);
+    expect(find.text('ERC 2025'), findsNothing);
     expect(find.text('AHA 2025'), findsNothing);
 
-    await tester.tap(find.byTooltip('Fall beenden'));
-    await tester.pumpAndSettle();
+    await openEndCaseDialog(tester);
     await tester.tap(find.text('Abbruch'));
     await tester.pumpAndSettle();
 
     expect(find.text('Zusammenfassung'), findsOneWidget);
+    expect(find.textContaining('ERC 2025'), findsOneWidget);
 
     await tester.tap(
       find
@@ -623,7 +630,7 @@ void main() {
     expect(wakeLock.enabled, isFalse);
 
     await startNow(tester);
-    expect(find.text('AHA 2025'), findsOneWidget);
+    expect(find.text('AHA 2025'), findsNothing);
   });
 
   testWidgets('keeps the timer accurate after the app is backgrounded', (
@@ -854,8 +861,9 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('shows the Amiodaron hint only after the third Schock and '
-      'dismisses it without recording a dose', (tester) async {
+  testWidgets('shows the Amiodaron hint only after the third Schock', (
+    tester,
+  ) async {
     await pumpApp(tester);
     await startNow(tester);
 
@@ -863,20 +871,14 @@ void main() {
       await recordSchock(tester);
     }
 
-    expect(find.text('Amiodaron erwägen – 300 mg'), findsNothing);
+    expect(find.text('erwägen'), findsNothing);
     expect(find.textContaining('Letzte Gabe'), findsNothing);
 
     await recordSchock(tester);
 
-    expect(find.text('Amiodaron erwägen – 300 mg'), findsOneWidget);
+    expect(find.text('erwägen'), findsOneWidget);
+    expect(find.text('300 mg'), findsOneWidget);
     expect(find.text('Gegeben'), findsOneWidget);
-    expect(find.text('Nicht jetzt'), findsOneWidget);
-    expect(find.textContaining('Letzte Gabe'), findsNothing);
-
-    await tester.tap(find.text('Nicht jetzt'));
-    await tester.pump();
-
-    expect(find.text('Amiodaron erwägen – 300 mg'), findsNothing);
     expect(find.textContaining('Letzte Gabe'), findsNothing);
   });
 
@@ -889,28 +891,30 @@ void main() {
       await recordSchock(tester);
     }
 
-    expect(find.text('Amiodaron erwägen – 300 mg'), findsOneWidget);
+    expect(find.text('erwägen'), findsOneWidget);
+    expect(find.text('300 mg'), findsOneWidget);
     expect(find.textContaining('Letzte Gabe'), findsNothing);
 
     await tester.tap(find.text('Gegeben'));
     await tester.pump();
 
-    expect(find.text('Amiodaron erwägen – 300 mg'), findsNothing);
+    expect(find.text('erwägen'), findsNothing);
     expect(find.text('Amiodaron · Letzte Gabe 00:00'), findsOneWidget);
 
     await recordSchock(tester);
-    expect(find.text('Amiodaron erwägen – 150 mg'), findsNothing);
+    expect(find.text('erwägen'), findsNothing);
 
     clock.advance(const Duration(seconds: 45));
     await tester.pump(const Duration(milliseconds: 250));
 
     await recordSchock(tester);
-    expect(find.text('Amiodaron erwägen – 150 mg'), findsOneWidget);
+    expect(find.text('erwägen'), findsOneWidget);
+    expect(find.textContaining('150 mg'), findsOneWidget);
 
     await tester.tap(find.text('Gegeben'));
     await tester.pump();
 
-    expect(find.text('Amiodaron erwägen – 150 mg'), findsNothing);
+    expect(find.text('erwägen'), findsNothing);
     expect(find.text('Amiodaron · Letzte Gabe 00:45'), findsOneWidget);
   });
 
@@ -927,11 +931,12 @@ void main() {
     }
     await tester.tap(find.text('Gegeben'));
     await tester.pump();
-    expect(find.text('Amiodaron erwägen – 150 mg'), findsNothing);
+    expect(find.text('erwägen'), findsNothing);
 
     await recordSchock(tester);
 
-    expect(find.text('Amiodaron erwägen – 150 mg'), findsOneWidget);
+    expect(find.text('erwägen'), findsOneWidget);
+    expect(find.textContaining('150 mg'), findsOneWidget);
   });
 
   testWidgets('keeps the Amiodaron hint inside a compact landscape phone', (
@@ -949,10 +954,10 @@ void main() {
       await recordSchock(tester);
     }
 
-    expect(find.text('Amiodaron erwägen – 300 mg'), findsOneWidget);
-    expectInsideViewport(tester, find.text('Amiodaron erwägen – 300 mg'));
+    expect(find.text('erwägen'), findsOneWidget);
+    expect(find.textContaining('300 mg'), findsOneWidget);
+    expectInsideViewport(tester, find.text('erwägen'));
     expectInsideViewport(tester, find.text('Gegeben'));
-    expectInsideViewport(tester, find.text('Nicht jetzt'));
     expect(tester.takeException(), isNull);
   });
 
@@ -999,7 +1004,6 @@ void main() {
 
       expect(find.text('02:00'), findsOneWidget);
       expect(find.text('Druckphase'), findsOneWidget);
-      expect(find.text('ERC 2025'), findsOneWidget);
       expect(find.text('Schocks: 0'), findsOneWidget);
       expect(find.text('Adrenalin'), findsOneWidget);
       expect(find.text('Gabe'), findsOneWidget);
@@ -1009,7 +1013,6 @@ void main() {
       expectInsideViewport(tester, find.text('Schocks: 0'));
       expectInsideViewport(tester, find.text('Gabe'));
       expectInsideViewport(tester, find.byTooltip('Menü öffnen'));
-      expectInsideViewport(tester, find.byTooltip('Fall beenden'));
       expect(tester.takeException(), isNull);
 
       await tester.tap(find.text('Analyse starten'));
@@ -1151,7 +1154,7 @@ void main() {
     clock.advance(const Duration(seconds: 10));
     await tester.pump(const Duration(milliseconds: 250));
 
-    await tester.tap(find.byTooltip('Fall beenden'));
+    await openEndCaseDialog(tester);
     await tester.pumpAndSettle();
 
     expect(find.text('Grund'), findsOneWidget);
@@ -1181,7 +1184,7 @@ void main() {
     await pumpApp(tester);
     await startNow(tester);
 
-    await tester.tap(find.byTooltip('Fall beenden'));
+    await openEndCaseDialog(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Abbrechen'));
     await tester.pumpAndSettle();
@@ -1189,7 +1192,7 @@ void main() {
     expect(find.text('Druckphase'), findsOneWidget);
     expect(find.text('Zusammenfassung'), findsNothing);
 
-    await tester.tap(find.byTooltip('Fall beenden'));
+    await openEndCaseDialog(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Abbruch'));
     await tester.pumpAndSettle();
@@ -1268,7 +1271,7 @@ void main() {
     await pumpApp(tester);
     await startNow(tester);
 
-    await tester.tap(find.byTooltip('Fall beenden'));
+    await openEndCaseDialog(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Übergabe'));
     await tester.pumpAndSettle();
@@ -1308,7 +1311,7 @@ void main() {
 
     await recordSchock(tester);
 
-    await tester.tap(find.byTooltip('Fall beenden'));
+    await openEndCaseDialog(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Fall verwerfen'));
     await tester.pumpAndSettle();
@@ -1340,7 +1343,7 @@ void main() {
     await pumpApp(tester);
     await startNow(tester);
 
-    await tester.tap(find.byTooltip('Fall beenden'));
+    await openEndCaseDialog(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Abbruch'));
     await tester.pumpAndSettle();
@@ -1465,7 +1468,7 @@ void main() {
     await tester.pumpAndSettle();
     expect((await store.load()).single.notizen, hasLength(1));
 
-    await tester.tap(find.byTooltip('Fall beenden'));
+    await openEndCaseDialog(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Abbruch'));
     await tester.pumpAndSettle();
@@ -1682,7 +1685,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
-    await tester.tap(find.byTooltip('Fall beenden'));
+    await openEndCaseDialog(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Übergabe'));
     await tester.pumpAndSettle();
@@ -1920,7 +1923,6 @@ void main() {
 
     await startNow(tester);
 
-    expect(find.text('Demo'), findsOneWidget);
     expect(find.text('+30 s'), findsOneWidget);
     expect(find.text('02:00'), findsOneWidget);
 
@@ -1987,7 +1989,6 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(find.text('Demo'), findsOneWidget);
     expect(find.text('+30 s'), findsOneWidget);
     expect(find.text('01:00'), findsNWidgets(2));
   });
@@ -2000,7 +2001,7 @@ void main() {
 
     await tester.tap(find.text('+30 s'));
     await tester.pump();
-    await tester.tap(find.byTooltip('Fall beenden'));
+    await openEndCaseDialog(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Abbruch'));
     await tester.pumpAndSettle();
@@ -2208,7 +2209,7 @@ void main() {
     clock.advance(const Duration(seconds: 10));
     await tester.pump(const Duration(milliseconds: 250));
 
-    await tester.tap(find.byTooltip('Fall beenden'));
+    await openEndCaseDialog(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Übergabe'));
     await tester.pumpAndSettle();
@@ -2262,7 +2263,7 @@ void main() {
     await tester.pump();
     clock.advance(const Duration(minutes: 1));
     await tester.pump(const Duration(milliseconds: 250));
-    await tester.tap(find.byTooltip('Fall beenden'));
+    await openEndCaseDialog(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Übergabe'));
     await tester.pumpAndSettle();
@@ -2404,7 +2405,7 @@ void main() {
     await tester.pumpAndSettle();
     clock.advance(const Duration(seconds: 10));
     await tester.pump(const Duration(milliseconds: 250));
-    await tester.tap(find.byTooltip('Fall beenden'));
+    await openEndCaseDialog(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Übergabe'));
     await tester.pumpAndSettle();
@@ -2565,7 +2566,7 @@ void main() {
 
     await tester.tap(find.byType(BackButton).first);
     await tester.pumpAndSettle();
-    await tester.tap(find.byTooltip('Fall beenden'));
+    await openEndCaseDialog(tester);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Übergabe'));
     await tester.pumpAndSettle();
