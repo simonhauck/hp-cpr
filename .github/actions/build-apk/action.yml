@@ -1,0 +1,11 @@
+name: Build APK release
+description: Build the Flutter release APK. Requires Nix to be installed.
+
+runs:
+  using: composite
+  steps:
+    - name: Build APK
+      uses: ./.github/actions/nix
+      with:
+        flake: .#android
+        command: flutter build apk --release

@@ -158,7 +158,7 @@ release-please PRs are exempt from the label check.
 
 ### Releases
 
-release-please keeps one release PR open. Merge it when you want to cut a release. Merging it bumps `pubspec.yaml` (including the `+build` number) and `CHANGELOG.md`; the delivery workflow then checks the merged commit, creates the `vX.Y.Z` tag and GitHub Release, deploys the release build to Pages, and attaches:
+release-please keeps one release PR open. Merge it when you want to cut a release. Merging it bumps `pubspec.yaml` (including the `+build` number) and `CHANGELOG.md`; the CI/CD workflow then checks the merged commit, creates the `vX.Y.Z` tag and GitHub Release, deploys the release build to Pages, and attaches:
 
 - `hp-cpr-<version>-debug-signed.apk` — release-mode, debug-signed, for testing only
 - `hp-cpr-web-<version>.zip`
