@@ -1,4 +1,4 @@
-name: Deliver
+name: CI/CD
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: deliver-main
+  group: cicd-main
   cancel-in-progress: false
 
 jobs:
@@ -19,7 +19,7 @@ jobs:
   release-please:
     name: Release Please
     needs: checks
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
@@ -44,10 +44,11 @@ jobs:
             echo "is_current=false" >> "$GITHUB_OUTPUT"
             echo "::notice::Skipping release-please because main advanced to ${current}."
           fi
+
       - name: Run release-please
         id: release
         if: steps.current.outputs.is_current == 'true'
-        uses: googleapis/release-please-action@0dfd8538845b8e92600d271a895a5372865d4062 # v5
+        uses: googleapis/release-please-action@v5
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
@@ -58,7 +59,7 @@ jobs:
       - checks
       - release-please
     if: needs.release-please.outputs.release_created == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       pages: write
@@ -70,48 +71,35 @@ jobs:
       # Release artifacts must come from the tagged commit, not from the
       # commit that happened to trigger this workflow run.
       - name: Check out release tag
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.release-please.outputs.tag_name }}
-      - name: Install Nix
-        uses: DeterminateSystems/determinate-nix-action@f296148a827001a9a82d3685b53210c06e5d3b67 # v3
-      - name: Cache Nix store
-        uses: nix-community/cache-nix-action@7df957e333c1e5da7721f60227dbba6d06080569 # v7
+
+      - name: Set up Nix and caches
+        uses: ./.github/actions/setup
         with:
-          primary-key: nix-release-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
-          restore-prefixes-first-match: |
+          nix-cache-prefix: nix-release
+          nix-restore-prefixes: |
             nix-ci-${{ runner.os }}-
             nix-android-${{ runner.os }}-
-          save: false
-      - name: Cache pub packages
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
-        with:
-          path: ~/.pub-cache
-          key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
-          restore-keys: pub-${{ runner.os }}-
-      - name: Cache Gradle
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
-          restore-keys: gradle-${{ runner.os }}-
+          save-nix-cache: false
+          gradle-cache: true
+
       - name: Build web
-        run: |
-          base_href="/${GITHUB_REPOSITORY#*/}/"
-          nix develop .#ci --command flutter build web --release --base-href "$base_href"
-      - name: Verify app license is bundled
-        run: grep -q '^hp_cpr$' build/web/assets/NOTICES
+        uses: ./.github/actions/build-web
+
       - name: Build APK
-        run: nix develop .#android --command flutter build apk --release
+        uses: ./.github/actions/build-apk
+
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        uses: actions/upload-pages-artifact@v5
         with:
           path: build/web
+
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
+        uses: actions/deploy-pages@v5
+
       - name: Attach release assets
         env:
           GH_TOKEN: ${{ github.token }}

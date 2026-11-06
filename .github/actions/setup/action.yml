@@ -1,0 +1,49 @@
+name: Setup Nix and caches
+description: Install Nix and restore the Nix store, pub, and Gradle caches.
+
+inputs:
+  nix-cache-prefix:
+    description: Cache key prefix without the OS suffix, for example nix-ci.
+    required: true
+  nix-restore-prefixes:
+    description: Newline-separated cache key prefixes to restore first. Defaults to the prefix of nix-cache-prefix.
+    required: false
+    default: ""
+  save-nix-cache:
+    description: Whether to save the Nix store cache when the job finishes.
+    required: false
+    default: "true"
+  gradle-cache:
+    description: Whether to restore the Gradle caches.
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Install Nix
+      uses: DeterminateSystems/determinate-nix-action@v3
+
+    - name: Cache Nix store
+      uses: nix-community/cache-nix-action@v7
+      with:
+        primary-key: ${{ inputs.nix-cache-prefix }}-${{ runner.os }}-${{ hashFiles('**/flake.lock') }}
+        restore-prefixes-first-match: ${{ inputs.nix-restore-prefixes || format('{0}-{1}-', inputs.nix-cache-prefix, runner.os) }}
+        save: ${{ inputs.save-nix-cache }}
+
+    - name: Cache pub packages
+      uses: actions/cache@v6
+      with:
+        path: ~/.pub-cache
+        key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+        restore-keys: pub-${{ runner.os }}-
+
+    - name: Cache Gradle
+      if: inputs.gradle-cache == 'true'
+      uses: actions/cache@v6
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*', 'android/gradle/wrapper/gradle-wrapper.properties') }}
+        restore-keys: gradle-${{ runner.os }}-

@@ -136,18 +136,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get phaseStripRosc => 'ROSC · Reanimation pausiert';
 
   @override
-  String get phaseStripDruckphaseCompact => 'Druckphase · Komprimieren';
-
-  @override
-  String get phaseStripDruckphaseDueCompact => 'Druckphase · Analyse starten';
-
-  @override
-  String get phaseStripAnalysephaseCompact => 'Analysephase · Rhythmus prüfen';
-
-  @override
-  String get phaseStripRoscCompact => 'ROSC · Pausiert';
-
-  @override
   String schockCountChip(int count) {
     return 'Schocks: $count';
   }
@@ -435,15 +423,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get amiodaronLabel => 'Amiodaron';
 
   @override
-  String amiodaronHint(int dosis) {
-    return 'Amiodaron erwägen – $dosis mg';
+  String get amiodaronStateConsider => 'erwägen';
+
+  @override
+  String amiodaronDose(int dosis) {
+    return '$dosis mg';
   }
 
   @override
   String get amiodaronGiveButton => 'Gegeben';
-
-  @override
-  String get amiodaronDismissButton => 'Nicht jetzt';
 
   @override
   String amiodaronLastDose(String time) {

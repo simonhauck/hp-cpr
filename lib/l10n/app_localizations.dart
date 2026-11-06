@@ -322,30 +322,6 @@ abstract class AppLocalizations {
   /// **'ROSC · Reanimation pausiert'**
   String get phaseStripRosc;
 
-  /// Kompakte Aufgabe in der Druckphase
-  ///
-  /// In de, this message translates to:
-  /// **'Druckphase · Komprimieren'**
-  String get phaseStripDruckphaseCompact;
-
-  /// Kompakte Aufgabe, wenn die Rhythmusanalyse fällig ist
-  ///
-  /// In de, this message translates to:
-  /// **'Druckphase · Analyse starten'**
-  String get phaseStripDruckphaseDueCompact;
-
-  /// Kompakte Aufgabe in der Analysephase
-  ///
-  /// In de, this message translates to:
-  /// **'Analysephase · Rhythmus prüfen'**
-  String get phaseStripAnalysephaseCompact;
-
-  /// Kompakte Statuszeile im ROSC-Zustand
-  ///
-  /// In de, this message translates to:
-  /// **'ROSC · Pausiert'**
-  String get phaseStripRoscCompact;
-
   /// Kompakte Anzeige der Schockanzahl
   ///
   /// In de, this message translates to:
@@ -874,23 +850,23 @@ abstract class AppLocalizations {
   /// **'Amiodaron'**
   String get amiodaronLabel;
 
-  /// Hinweis auf eine mögliche Amiodaron-Gabe
+  /// Status des Amiodaron-Hinweises, wenn eine Gabe erwogen werden sollte
   ///
   /// In de, this message translates to:
-  /// **'Amiodaron erwägen – {dosis} mg'**
-  String amiodaronHint(int dosis);
+  /// **'erwägen'**
+  String get amiodaronStateConsider;
+
+  /// Vorgeschlagene Amiodaron-Dosis
+  ///
+  /// In de, this message translates to:
+  /// **'{dosis} mg'**
+  String amiodaronDose(int dosis);
 
   /// Schaltfläche zum Erfassen einer Amiodaron-Gabe
   ///
   /// In de, this message translates to:
   /// **'Gegeben'**
   String get amiodaronGiveButton;
-
-  /// Schaltfläche zum Ausblenden des Amiodaron-Hinweises
-  ///
-  /// In de, this message translates to:
-  /// **'Nicht jetzt'**
-  String get amiodaronDismissButton;
 
   /// Zeitpunkt der letzten Amiodaron-Gabe
   ///

@@ -141,7 +141,7 @@ class _StartPageState extends State<StartPage> {
           onCustomStartzeit: () => _showCustomStartzeit(context),
         );
 
-        return layout.isLandscape
+        return layout.usesTwoColumnStartCards
             ? Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -251,6 +251,47 @@ class _StartHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final appTitleStyle =
+        (layout.isCompact
+                ? theme.textTheme.labelSmall
+                : theme.textTheme.labelLarge)
+            ?.copyWith(
+              color: theme.colorScheme.primary,
+              letterSpacing: PageLayout.appTitleLetterSpacing,
+            );
+    final titleStyle =
+        (layout.isCompact
+                ? theme.textTheme.titleMedium
+                : theme.textTheme.headlineSmall)
+            ?.copyWith(fontWeight: FontWeight.w700);
+
+    final chip = AnimatedBuilder(
+      animation: settings,
+      builder: (context, _) => LeitlinienprofilChip(
+        leitlinienprofil: settings.leitlinienprofil,
+        compact: layout.isCompact,
+        onPressed: onOpenSettings,
+      ),
+    );
+
+    if (layout.stacksStartHeader) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Text(l10n.appTitle, style: appTitleStyle),
+              const Spacer(),
+              chip,
+              const SizedBox(width: PageLayout.space8),
+              const AppMenuButton(),
+            ],
+          ),
+          const SizedBox(height: PageLayout.space4),
+          Text(l10n.newCaseTitle, style: titleStyle),
+        ],
+      );
+    }
 
     return Row(
       children: [
@@ -258,40 +299,16 @@ class _StartHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                l10n.appTitle,
-                style:
-                    (layout.isCompact
-                            ? theme.textTheme.labelSmall
-                            : theme.textTheme.labelLarge)
-                        ?.copyWith(
-                          color: theme.colorScheme.primary,
-                          letterSpacing: PageLayout.appTitleLetterSpacing,
-                        ),
-              ),
+              Text(l10n.appTitle, style: appTitleStyle),
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  l10n.newCaseTitle,
-                  style:
-                      (layout.isCompact
-                              ? theme.textTheme.titleMedium
-                              : theme.textTheme.headlineSmall)
-                          ?.copyWith(fontWeight: FontWeight.w700),
-                ),
+                child: Text(l10n.newCaseTitle, style: titleStyle),
               ),
             ],
           ),
         ),
-        AnimatedBuilder(
-          animation: settings,
-          builder: (context, _) => LeitlinienprofilChip(
-            leitlinienprofil: settings.leitlinienprofil,
-            compact: layout.isCompact,
-            onPressed: onOpenSettings,
-          ),
-        ),
+        chip,
         const SizedBox(width: PageLayout.space8),
         const AppMenuButton(),
       ],
