@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.0](https://github.com/simonhauck/hp-cpr/compare/v0.2.0...v0.3.0) (2026-11-06)
+
+
+### Features
+
+* **ui:** add responsive phone layout ([#50](https://github.com/simonhauck/hp-cpr/issues/50)) ([dd0f0ca](https://github.com/simonhauck/hp-cpr/commit/dd0f0ca7be2aa3940325b3a8219038f053348a2f))
+
+
+### Bug Fixes
+
+* **ci:** build release artifacts from the tag ([#47](https://github.com/simonhauck/hp-cpr/issues/47)) ([d202d8c](https://github.com/simonhauck/hp-cpr/commit/d202d8ca06016c8543d0227efc338ba8fc6d1867))
+
 ## [0.2.0](https://github.com/simonhauck/hp-cpr/compare/v0.1.0...v0.2.0) (2026-11-01)
 
 
