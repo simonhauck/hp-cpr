@@ -61,119 +61,102 @@ class AmiodaronPanel extends StatelessWidget {
           )
         : null;
 
-    final decoration = BoxDecoration(
-      color: theme.colorScheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(layout.cardRadius),
-    );
-
-    if (layout.isCompact) {
-      return Container(
-        padding: layout.medicationPanelPadding,
-        decoration: decoration,
-        child: Row(
-          children: [
-            Icon(
-              Icons.vaccines_outlined,
-              size: PageLayout.iconSmall,
-              color: theme.colorScheme.primary,
+    Widget titleRow({Widget? trailing}) {
+      return Row(
+        children: [
+          Icon(
+            Icons.vaccines_outlined,
+            size: PageLayout.iconSmall,
+            color: theme.colorScheme.primary,
+          ),
+          const SizedBox(width: PageLayout.space6),
+          Text(
+            l10n.amiodaronLabel,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
             ),
-            const SizedBox(width: PageLayout.space6),
-            Expanded(
+          ),
+          const SizedBox(width: PageLayout.space8),
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerRight,
               child: FittedBox(
                 fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      l10n.amiodaronLabel,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(width: PageLayout.space8),
-                    Text(
-                      stateLabel,
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: stateColor,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    if (detail != null) ...[
-                      const SizedBox(width: PageLayout.space8),
-                      Text(
-                        detail,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
-                      ),
-                    ],
-                  ],
+                child: Text(
+                  stateLabel,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: stateColor,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
-            if (giveButton != null) ...[
-              const SizedBox(width: PageLayout.space8),
-              giveButton,
-            ],
+          ),
+          if (trailing != null) ...[
+            const SizedBox(width: PageLayout.space8),
+            trailing,
           ],
+        ],
+      );
+    }
+
+    Widget details({required bool allowWrap}) {
+      final text = Text(
+        detail!,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+          fontFeatures: const [FontFeature.tabularFigures()],
         ),
       );
+
+      return allowWrap
+          ? text
+          : FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: text,
+            );
     }
 
     return Container(
       padding: layout.medicationPanelPadding,
-      decoration: decoration,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.vaccines_outlined,
-                size: PageLayout.iconSmall,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(width: PageLayout.space6),
-              Text(
-                l10n.amiodaronLabel,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(width: PageLayout.space8),
-              Expanded(
-                child: Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    stateLabel,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: stateColor,
-                      fontWeight: FontWeight.w700,
-                    ),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(layout.cardRadius),
+      ),
+      child: layout.stacksMedicationPanel
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                titleRow(trailing: giveButton),
+                if (detail != null) ...[
+                  const SizedBox(height: PageLayout.space2),
+                  details(allowWrap: true),
+                ],
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      titleRow(),
+                      if (detail != null) ...[
+                        const SizedBox(height: PageLayout.space2),
+                        details(allowWrap: false),
+                      ],
+                    ],
                   ),
                 ),
-              ),
-              if (giveButton != null) ...[
-                const SizedBox(width: PageLayout.space8),
-                giveButton,
+                if (giveButton != null) ...[
+                  const SizedBox(width: PageLayout.space8),
+                  giveButton,
+                ],
               ],
-            ],
-          ),
-          if (detail != null) ...[
-            const SizedBox(height: PageLayout.space2),
-            Text(
-              detail,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
             ),
-          ],
-        ],
-      ),
     );
   }
 }
