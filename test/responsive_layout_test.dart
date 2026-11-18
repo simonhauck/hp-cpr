@@ -57,6 +57,12 @@ void main() {
     expectInsideViewport(tester, find.text('Schocks: 0'));
     expectInsideViewport(tester, find.text('Gabe'));
 
+    final amiodaronNotRecommended = find.text('nicht empfohlen');
+    expect(amiodaronNotRecommended, findsOneWidget);
+    expectNoScale(tester, amiodaronNotRecommended);
+    expectInsideViewport(tester, amiodaronNotRecommended);
+    expect(find.text('Gegeben'), findsNothing);
+
     final phaseLabel = find.text('Druckphase · Jetzt 2 Minuten komprimieren');
     expect(phaseLabel, findsOneWidget);
     expect(
@@ -99,7 +105,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('erwägen'), findsNothing);
-    final amiodaronLastDose = find.text('Amiodaron · Letzte Gabe 01:00');
+    expect(find.text('nicht empfohlen'), findsOneWidget);
+    final amiodaronLastDose = find.text('Letzte Gabe 01:00');
     expect(amiodaronLastDose, findsOneWidget);
     expectNoScale(tester, amiodaronLastDose);
     expectInsideViewport(tester, amiodaronLastDose);

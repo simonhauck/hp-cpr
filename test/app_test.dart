@@ -861,21 +861,27 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('shows the Amiodaron hint only after the third Schock', (
-    tester,
-  ) async {
+  testWidgets('shows Amiodaron with a not-recommended hint before the third '
+      'Schock', (tester) async {
     await pumpApp(tester);
     await startNow(tester);
+
+    expect(find.text('Amiodaron'), findsOneWidget);
+    expect(find.text('nicht empfohlen'), findsOneWidget);
+    expect(find.text('erwägen'), findsNothing);
+    expect(find.text('Gegeben'), findsNothing);
 
     for (var count = 0; count < 2; count++) {
       await recordSchock(tester);
     }
 
+    expect(find.text('nicht empfohlen'), findsOneWidget);
     expect(find.text('erwägen'), findsNothing);
     expect(find.textContaining('Letzte Gabe'), findsNothing);
 
     await recordSchock(tester);
 
+    expect(find.text('nicht empfohlen'), findsNothing);
     expect(find.text('erwägen'), findsOneWidget);
     expect(find.text('300 mg'), findsOneWidget);
     expect(find.text('Gegeben'), findsOneWidget);
@@ -899,10 +905,12 @@ void main() {
     await tester.pump();
 
     expect(find.text('erwägen'), findsNothing);
-    expect(find.text('Amiodaron · Letzte Gabe 00:00'), findsOneWidget);
+    expect(find.text('nicht empfohlen'), findsOneWidget);
+    expect(find.text('Letzte Gabe 00:00'), findsOneWidget);
 
     await recordSchock(tester);
     expect(find.text('erwägen'), findsNothing);
+    expect(find.text('nicht empfohlen'), findsOneWidget);
 
     clock.advance(const Duration(seconds: 45));
     await tester.pump(const Duration(milliseconds: 250));
@@ -915,7 +923,8 @@ void main() {
     await tester.pump();
 
     expect(find.text('erwägen'), findsNothing);
-    expect(find.text('Amiodaron · Letzte Gabe 00:45'), findsOneWidget);
+    expect(find.text('nicht empfohlen'), findsOneWidget);
+    expect(find.text('Letzte Gabe 00:45'), findsOneWidget);
   });
 
   testWidgets('uses the AHA second Amiodaron dose trigger after the fourth '
@@ -932,6 +941,7 @@ void main() {
     await tester.tap(find.text('Gegeben'));
     await tester.pump();
     expect(find.text('erwägen'), findsNothing);
+    expect(find.text('nicht empfohlen'), findsOneWidget);
 
     await recordSchock(tester);
 
@@ -949,6 +959,10 @@ void main() {
 
     await pumpApp(tester);
     await startNow(tester);
+
+    expect(find.text('nicht empfohlen'), findsOneWidget);
+    expectInsideViewport(tester, find.text('nicht empfohlen'));
+    expect(find.text('Gegeben'), findsNothing);
 
     for (var count = 0; count < 3; count++) {
       await recordSchock(tester);

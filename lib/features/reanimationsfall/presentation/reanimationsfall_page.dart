@@ -6,7 +6,6 @@ import 'package:hp_cpr/core/wake_lock.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/features/messwerte/presentation/messwerte_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
-import 'package:hp_cpr/features/reanimationsfall/domain/amiodaron.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/actions_sheet.dart';
@@ -310,11 +309,6 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
                 ],
               );
 
-        final showAmiodaronHint =
-            snapshot.amiodaronHinweis != AmiodaronHinweis.keine;
-        final showAmiodaronPanel =
-            showAmiodaronHint || snapshot.amiodaronGaben.isNotEmpty;
-
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -326,14 +320,12 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
               onRecordAdrenalin: _recordAdrenalin,
               isRecordingEnabled: snapshot.istLaufend,
             ),
-            if (showAmiodaronPanel) ...[
-              SizedBox(height: layout.contentGap),
-              AmiodaronPanel(
-                snapshot: snapshot,
-                layout: layout,
-                onRecordAmiodaron: _recordAmiodaron,
-              ),
-            ],
+            SizedBox(height: layout.contentGap),
+            AmiodaronPanel(
+              snapshot: snapshot,
+              layout: layout,
+              onRecordAmiodaron: _recordAmiodaron,
+            ),
           ],
         );
       },
@@ -892,7 +884,7 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
           const SizedBox(height: PageLayout.space8),
           _overdueHint(l10n, theme, foreground),
         ],
-        const SizedBox(height: PageLayout.space8),
+        const SizedBox(height: PageLayout.space6),
         _choiceGrid(choices),
         const SizedBox(height: PageLayout.space4),
         TextButton(
