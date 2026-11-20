@@ -420,9 +420,9 @@
   "@adrenalinLabel": {
     "description": "Beschriftung des Adrenalin-Zeitfensters"
   },
-  "adrenalinRecordButton": "Gabe",
-  "@adrenalinRecordButton": {
-    "description": "Schaltfläche zum Erfassen einer Adrenalin-Gabe"
+  "medikamentGabeButton": "Gabe erfassen",
+  "@medikamentGabeButton": {
+    "description": "Schaltfläche zum Erfassen einer Medikamenten-Gabe (Adrenalin, Amiodaron)"
   },
   "adrenalinFirstDoseDue": "Erste Gabe fällig",
   "@adrenalinFirstDoseDue": {
@@ -444,9 +444,9 @@
   "@adrenalinStateOverdue": {
     "description": "Zustand des Adrenalin-Zeitfensters nach 5 Minuten"
   },
-  "adrenalinLastDoseAt": "Letzte Gabe: {time} Uhr, vor {since}",
-  "@adrenalinLastDoseAt": {
-    "description": "Uhrzeit und verstrichene Zeit seit der letzten Adrenalin-Gabe",
+  "medikamentLetzteGabe": "Letzte Gabe: {time} Uhr, vor {since}",
+  "@medikamentLetzteGabe": {
+    "description": "Uhrzeit und verstrichene Zeit seit der letzten Medikamenten-Gabe",
     "placeholders": {
       "time": {
         "type": "String"
@@ -563,19 +563,6 @@
     "placeholders": {
       "dosis": {
         "type": "int"
-      }
-    }
-  },
-  "amiodaronGiveButton": "Gegeben",
-  "@amiodaronGiveButton": {
-    "description": "Schaltfläche zum Erfassen einer Amiodaron-Gabe"
-  },
-  "amiodaronLastDose": "Letzte Gabe {time}",
-  "@amiodaronLastDose": {
-    "description": "Zeitpunkt der letzten Amiodaron-Gabe",
-    "placeholders": {
-      "time": {
-        "type": "String"
       }
     }
   },
