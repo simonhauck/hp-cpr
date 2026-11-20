@@ -7,6 +7,7 @@ import 'package:hp_cpr/app.dart';
 import 'package:hp_cpr/features/about/presentation/about_page.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_store.dart';
+import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
 
 import 'support/fake_clock.dart';
@@ -1315,10 +1316,10 @@ void main() {
     await openDrawer(tester);
     await selectFromDrawer(tester, 'Einsatzlog');
 
-    expect(find.text('Reanimationsfall 08:00:00'), findsOneWidget);
+    expect(find.text('Reanimationsfall 25.10.2026, 08:00'), findsOneWidget);
     expect(find.text('CPR 00:00 · ERC 2025'), findsOneWidget);
 
-    await tester.tap(find.text('Reanimationsfall 08:00:00'));
+    await tester.tap(find.text('Reanimationsfall 25.10.2026, 08:00'));
     await tester.pumpAndSettle();
     expect(find.text('Zusammenfassung'), findsOneWidget);
     expect(find.text('Reanimationsfall beendet'), findsOneWidget);
@@ -1327,7 +1328,44 @@ void main() {
     await openDrawer(tester);
     await selectFromDrawer(tester, 'Einsatzlog');
 
-    expect(find.text('Reanimationsfall 08:00:00'), findsOneWidget);
+    expect(find.text('Reanimationsfall 25.10.2026, 08:00'), findsOneWidget);
+  });
+
+  testWidgets('groups Einsatzlog entries by day, newest first', (tester) async {
+    Future<void> storeEndedCase(DateTime startzeit) async {
+      final endedCase = Reanimationsfall.start(
+        clock: FakeClock(wallTime: startzeit),
+      );
+      endedCase.endReanimationsfall(Beendigungsgrund.uebergabe);
+      await store.save(endedCase.exportState());
+    }
+
+    clock = FakeClock(wallTime: DateTime(2026, 11, 20, 12));
+    await storeEndedCase(DateTime(2026, 10, 25, 8));
+    await storeEndedCase(DateTime(2026, 11, 19, 18, 30));
+    await storeEndedCase(DateTime(2026, 11, 20, 9));
+    await pumpApp(tester);
+    await openDrawer(tester);
+    await selectFromDrawer(tester, 'Einsatzlog');
+
+    final rowsInOrder = [
+      'Heute',
+      'Reanimationsfall 20.11.2026, 09:00',
+      'Gestern',
+      'Reanimationsfall 19.11.2026, 18:30',
+      '25.10.2026',
+      'Reanimationsfall 25.10.2026, 08:00',
+    ];
+    for (final row in rowsInOrder) {
+      expect(find.text(row), findsOneWidget);
+    }
+    for (var i = 1; i < rowsInOrder.length; i++) {
+      expect(
+        tester.getTopLeft(find.text(rowsInOrder[i - 1])).dy,
+        lessThan(tester.getTopLeft(find.text(rowsInOrder[i])).dy),
+        reason: '${rowsInOrder[i - 1]} should be above ${rowsInOrder[i]}',
+      );
+    }
   });
 
   testWidgets('marks a mis-started case as Verworfen and retains it in the '
@@ -1352,10 +1390,10 @@ void main() {
     await openDrawer(tester);
     await selectFromDrawer(tester, 'Einsatzlog');
 
-    expect(find.text('Reanimationsfall 08:00:00'), findsOneWidget);
+    expect(find.text('Reanimationsfall 25.10.2026, 08:00'), findsOneWidget);
     expect(find.text('CPR 00:00 · ERC 2025 · Verworfen'), findsOneWidget);
 
-    await tester.tap(find.text('Reanimationsfall 08:00:00'));
+    await tester.tap(find.text('Reanimationsfall 25.10.2026, 08:00'));
     await tester.pumpAndSettle();
 
     expect(find.text('Reanimationsfall verworfen'), findsOneWidget);
@@ -1392,7 +1430,7 @@ void main() {
     expect(find.text('Reanimationsfall löschen?'), findsOneWidget);
     await tester.tap(find.text('Abbrechen'));
     await tester.pumpAndSettle();
-    expect(find.text('Reanimationsfall 08:00:00'), findsOneWidget);
+    expect(find.text('Reanimationsfall 25.10.2026, 08:00'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Reanimationsfall löschen'));
     await tester.pumpAndSettle();
@@ -2048,7 +2086,7 @@ void main() {
     await openDrawer(tester);
     await selectFromDrawer(tester, 'Einsatzlog');
 
-    expect(find.text('Reanimationsfall 08:00:00'), findsOneWidget);
+    expect(find.text('Reanimationsfall 25.10.2026, 08:00'), findsOneWidget);
     expect(find.text('CPR 00:30 · ERC 2025 · Demo'), findsOneWidget);
   });
 

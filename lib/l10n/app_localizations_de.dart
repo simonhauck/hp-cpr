@@ -579,6 +579,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get einsatzlogEmpty => 'Noch keine abgeschlossenen Reanimationsfälle';
 
   @override
+  String get einsatzlogToday => 'Heute';
+
+  @override
+  String get einsatzlogYesterday => 'Gestern';
+
+  @override
   String einsatzlogEntryTitle(String time) {
     return 'Reanimationsfall $time';
   }

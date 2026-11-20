@@ -128,27 +128,91 @@ class _EinsatzlogPageState extends State<EinsatzlogPage> {
                   );
                 }
 
-                return ListView.separated(
+                final today = _dayOf(widget.session.clock.now());
+                final yesterday = DateTime(
+                  today.year,
+                  today.month,
+                  today.day - 1,
+                );
+                final rows = <Widget>[];
+                DateTime? currentDay;
+                for (final state in states) {
+                  final day = _dayOf(state.startzeit);
+                  if (day != currentDay) {
+                    currentDay = day;
+                    if (rows.isNotEmpty) {
+                      rows.add(const SizedBox(height: PageLayout.space16));
+                    }
+                    rows.add(
+                      _EinsatzlogDayHeader(
+                        label: _dayLabel(l10n, day, today, yesterday),
+                      ),
+                    );
+                  } else {
+                    rows.add(const Divider(height: PageLayout.dividerHeight));
+                  }
+                  rows.add(
+                    _EinsatzlogTile(
+                      state: state,
+                      session: widget.session,
+                      onOpen: () => _openDetail(state),
+                      onDelete: () => _delete(state),
+                    ),
+                  );
+                }
+
+                return ListView(
                   padding: const EdgeInsets.fromLTRB(
                     PageLayout.space20,
                     PageLayout.space16,
                     PageLayout.space20,
                     PageLayout.space24,
                   ),
-                  itemCount: states.length,
-                  separatorBuilder: (_, _) =>
-                      const Divider(height: PageLayout.dividerHeight),
-                  itemBuilder: (context, index) {
-                    return _EinsatzlogTile(
-                      state: states[index],
-                      session: widget.session,
-                      onOpen: () => _openDetail(states[index]),
-                      onDelete: () => _delete(states[index]),
-                    );
-                  },
+                  children: rows,
                 );
               },
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The local calendar day of [time], without a time of day.
+DateTime _dayOf(DateTime time) {
+  final local = time.toLocal();
+  return DateTime(local.year, local.month, local.day);
+}
+
+/// "Heute", "Gestern", or the date for any other day.
+String _dayLabel(
+  AppLocalizations l10n,
+  DateTime day,
+  DateTime today,
+  DateTime yesterday,
+) {
+  if (day == today) return l10n.einsatzlogToday;
+  if (day == yesterday) return l10n.einsatzlogYesterday;
+  return formatWallDate(day);
+}
+
+class _EinsatzlogDayHeader extends StatelessWidget {
+  const _EinsatzlogDayHeader({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Semantics(
+      header: true,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: PageLayout.space8),
+        child: Text(
+          label,
+          style: theme.textTheme.titleSmall?.copyWith(
+            color: theme.colorScheme.primary,
           ),
         ),
       ),
@@ -198,7 +262,9 @@ class _EinsatzlogTile extends StatelessWidget {
             ? theme.colorScheme.error
             : theme.colorScheme.primary,
       ),
-      title: Text(l10n.einsatzlogEntryTitle(formatWallTime(state.startzeit))),
+      title: Text(
+        l10n.einsatzlogEntryTitle(formatWallDateTime(state.startzeit)),
+      ),
       subtitle: Text(subtitleWithMarkers),
       trailing: IconButton(
         onPressed: onDelete,
