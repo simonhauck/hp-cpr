@@ -89,7 +89,7 @@
   "@elapsedTimeLabel": {
     "description": "Beschriftung der Anzeige der Fall-Dauer"
   },
-  "startzeitValue": "Startzeit {time}",
+  "startzeitValue": "Startzeit {time} Uhr",
   "@startzeitValue": {
     "description": "Anzeige der Startzeit mit Uhrzeit",
     "placeholders": {
@@ -236,11 +236,11 @@
   "@protokollTimeTitle": {
     "description": "Titel des Dialogs für den korrigierten Zeitpunkt"
   },
-  "protokollCaseTime": "Fallzeit",
+  "protokollCaseTime": "Zeitpunkt (seit Start)",
   "@protokollCaseTime": {
     "description": "Beschriftung der fallrelativen Zeit"
   },
-  "protokollWallTime": "Uhrzeit {time}",
+  "protokollWallTime": "{time} Uhr",
   "@protokollWallTime": {
     "description": "Vorschau der Wanduhrzeit eines korrigierten Zeitpunkts",
     "placeholders": {
@@ -322,7 +322,7 @@
   "@pauseLabel": {
     "description": "Beschriftung des Pausenzählers in der Analysephase"
   },
-  "pauseOverdueAha": "Pulscheck über {seconds} s – CPR fortsetzen",
+  "pauseOverdueAha": "Pulskontrolle über {seconds} s – CPR fortsetzen",
   "@pauseOverdueAha": {
     "description": "Überfälligkeitshinweis in der Analysephase für AHA 2025",
     "placeholders": {
@@ -583,7 +583,7 @@
   "@roscDescription": {
     "description": "Erklärung des ROSC-Zustands auf dem laufenden Fall"
   },
-  "resumeResuscitationButton": "Reanimationswiederbeginn",
+  "resumeResuscitationButton": "Reanimation wieder aufnehmen",
   "@resumeResuscitationButton": {
     "description": "Schaltfläche zum Start eines neuen Reanimationsabschnitts nach ROSC"
   },
@@ -619,9 +619,22 @@
   "@summaryCaseEnded": {
     "description": "Überschrift der Zusammenfassung"
   },
-  "summaryCprDuration": "CPR-Dauer",
+  "summaryCprDuration": "CPR-Dauer (ohne ROSC)",
   "@summaryCprDuration": {
     "description": "Beschriftung der gesamten CPR-Dauer"
+  },
+  "summaryReanimationsdauer": "Reanimationsdauer (gesamt)",
+  "@summaryReanimationsdauer": {
+    "description": "Beschriftung der Gesamtdauer von Startzeit bis Ende"
+  },
+  "wallTimeValue": "{time} Uhr",
+  "@wallTimeValue": {
+    "description": "Uhrzeit mit Einheit, z. B. 12:03:45 Uhr",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "summaryStartzeit": "Startzeit",
   "@summaryStartzeit": {
@@ -736,7 +749,7 @@
   "@activeCaseTitle": {
     "description": "Überschrift der Karte für einen gespeicherten aktiven Fall"
   },
-  "activeCaseDescription": "Der Reanimationsfall läuft bereits. Setze ihn fort, um weiterzutimen.",
+  "activeCaseDescription": "Der Reanimationsfall läuft noch und kann fortgesetzt werden.",
   "@activeCaseDescription": {
     "description": "Erklärung der Fortsetzen-Karte"
   },
