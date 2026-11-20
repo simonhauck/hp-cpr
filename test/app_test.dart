@@ -559,11 +559,14 @@ void main() {
 
     clock.advance(const Duration(seconds: 10));
     await tester.pump(const Duration(milliseconds: 250));
-    expect(find.text('Pulscheck über 10 s – CPR fortsetzen'), findsNothing);
+    expect(find.text('Pulskontrolle über 10 s – CPR fortsetzen'), findsNothing);
 
     clock.advance(const Duration(seconds: 1));
     await tester.pump(const Duration(milliseconds: 250));
-    expect(find.text('Pulscheck über 10 s – CPR fortsetzen'), findsOneWidget);
+    expect(
+      find.text('Pulskontrolle über 10 s – CPR fortsetzen'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('records Unklar and resumes without a note prompt', (
@@ -646,7 +649,7 @@ void main() {
 
     expect(find.text('ROSC'), findsWidgets);
     expect(find.text('Kreislauf zurückgekehrt'), findsOneWidget);
-    expect(find.text('Reanimationswiederbeginn'), findsOneWidget);
+    expect(find.text('Reanimation wieder aufnehmen'), findsOneWidget);
     expect(find.text('Fall beenden'), findsOneWidget);
     expect(find.text('Zusammenfassung'), findsNothing);
   });
@@ -659,7 +662,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.text('Startzeit 07:55:00'), findsOneWidget);
+    expect(find.text('Startzeit 07:55:00 Uhr'), findsOneWidget);
     expect(find.text('05:00'), findsOneWidget);
     expect(find.text('Analyse fällig'), findsOneWidget);
     expect(find.text('+03:00'), findsOneWidget);
@@ -687,7 +690,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(find.text('Startzeit 07:56:30'), findsOneWidget);
+    expect(find.text('Startzeit 07:56:30 Uhr'), findsOneWidget);
     expect(find.text('03:30'), findsOneWidget);
     expect(find.text('Analyse fällig'), findsOneWidget);
     expect(find.text('+01:30'), findsOneWidget);
@@ -1212,7 +1215,7 @@ void main() {
     expect(find.text('ROSC'), findsWidgets);
     expect(find.text('ROSC · Reanimation pausiert'), findsOneWidget);
     expect(find.byIcon(Icons.favorite), findsOneWidget);
-    expect(find.text('Reanimationswiederbeginn'), findsOneWidget);
+    expect(find.text('Reanimation wieder aufnehmen'), findsOneWidget);
     expect(find.text('Aktionen'), findsOneWidget);
     expect(find.text('Letzte Gabe: 08:00 Uhr, vor 02:00'), findsOneWidget);
     expect(
@@ -1248,7 +1251,7 @@ void main() {
 
     clock.advance(const Duration(seconds: 30));
     await tester.pump(const Duration(milliseconds: 250));
-    await tester.tap(find.text('Reanimationswiederbeginn'));
+    await tester.tap(find.text('Reanimation wieder aufnehmen'));
     await tester.pump();
 
     expect(find.textContaining('Druckphase ·'), findsOneWidget);
@@ -1277,16 +1280,18 @@ void main() {
 
     expect(find.text('Zusammenfassung'), findsOneWidget);
     expect(find.text('Reanimationsfall beendet'), findsOneWidget);
-    expect(find.text('CPR-Dauer'), findsOneWidget);
+    expect(find.text('CPR-Dauer (ohne ROSC)'), findsOneWidget);
     expect(find.text('02:10'), findsOneWidget);
     expect(find.text('ROSC'), findsOneWidget);
     expect(find.text('Reanimationswiederbeginn'), findsOneWidget);
     expect(find.text('Fall beendet: Übergabe'), findsOneWidget);
     expect(find.text('Übergabe'), findsOneWidget);
-    expect(find.text('08:00:00'), findsNWidgets(2));
+    expect(find.text('08:00:00'), findsOneWidget);
+    expect(find.text('08:00:00 Uhr'), findsOneWidget);
     expect(find.text('08:02:00'), findsOneWidget);
     expect(find.text('08:02:30'), findsOneWidget);
-    expect(find.text('08:02:40'), findsNWidgets(2));
+    expect(find.text('08:02:40'), findsOneWidget);
+    expect(find.text('08:02:40 Uhr'), findsOneWidget);
     expect(wakeLock.enabled, isFalse);
   });
 
@@ -2394,6 +2399,9 @@ void main() {
   });
 
   testWidgets('edits and restores a completed Protokoll entry', (tester) async {
+    addTearDown(tester.view.reset);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(800, 1000);
     await pumpApp(tester);
     await startNow(tester);
     await recordSchock(tester);
@@ -2438,6 +2446,9 @@ void main() {
 
   testWidgets('rebuilds CPR duration after a completed ROSC removal and '
       'refreshes the Einsatzlog', (tester) async {
+    addTearDown(tester.view.reset);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(800, 1000);
     await pumpApp(tester);
     await startNow(tester);
     clock.advance(const Duration(minutes: 2));
@@ -2450,7 +2461,7 @@ void main() {
     await tester.pumpAndSettle();
     clock.advance(const Duration(minutes: 1));
     await tester.pump(const Duration(milliseconds: 250));
-    await tester.tap(find.text('Reanimationswiederbeginn'));
+    await tester.tap(find.text('Reanimation wieder aufnehmen'));
     await tester.pump();
     clock.advance(const Duration(minutes: 1));
     await tester.pump(const Duration(milliseconds: 250));
@@ -2460,7 +2471,10 @@ void main() {
     await tester.pumpAndSettle();
 
     final cprRow = find
-        .ancestor(of: find.text('CPR-Dauer'), matching: find.byType(Row))
+        .ancestor(
+          of: find.text('CPR-Dauer (ohne ROSC)'),
+          matching: find.byType(Row),
+        )
         .first;
     expect(
       find.descendant(of: cprRow, matching: find.text('03:00')),
@@ -2582,6 +2596,9 @@ void main() {
   });
 
   testWidgets('corrects a completed Rhythmusanalyse result', (tester) async {
+    addTearDown(tester.view.reset);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(800, 1000);
     await pumpApp(tester);
     await startNow(tester);
     clock.advance(const Duration(minutes: 2));
