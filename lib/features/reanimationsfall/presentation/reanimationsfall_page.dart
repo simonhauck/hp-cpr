@@ -286,7 +286,6 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
           onRecordRhythmusanalyse: _recordRhythmusanalyse,
           onRecordRosc: _recordRosc,
           onRecordUnklar: _recordUnklar,
-          onSkipRhythmusanalyse: _skipRhythmusanalyse,
         );
 
         final main = layout.isLandscape
@@ -341,8 +340,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
               layout: layout,
               onOpenActions: _openActions,
               onSkipRhythmusanalyse:
-                  layout.isCompact &&
-                      snapshot.phase == Reanimationsphase.analysephase
+                  snapshot.phase == Reanimationsphase.analysephase
                   ? _skipRhythmusanalyse
                   : null,
               onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
@@ -453,7 +451,6 @@ class _PhaseTimerPanel extends StatelessWidget {
     required this.onRecordRhythmusanalyse,
     required this.onRecordRosc,
     required this.onRecordUnklar,
-    required this.onSkipRhythmusanalyse,
   });
 
   final ReanimationsfallSnapshot snapshot;
@@ -462,7 +459,6 @@ class _PhaseTimerPanel extends StatelessWidget {
   final ValueChanged<RhythmusanalyseKategorie> onRecordRhythmusanalyse;
   final VoidCallback onRecordRosc;
   final VoidCallback onRecordUnklar;
-  final VoidCallback onSkipRhythmusanalyse;
 
   @override
   Widget build(BuildContext context) {
@@ -482,7 +478,6 @@ class _PhaseTimerPanel extends StatelessWidget {
         onRecordRhythmusanalyse: onRecordRhythmusanalyse,
         onRecordRosc: onRecordRosc,
         onRecordUnklar: onRecordUnklar,
-        onSkipRhythmusanalyse: onSkipRhythmusanalyse,
       ),
     };
   }
@@ -785,7 +780,6 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
     required this.onRecordRhythmusanalyse,
     required this.onRecordRosc,
     required this.onRecordUnklar,
-    required this.onSkipRhythmusanalyse,
   });
 
   final ReanimationsfallSnapshot snapshot;
@@ -793,7 +787,6 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
   final ValueChanged<RhythmusanalyseKategorie> onRecordRhythmusanalyse;
   final VoidCallback onRecordRosc;
   final VoidCallback onRecordUnklar;
-  final VoidCallback onSkipRhythmusanalyse;
 
   @override
   Widget build(BuildContext context) {
@@ -886,11 +879,6 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
         ],
         const SizedBox(height: PageLayout.space6),
         _choiceGrid(choices),
-        const SizedBox(height: PageLayout.space4),
-        TextButton(
-          onPressed: onSkipRhythmusanalyse,
-          child: Text(l10n.skipAnalysisButton),
-        ),
       ],
     );
   }

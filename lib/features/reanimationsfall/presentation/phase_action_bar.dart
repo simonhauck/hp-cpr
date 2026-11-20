@@ -8,7 +8,7 @@ enum PhaseActionEmphasis { filled, outlined }
 /// The secondary actions for the running Reanimationsfall.
 ///
 /// Phase-specific primary actions live in the timer panel; this bar keeps the
-/// compact Überspringen fallback, the Aktionen entry point, and the Demo-Modus
+/// Überspringen action, the Aktionen entry point, and the Demo-Modus
 /// control within reach.
 class PhaseActionBar extends StatelessWidget {
   const PhaseActionBar({
@@ -22,7 +22,7 @@ class PhaseActionBar extends StatelessWidget {
   final PageLayout layout;
   final VoidCallback onOpenActions;
 
-  /// Shown only on compact layouts, where the timer panel has no room for it.
+  /// Shown during the Analysephase on every layout; null otherwise.
   final VoidCallback? onSkipRhythmusanalyse;
 
   /// Advances the simulated case time; null outside Demo-Modus.
