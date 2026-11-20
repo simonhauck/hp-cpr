@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.4.0](https://github.com/simonhauck/hp-cpr/compare/v0.3.0...v0.4.0) (2026-11-20)
+
+
+### Features
+
+* **amiodaron:** show the card with a not-recommended state ([#51](https://github.com/simonhauck/hp-cpr/issues/51)) ([72912db](https://github.com/simonhauck/hp-cpr/commit/72912db2be9c5a3f66a4c9f9471cf16cc45a9147))
+* **einsatzlog:** show the case date ([#69](https://github.com/simonhauck/hp-cpr/issues/69)) ([22dccdc](https://github.com/simonhauck/hp-cpr/commit/22dccdc13584e32f0b64c51f569c67089b75a2fb))
+* **reanimationsfall:** ask before leaving a running case ([#73](https://github.com/simonhauck/hp-cpr/issues/73)) ([7837940](https://github.com/simonhauck/hp-cpr/commit/783794035933bb6c91e5e800e63a056632a8d698))
+* **reanimationsfall:** group the Aktionen sheet ([#68](https://github.com/simonhauck/hp-cpr/issues/68)) ([e5697d7](https://github.com/simonhauck/hp-cpr/commit/e5697d78fb64ae232c90d9671e8f3449057945d8))
+
+
+### Bug Fixes
+
+* **rhythmusanalyse:** skip the repeated category step ([#72](https://github.com/simonhauck/hp-cpr/issues/72)) ([4d091ad](https://github.com/simonhauck/hp-cpr/commit/4d091ada6b1eb2819c7c460c838c7dfe89f0d7bb))
+* **summary:** remove duplicates and sort Messwerte consistently ([#71](https://github.com/simonhauck/hp-cpr/issues/71)) ([7fe1dae](https://github.com/simonhauck/hp-cpr/commit/7fe1daeea01007614bd43de2dcc8e79d54d2a6b8))
+* **ui:** align the start page action buttons ([#52](https://github.com/simonhauck/hp-cpr/issues/52)) ([44c2df7](https://github.com/simonhauck/hp-cpr/commit/44c2df74e4223666403a965af17dcfff3281ede0))
+* **ui:** consistent form fields, dialog buttons and chips ([#75](https://github.com/simonhauck/hp-cpr/issues/75)) ([e4c9f23](https://github.com/simonhauck/hp-cpr/commit/e4c9f23537a952625c60b6b78c3eb8fde03525f3)), closes [#61](https://github.com/simonhauck/hp-cpr/issues/61)
+* **ui:** consistent time formats and wording ([#77](https://github.com/simonhauck/hp-cpr/issues/77)) ([5e5a797](https://github.com/simonhauck/hp-cpr/commit/5e5a7972ac5b82c5e4c0ed5b7483f5b62f1f7531))
+
 ## [0.3.0](https://github.com/simonhauck/hp-cpr/compare/v0.2.0...v0.3.0) (2026-11-06)
 
 
