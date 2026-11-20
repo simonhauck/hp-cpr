@@ -8,41 +8,35 @@ import 'package:hp_cpr/features/messwerte/presentation/messwert_tile.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/messwert.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
-import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/dialogs/notiz_erfassen_dialog.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 import 'package:hp_cpr/ui/navigation/app_drawer.dart';
 import 'package:hp_cpr/ui/navigation/app_routes.dart';
+import 'package:hp_cpr/ui/zeitstempel_zeile.dart';
 
 /// The Messwerte and free-text notes of a Reanimationsfall.
 ///
-/// Editable while the case is open; read-only when opened from the summary.
+/// Both lists are ordered like the Protokoll: by time, then recording order.
 class MesswertePage extends StatefulWidget {
   const MesswertePage({
     super.key,
-    required this.snapshot,
     required this.routes,
-    this.reanimationsfall,
-    this.session,
+    required this.reanimationsfall,
+    required this.session,
   });
 
-  final ReanimationsfallSnapshot snapshot;
   final AppRoutes routes;
 
-  /// Set for an active case; omit for the read-only summary view.
-  final Reanimationsfall? reanimationsfall;
-  final ReanimationsfallSession? session;
-
-  bool get isEditable => reanimationsfall != null && session != null;
+  final Reanimationsfall reanimationsfall;
+  final ReanimationsfallSession session;
 
   @override
   State<MesswertePage> createState() => _MesswertePageState();
 }
 
 class _MesswertePageState extends State<MesswertePage> {
-  late ReanimationsfallSnapshot _snapshot =
-      widget.reanimationsfall?.snapshot() ?? widget.snapshot;
+  late ReanimationsfallSnapshot _snapshot = widget.reanimationsfall.snapshot();
 
   Future<void> _recordMesswert(MesswertTyp typ) async {
     final eingabe = await showDialog<MesswertEingabe>(
@@ -51,7 +45,7 @@ class _MesswertePageState extends State<MesswertePage> {
     );
     if (eingabe == null || !mounted) return;
 
-    final reanimationsfall = widget.reanimationsfall!;
+    final reanimationsfall = widget.reanimationsfall;
     setState(() {
       switch (eingabe) {
         case TemperaturEingabe(:final celsius, :final notiz):
@@ -73,19 +67,19 @@ class _MesswertePageState extends State<MesswertePage> {
       }
       _snapshot = reanimationsfall.snapshot();
     });
-    unawaited(widget.session!.persist(reanimationsfall));
+    unawaited(widget.session.persist(reanimationsfall));
   }
 
   Future<void> _recordNotiz() async {
     final text = await showNotizErfassenDialog(context);
     if (text == null || !mounted) return;
 
-    final reanimationsfall = widget.reanimationsfall!;
+    final reanimationsfall = widget.reanimationsfall;
     setState(() {
       reanimationsfall.recordNotiz(text);
       _snapshot = reanimationsfall.snapshot();
     });
-    unawaited(widget.session!.persist(reanimationsfall));
+    unawaited(widget.session.persist(reanimationsfall));
   }
 
   @override
@@ -118,26 +112,24 @@ class _MesswertePageState extends State<MesswertePage> {
                 PageLayout.space24,
               ),
               children: [
-                if (widget.isEditable) ...[
-                  Wrap(
-                    spacing: PageLayout.space12,
-                    runSpacing: PageLayout.space8,
-                    children: [
-                      for (final typ in MesswertTyp.values)
-                        FilledButton.tonalIcon(
-                          onPressed: () => _recordMesswert(typ),
-                          icon: Icon(messwertIcon(typ)),
-                          label: Text(messwertTypLabel(l10n, typ)),
-                        ),
-                      OutlinedButton.icon(
-                        onPressed: _recordNotiz,
-                        icon: const Icon(Icons.notes),
-                        label: Text(l10n.notizErfassenButton),
+                Wrap(
+                  spacing: PageLayout.space12,
+                  runSpacing: PageLayout.space8,
+                  children: [
+                    for (final typ in MesswertTyp.values)
+                      FilledButton.tonalIcon(
+                        onPressed: () => _recordMesswert(typ),
+                        icon: Icon(messwertIcon(typ)),
+                        label: Text(messwertTypLabel(l10n, typ)),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: PageLayout.space20),
-                ],
+                    OutlinedButton.icon(
+                      onPressed: _recordNotiz,
+                      icon: const Icon(Icons.notes),
+                      label: Text(l10n.notizErfassenButton),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: PageLayout.space20),
                 Text(
                   l10n.messwerteTitle,
                   style: theme.textTheme.titleMedium?.copyWith(
@@ -157,11 +149,16 @@ class _MesswertePageState extends State<MesswertePage> {
                     margin: EdgeInsets.zero,
                     child: Column(
                       children: [
-                        for (final (index, messwert)
-                            in _snapshot.messwerte.indexed) ...[
+                        for (final (index, messwert) in _sortedByTime(
+                          _snapshot.messwerte,
+                          (m) => m.zeitpunkt,
+                        ).indexed) ...[
                           if (index > 0)
                             const Divider(height: PageLayout.dividerHeight),
-                          MesswertTile(messwert: messwert),
+                          MesswertTile(
+                            messwert: messwert,
+                            startzeit: _snapshot.startzeit,
+                          ),
                         ],
                       ],
                     ),
@@ -186,16 +183,17 @@ class _MesswertePageState extends State<MesswertePage> {
                     margin: EdgeInsets.zero,
                     child: Column(
                       children: [
-                        for (final (index, notiz)
-                            in _snapshot.notizen.indexed) ...[
+                        for (final (index, notiz) in _sortedByTime(
+                          _snapshot.notizen,
+                          (n) => n.zeitpunkt,
+                        ).indexed) ...[
                           if (index > 0)
                             const Divider(height: PageLayout.dividerHeight),
-                          ListTile(
-                            leading: const Icon(Icons.notes),
-                            title: Text(notiz.text),
-                            subtitle: Text(
-                              formatReanimationsdauer(notiz.zeitpunkt),
-                            ),
+                          ZeitstempelZeile(
+                            zeitpunkt: notiz.zeitpunkt,
+                            startzeit: _snapshot.startzeit,
+                            icon: Icons.notes,
+                            title: notiz.text,
                           ),
                         ],
                       ],
@@ -208,4 +206,14 @@ class _MesswertePageState extends State<MesswertePage> {
       ),
     );
   }
+}
+
+/// Orders by time, keeping recording order for equal times (as the Protokoll).
+List<T> _sortedByTime<T>(List<T> items, Duration Function(T) zeitpunkt) {
+  final indexed = items.indexed.toList()
+    ..sort((a, b) {
+      final byTime = zeitpunkt(a.$2).compareTo(zeitpunkt(b.$2));
+      return byTime != 0 ? byTime : a.$1.compareTo(b.$1);
+    });
+  return [for (final (_, item) in indexed) item];
 }
