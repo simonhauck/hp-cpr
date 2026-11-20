@@ -52,7 +52,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
-    expectNoScale(tester, find.text('Druckphase'));
+    expectNoScale(tester, find.textContaining('Druckphase ·'));
     expectNoScale(tester, find.text('02:00'));
     expectInsideViewport(tester, find.text('Schocks: 0'));
     expectInsideViewport(tester, find.text('Gabe'));
@@ -165,7 +165,11 @@ void main() {
 
       await tester.tap(find.text('Überspringen'));
       await tester.pumpAndSettle();
-      expect(find.text('Druckphase'), findsOneWidget, reason: 'size $size');
+      expect(
+        find.textContaining('Druckphase ·'),
+        findsOneWidget,
+        reason: 'size $size',
+      );
       expect(find.text('Überspringen'), findsNothing, reason: 'size $size');
     }
   }, skip: kIsWeb);

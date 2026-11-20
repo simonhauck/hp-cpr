@@ -10,8 +10,8 @@ import 'package:hp_cpr/features/reanimationsfall/domain/messwert.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/dialogs/notiz_erfassen_dialog.dart';
+import 'package:hp_cpr/ui/layout/content_page_scaffold.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
-import 'package:hp_cpr/ui/navigation/app_drawer.dart';
 import 'package:hp_cpr/ui/navigation/app_routes.dart';
 import 'package:hp_cpr/ui/zeitstempel_zeile.dart';
 
@@ -87,123 +87,98 @@ class _MesswertePageState extends State<MesswertePage> {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        leading: const BackButton(),
-        title: Text(l10n.messwerteTitle),
-        actions: const [
-          AppMenuButton(),
-          SizedBox(width: PageLayout.space8),
-        ],
-      ),
-      drawer: AppDrawer(routes: widget.routes),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: PageLayout.settingsContentWidth,
-            ),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(
-                PageLayout.space20,
-                PageLayout.space16,
-                PageLayout.space20,
-                PageLayout.space24,
+    return ContentPageScaffold(
+      title: l10n.messwerteTitle,
+      routes: widget.routes,
+      children: [
+        Wrap(
+          spacing: PageLayout.space12,
+          runSpacing: PageLayout.space8,
+          children: [
+            for (final typ in MesswertTyp.values)
+              FilledButton.tonalIcon(
+                onPressed: () => _recordMesswert(typ),
+                icon: Icon(messwertIcon(typ)),
+                label: Text(messwertTypLabel(l10n, typ)),
               ),
+            OutlinedButton.icon(
+              onPressed: _recordNotiz,
+              icon: const Icon(Icons.notes),
+              label: Text(l10n.notizErfassenButton),
+            ),
+          ],
+        ),
+        const SizedBox(height: PageLayout.space20),
+        Text(
+          l10n.messwerteTitle,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: PageLayout.space8),
+        if (_snapshot.messwerte.isEmpty)
+          Text(
+            l10n.messwerteEmpty,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          )
+        else
+          Card(
+            margin: EdgeInsets.zero,
+            child: Column(
               children: [
-                Wrap(
-                  spacing: PageLayout.space12,
-                  runSpacing: PageLayout.space8,
-                  children: [
-                    for (final typ in MesswertTyp.values)
-                      FilledButton.tonalIcon(
-                        onPressed: () => _recordMesswert(typ),
-                        icon: Icon(messwertIcon(typ)),
-                        label: Text(messwertTypLabel(l10n, typ)),
-                      ),
-                    OutlinedButton.icon(
-                      onPressed: _recordNotiz,
-                      icon: const Icon(Icons.notes),
-                      label: Text(l10n.notizErfassenButton),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: PageLayout.space20),
-                Text(
-                  l10n.messwerteTitle,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+                for (final (index, messwert) in _sortedByTime(
+                  _snapshot.messwerte,
+                  (m) => m.zeitpunkt,
+                ).indexed) ...[
+                  if (index > 0)
+                    const Divider(height: PageLayout.dividerHeight),
+                  MesswertTile(
+                    messwert: messwert,
+                    startzeit: _snapshot.startzeit,
                   ),
-                ),
-                const SizedBox(height: PageLayout.space8),
-                if (_snapshot.messwerte.isEmpty)
-                  Text(
-                    l10n.messwerteEmpty,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  )
-                else
-                  Card(
-                    margin: EdgeInsets.zero,
-                    child: Column(
-                      children: [
-                        for (final (index, messwert) in _sortedByTime(
-                          _snapshot.messwerte,
-                          (m) => m.zeitpunkt,
-                        ).indexed) ...[
-                          if (index > 0)
-                            const Divider(height: PageLayout.dividerHeight),
-                          MesswertTile(
-                            messwert: messwert,
-                            startzeit: _snapshot.startzeit,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                const SizedBox(height: PageLayout.space20),
-                Text(
-                  l10n.notizenTitle,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: PageLayout.space8),
-                if (_snapshot.notizen.isEmpty)
-                  Text(
-                    l10n.notizenEmpty,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  )
-                else
-                  Card(
-                    margin: EdgeInsets.zero,
-                    child: Column(
-                      children: [
-                        for (final (index, notiz) in _sortedByTime(
-                          _snapshot.notizen,
-                          (n) => n.zeitpunkt,
-                        ).indexed) ...[
-                          if (index > 0)
-                            const Divider(height: PageLayout.dividerHeight),
-                          ZeitstempelZeile(
-                            zeitpunkt: notiz.zeitpunkt,
-                            startzeit: _snapshot.startzeit,
-                            icon: Icons.notes,
-                            title: notiz.text,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
+                ],
               ],
             ),
           ),
+        const SizedBox(height: PageLayout.space20),
+        Text(
+          l10n.notizenTitle,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
         ),
-      ),
+        const SizedBox(height: PageLayout.space8),
+        if (_snapshot.notizen.isEmpty)
+          Text(
+            l10n.notizenEmpty,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          )
+        else
+          Card(
+            margin: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (final (index, notiz) in _sortedByTime(
+                  _snapshot.notizen,
+                  (n) => n.zeitpunkt,
+                ).indexed) ...[
+                  if (index > 0)
+                    const Divider(height: PageLayout.dividerHeight),
+                  ZeitstempelZeile(
+                    zeitpunkt: notiz.zeitpunkt,
+                    startzeit: _snapshot.startzeit,
+                    icon: Icons.notes,
+                    title: notiz.text,
+                  ),
+                ],
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

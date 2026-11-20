@@ -280,7 +280,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
       },
       child: PageScaffold(
         maxWidth: PageLayout.maxContentWidth,
-        drawer: AppDrawer(routes: widget.routes),
+        endDrawer: AppDrawer(routes: widget.routes),
         header: (context, layout) => _ReanimationsfallHeader(
           snapshot: snapshot,
           layout: layout,
@@ -375,38 +375,10 @@ class _ReanimationsfallHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-
-    final phaseLabel = switch (snapshot.zustand) {
-      ReanimationsfallZustand.laufend => switch (snapshot.phase) {
-        Reanimationsphase.druckphase => l10n.phaseDruckphase,
-        Reanimationsphase.analysephase => l10n.phaseAnalysephase,
-      },
-      ReanimationsfallZustand.rosc => l10n.rhythmusanalyseRosc,
-      ReanimationsfallZustand.beendet => l10n.summaryCaseEnded,
-      ReanimationsfallZustand.verworfen => l10n.verworfenLabel,
-    };
-
     return Row(
       children: [
         BackButton(onPressed: onBack),
-        const SizedBox(width: PageLayout.space8),
-        Expanded(
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                phaseLabel,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-        ),
+        const Spacer(),
         const SizedBox(width: PageLayout.space12),
         SchockCountChip(count: snapshot.schockAnzahl, layout: layout),
         const SizedBox(width: PageLayout.space8),

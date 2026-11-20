@@ -5,6 +5,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:hp_cpr/app.dart';
 import 'package:hp_cpr/features/about/presentation/about_page.dart';
+import 'package:hp_cpr/features/einsatzlog/presentation/einsatzlog_page.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_store.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
@@ -149,7 +150,7 @@ void main() {
 
     await startNow(tester);
 
-    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.textContaining('Druckphase ·'), findsOneWidget);
     expect(find.text('Reanimationsdauer'), findsOneWidget);
     expect(find.text('00:00'), findsOneWidget);
     expect(find.text('Nächste Analyse'), findsOneWidget);
@@ -304,7 +305,7 @@ void main() {
     await tester.tap(find.text('Unbekannt (AED)'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.textContaining('Druckphase ·'), findsOneWidget);
     expect(find.text('Nächste Analyse'), findsOneWidget);
 
     await openEndCaseDialog(tester);
@@ -332,7 +333,7 @@ void main() {
     await tester.tap(find.text('Analyse starten'));
     await tester.pump();
 
-    expect(find.text('Analysephase'), findsOneWidget);
+    expect(find.textContaining('Analysephase ·'), findsOneWidget);
     expect(find.text('Pause'), findsOneWidget);
     expect(find.text('00:00'), findsOneWidget);
 
@@ -360,7 +361,7 @@ void main() {
     await tester.tap(find.text('Nein'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.textContaining('Druckphase ·'), findsOneWidget);
     expect(find.text('Nächste Analyse'), findsOneWidget);
     expect(find.text('02:00'), findsNWidgets(2));
   });
@@ -436,7 +437,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Schock abgegeben?'), findsNothing);
-    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.textContaining('Druckphase ·'), findsOneWidget);
   });
 
   testWidgets('records a confirmed Schock from the wizard and resumes', (
@@ -457,7 +458,7 @@ void main() {
     await tester.tap(find.text('Ja'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.textContaining('Druckphase ·'), findsOneWidget);
     expect(find.text('Schocks: 1'), findsOneWidget);
     expect(find.text('02:00'), findsNWidgets(2));
     expect(find.text('CPR fortsetzen'), findsNothing);
@@ -496,7 +497,7 @@ void main() {
     await tester.tap(find.text('Abbrechen').last);
     await tester.pumpAndSettle();
 
-    expect(find.text('Analysephase'), findsOneWidget);
+    expect(find.textContaining('Analysephase ·'), findsOneWidget);
     expect(find.text('Schockbar'), findsOneWidget);
     expect(find.text('Kreislauf zurückgekehrt'), findsNothing);
   });
@@ -580,7 +581,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Notiz zur Rhythmusanalyse'), findsNothing);
-    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.textContaining('Druckphase ·'), findsOneWidget);
     expect(find.text('Nächste Analyse'), findsOneWidget);
 
     await openEndCaseDialog(tester);
@@ -608,7 +609,7 @@ void main() {
 
     expect(find.text('Grund (optional)'), findsNothing);
     expect(find.text('Analyse übersprungen'), findsOneWidget);
-    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.textContaining('Druckphase ·'), findsOneWidget);
     expect(find.text('Nächste Analyse'), findsOneWidget);
     expect(find.text('02:00'), findsNWidgets(2));
   });
@@ -632,7 +633,7 @@ void main() {
 
     await tester.tap(find.text('Asystolie'));
     await tester.pumpAndSettle();
-    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.textContaining('Druckphase ·'), findsOneWidget);
     expect(find.text('Ergebnis: Nicht schockbar – Asystolie'), findsNothing);
 
     await tester.tap(find.text('Analyse starten'));
@@ -787,13 +788,13 @@ void main() {
     await tester.tap(find.text('Nein'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.textContaining('Druckphase ·'), findsOneWidget);
     expect(find.text('Nächste Analyse'), findsOneWidget);
     expect(find.text('CPR fortsetzen'), findsNothing);
 
     await recordSchock(tester);
     expect(find.text('Schocks: 1'), findsOneWidget);
-    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.textContaining('Druckphase ·'), findsOneWidget);
     expect(find.text('CPR fortsetzen'), findsNothing);
   });
 
@@ -929,7 +930,7 @@ void main() {
     clock.advance(const Duration(minutes: 2));
     await tester.pump(const Duration(milliseconds: 250));
 
-    expect(find.text('Analysephase'), findsOneWidget);
+    expect(find.textContaining('Analysephase ·'), findsOneWidget);
     expect(find.text('fällig'), findsOneWidget);
   });
 
@@ -1107,19 +1108,19 @@ void main() {
       await openDrawer(tester);
       expectInsideViewport(tester, find.widgetWithText(ListTile, 'Über'));
       expect(tester.takeException(), isNull);
-      await tester.tapAt(Offset(size.width - 20, 20));
+      await tester.tapAt(const Offset(20, 20));
       await tester.pumpAndSettle();
 
       await startNow(tester);
 
       expect(find.text('02:00'), findsOneWidget);
-      expect(find.text('Druckphase'), findsOneWidget);
+      expect(find.textContaining('Druckphase ·'), findsOneWidget);
       expect(find.text('Schocks: 0'), findsOneWidget);
       expect(find.text('Adrenalin'), findsOneWidget);
       expect(find.text('Gabe'), findsOneWidget);
       expect(find.byType(Scrollable), findsNothing);
       expectInsideViewport(tester, find.text('02:00'));
-      expectInsideViewport(tester, find.text('Druckphase'));
+      expectInsideViewport(tester, find.textContaining('Druckphase ·'));
       expectInsideViewport(tester, find.text('Schocks: 0'));
       expectInsideViewport(tester, find.text('Gabe'));
       expectInsideViewport(tester, find.byTooltip('Menü öffnen'));
@@ -1128,7 +1129,7 @@ void main() {
       await tester.tap(find.text('Analyse starten'));
       await tester.pump();
 
-      expect(find.text('Analysephase'), findsOneWidget);
+      expect(find.textContaining('Analysephase ·'), findsOneWidget);
       expect(find.text('Schockbar'), findsOneWidget);
       expect(find.text('Nicht schockbar'), findsOneWidget);
       expect(find.text('ROSC'), findsOneWidget);
@@ -1157,14 +1158,14 @@ void main() {
       await tester.tap(find.text('Nein'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Druckphase'), findsOneWidget);
+      expect(find.textContaining('Druckphase ·'), findsOneWidget);
       expect(find.text('CPR fortsetzen'), findsNothing);
       expect(tester.takeException(), isNull, reason: 'size $size result');
 
       await recordSchock(tester);
 
       expect(find.text('Schocks: 1'), findsOneWidget);
-      expect(find.text('Druckphase'), findsOneWidget);
+      expect(find.textContaining('Druckphase ·'), findsOneWidget);
       expect(find.text('CPR fortsetzen'), findsNothing);
       expect(tester.takeException(), isNull, reason: 'size $size Schock');
 
@@ -1187,7 +1188,7 @@ void main() {
     await startNow(tester);
 
     expect(find.text('02:00'), findsOneWidget);
-    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.textContaining('Druckphase ·'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -1250,7 +1251,7 @@ void main() {
     await tester.tap(find.text('Reanimationswiederbeginn'));
     await tester.pump();
 
-    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.textContaining('Druckphase ·'), findsOneWidget);
     expect(find.text('02:00'), findsOneWidget);
     expect(find.text('ROSC'), findsNothing);
     expect(
@@ -1298,7 +1299,7 @@ void main() {
     await tester.tap(find.text('Abbrechen'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.textContaining('Druckphase ·'), findsOneWidget);
     expect(find.text('Zusammenfassung'), findsNothing);
 
     await openEndCaseDialog(tester);
@@ -1346,7 +1347,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.textContaining('Druckphase ·'), findsOneWidget);
     expect(find.text('Schocks: 1'), findsOneWidget);
     expect(find.text('00:40'), findsOneWidget);
     expect(wakeLock.enabled, isTrue);
@@ -1370,7 +1371,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(find.text('Analysephase'), findsOneWidget);
+    expect(find.textContaining('Analysephase ·'), findsOneWidget);
     expect(find.text('00:05'), findsOneWidget);
   });
 
@@ -1586,7 +1587,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.textContaining('Druckphase ·'), findsOneWidget);
     expect(wakeLock.enabled, isTrue);
   });
 
@@ -1896,7 +1897,10 @@ void main() {
 
     await openDrawer(tester);
 
-    expect(find.text('Menü'), findsOneWidget);
+    expect(
+      find.descendant(of: find.byType(Drawer), matching: find.text('HP-CPR')),
+      findsOneWidget,
+    );
     expect(find.widgetWithText(ListTile, 'Einsatzlog'), findsOneWidget);
     expect(find.widgetWithText(ListTile, 'Einstellungen'), findsOneWidget);
     expect(find.widgetWithText(ListTile, 'Rechtliches'), findsNothing);
@@ -1911,7 +1915,7 @@ void main() {
     await selectFromDrawer(tester, 'Einstellungen');
 
     expect(find.text('Einstellungen'), findsOneWidget);
-    expect(find.text('Menü'), findsNothing);
+    expect(find.byType(Drawer), findsNothing);
 
     await openDrawer(tester);
 
@@ -1925,7 +1929,7 @@ void main() {
     await selectFromDrawer(tester, 'Einstellungen');
 
     expect(find.text('Einstellungen'), findsOneWidget);
-    expect(find.text('Menü'), findsNothing);
+    expect(find.byType(Drawer), findsNothing);
   });
 
   testWidgets('opens Über from the drawer with the licenses entry', (
@@ -2022,47 +2026,71 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.textContaining('Druckphase ·'), findsOneWidget);
     expect(find.text('00:35'), findsOneWidget);
     expect(wakeLock.enabled, isTrue);
   });
 
-  testWidgets('switches destinations from secondary pages and unwinds with '
-      'back', (tester) async {
+  testWidgets('replaces menu pages so back returns to the first page', (
+    tester,
+  ) async {
+    Future<void> back() async {
+      await tester.tap(
+        find
+            .descendant(
+              of: find.byType(AppBar),
+              matching: find.byType(BackButton),
+            )
+            .hitTestable(),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
     await pumpApp(tester);
 
     await openDrawer(tester);
+    await selectFromDrawer(tester, 'Einsatzlog');
+    await openDrawer(tester);
     await selectFromDrawer(tester, 'Einstellungen');
     await openDrawer(tester);
-    await selectFromDrawer(tester, 'Über');
+    await selectFromDrawer(tester, 'Einsatzlog');
 
-    expect(find.text('Version 0.1.0 (Build 1)'), findsOneWidget);
+    expect(find.byType(EinsatzlogPage), findsOneWidget);
 
-    await tester.tap(
-      find
-          .descendant(
-            of: find.byType(AppBar),
-            matching: find.byType(BackButton),
-          )
-          .hitTestable(),
-    );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
-
-    expect(find.text('Einstellungen'), findsOneWidget);
-
-    await tester.tap(
-      find
-          .descendant(
-            of: find.byType(AppBar),
-            matching: find.byType(BackButton),
-          )
-          .hitTestable(),
-    );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 400));
+    await back();
 
     expect(find.text('Neuer Reanimationsfall'), findsOneWidget);
+  });
+
+  testWidgets('opens the end drawer from the menu button on a content page '
+      'and on the running case', (tester) async {
+    await pumpApp(tester);
+
+    await openDrawer(tester);
+    await selectFromDrawer(tester, 'Über');
+    await openDrawer(tester);
+
+    final width = tester.getSize(find.byType(Scaffold).first).width;
+    expect(tester.getTopRight(find.byType(Drawer)).dx, width);
+
+    await tester.tapAt(const Offset(20, 20));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(AppBar),
+            matching: find.byType(BackButton),
+          )
+          .hitTestable(),
+    );
+    await tester.pumpAndSettle();
+
+    await startNow(tester);
+    await openDrawer(tester);
+
+    expect(find.byType(Drawer), findsOneWidget);
+    expect(tester.getTopRight(find.byType(Drawer)).dx, width);
   });
 
   testWidgets('enables Demo-Modus on the start screen and advances the '
@@ -2812,7 +2840,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Reanimationsfall verlassen?'), findsOneWidget);
-    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.textContaining('Druckphase ·'), findsOneWidget);
   });
 
   testWidgets('Abbrechen keeps the running case open', (tester) async {
@@ -2825,7 +2853,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Reanimationsfall verlassen?'), findsNothing);
-    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.textContaining('Druckphase ·'), findsOneWidget);
     expect(find.text('Aktionen'), findsOneWidget);
   });
 
@@ -2854,7 +2882,7 @@ void main() {
 
     expect(find.text('Reanimationsfall verlassen?'), findsNothing);
     expect(find.text('Grund'), findsOneWidget);
-    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.textContaining('Druckphase ·'), findsOneWidget);
   });
 
   testWidgets('ending via Aktionen does not show the leave dialog', (

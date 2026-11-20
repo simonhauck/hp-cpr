@@ -7,9 +7,9 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/reanimationsfall_s
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/dialogs/destructive_confirm_dialog.dart';
+import 'package:hp_cpr/ui/layout/content_page_scaffold.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 import 'package:hp_cpr/ui/navigation/app_destination.dart';
-import 'package:hp_cpr/ui/navigation/app_drawer.dart';
 import 'package:hp_cpr/ui/navigation/app_routes.dart';
 
 /// The persistent list of completed and Verworfene Reanimationsfälle.
@@ -71,95 +71,67 @@ class _EinsatzlogPageState extends State<EinsatzlogPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        leading: const BackButton(),
-        title: Text(l10n.einsatzlogTitle),
-        actions: const [
-          AppMenuButton(),
-          SizedBox(width: PageLayout.space8),
-        ],
-      ),
-      drawer: AppDrawer(
-        routes: widget.routes,
-        currentDestination: AppDestination.einsatzlog,
-      ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: PageLayout.settingsContentWidth,
-            ),
-            child: FutureBuilder<List<ReanimationsfallState>>(
-              future: _logFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState != ConnectionState.done) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+    return ContentPageScaffold.builder(
+      title: l10n.einsatzlogTitle,
+      routes: widget.routes,
+      currentDestination: AppDestination.einsatzlog,
+      bodyBuilder: (context) => FutureBuilder<List<ReanimationsfallState>>(
+        future: _logFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-                final states = snapshot.data ?? const [];
-                if (states.isEmpty) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(PageLayout.space24),
-                      child: Text(
-                        l10n.einsatzlogEmpty,
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                  );
-                }
-
-                final today = _dayOf(widget.session.clock.now());
-                final yesterday = DateTime(
-                  today.year,
-                  today.month,
-                  today.day - 1,
-                );
-                final rows = <Widget>[];
-                DateTime? currentDay;
-                for (final state in states) {
-                  final day = _dayOf(state.startzeit);
-                  if (day != currentDay) {
-                    currentDay = day;
-                    if (rows.isNotEmpty) {
-                      rows.add(const SizedBox(height: PageLayout.space16));
-                    }
-                    rows.add(
-                      _EinsatzlogDayHeader(
-                        label: _dayLabel(l10n, day, today, yesterday),
-                      ),
-                    );
-                  } else {
-                    rows.add(const Divider(height: PageLayout.dividerHeight));
-                  }
-                  rows.add(
-                    _EinsatzlogTile(
-                      state: state,
-                      session: widget.session,
-                      onOpen: () => _openDetail(state),
-                      onDelete: () => _delete(state),
-                    ),
-                  );
-                }
-
-                return ListView(
-                  padding: const EdgeInsets.fromLTRB(
-                    PageLayout.space20,
-                    PageLayout.space16,
-                    PageLayout.space20,
-                    PageLayout.space24,
+          final states = snapshot.data ?? const [];
+          if (states.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(PageLayout.space24),
+                child: Text(
+                  l10n.einsatzlogEmpty,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
-                  children: rows,
-                );
-              },
-            ),
-          ),
-        ),
+                ),
+              ),
+            );
+          }
+
+          final today = _dayOf(widget.session.clock.now());
+          final yesterday = DateTime(today.year, today.month, today.day - 1);
+          final rows = <Widget>[];
+          DateTime? currentDay;
+          for (final state in states) {
+            final day = _dayOf(state.startzeit);
+            if (day != currentDay) {
+              currentDay = day;
+              if (rows.isNotEmpty) {
+                rows.add(const SizedBox(height: PageLayout.space16));
+              }
+              rows.add(
+                _EinsatzlogDayHeader(
+                  label: _dayLabel(l10n, day, today, yesterday),
+                ),
+              );
+            } else {
+              rows.add(const Divider(height: PageLayout.dividerHeight));
+            }
+            rows.add(
+              _EinsatzlogTile(
+                state: state,
+                session: widget.session,
+                onOpen: () => _openDetail(state),
+                onDelete: () => _delete(state),
+              ),
+            );
+          }
+
+          return ListView(
+            padding: PageLayout.contentPagePadding,
+            children: rows,
+          );
+        },
       ),
     );
   }

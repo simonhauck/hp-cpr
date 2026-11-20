@@ -98,7 +98,7 @@ class _StartPageState extends State<StartPage> {
   Widget build(BuildContext context) {
     return PageScaffold(
       maxWidth: PageLayout.maxContentWidth,
-      drawer: AppDrawer(routes: widget.routes),
+      endDrawer: AppDrawer(routes: widget.routes),
       footer: !_loading && _activeFall == null
           ? (context, layout) => _DemoModusToggle(
               settings: widget.routes.settings,
