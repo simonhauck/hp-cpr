@@ -570,6 +570,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get discardCaseConfirm => 'Verwerfen';
 
   @override
+  String get leaveCaseTitle => 'Reanimationsfall verlassen?';
+
+  @override
+  String get leaveCaseDescription =>
+      'Der Fall läuft weiter und kann auf der Startseite fortgesetzt werden.';
+
+  @override
+  String get leaveCaseButton => 'Verlassen';
+
+  @override
   String get einsatzlogTitle => 'Einsatzlog';
 
   @override
