@@ -262,12 +262,6 @@ abstract class AppLocalizations {
   /// **'30 Sekunden vorspulen'**
   String get demoModusAdvanceTooltip;
 
-  /// Name der aktiven Phase mit Thoraxkompressionen
-  ///
-  /// In de, this message translates to:
-  /// **'Druckphase'**
-  String get phaseDruckphase;
-
   /// Beschriftung des Kompressionstimers vor Ablauf
   ///
   /// In de, this message translates to:
@@ -285,12 +279,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'+{time}'**
   String overdueTimer(String time);
-
-  /// Name der aktiven Phase mit pausierter Kompression
-  ///
-  /// In de, this message translates to:
-  /// **'Analysephase'**
-  String get phaseAnalysephase;
 
   /// Schaltfläche zum Starten der Analysephase
   ///
@@ -783,12 +771,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Ton bei fälligen Aktionen'**
   String get settingsSoundDescription;
-
-  /// Überschrift im App-Menü
-  ///
-  /// In de, this message translates to:
-  /// **'Menü'**
-  String get menuTitle;
 
   /// Tooltip der Menü-Schaltfläche
   ///

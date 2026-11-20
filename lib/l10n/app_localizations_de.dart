@@ -103,9 +103,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get demoModusAdvanceTooltip => '30 Sekunden vorspulen';
 
   @override
-  String get phaseDruckphase => 'Druckphase';
-
-  @override
   String get nextAnalysisLabel => 'Nächste Analyse';
 
   @override
@@ -115,9 +112,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String overdueTimer(String time) {
     return '+$time';
   }
-
-  @override
-  String get phaseAnalysephase => 'Analysephase';
 
   @override
   String get analyseButton => 'Analyse starten';
@@ -384,9 +378,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settingsSoundDescription => 'Ton bei fälligen Aktionen';
-
-  @override
-  String get menuTitle => 'Menü';
 
   @override
   String get menuOpenTooltip => 'Menü öffnen';

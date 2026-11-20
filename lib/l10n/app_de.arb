@@ -122,10 +122,6 @@
   "@demoModusAdvanceTooltip": {
     "description": "Tooltip der Demo-Modus-Vorspulschaltfläche"
   },
-  "phaseDruckphase": "Druckphase",
-  "@phaseDruckphase": {
-    "description": "Name der aktiven Phase mit Thoraxkompressionen"
-  },
   "nextAnalysisLabel": "Nächste Analyse",
   "@nextAnalysisLabel": {
     "description": "Beschriftung des Kompressionstimers vor Ablauf"
@@ -142,10 +138,6 @@
         "type": "String"
       }
     }
-  },
-  "phaseAnalysephase": "Analysephase",
-  "@phaseAnalysephase": {
-    "description": "Name der aktiven Phase mit pausierter Kompression"
   },
   "analyseButton": "Analyse starten",
   "@analyseButton": {
@@ -507,10 +499,6 @@
   "settingsSoundDescription": "Ton bei fälligen Aktionen",
   "@settingsSoundDescription": {
     "description": "Erklärung der Toneinstellung"
-  },
-  "menuTitle": "Menü",
-  "@menuTitle": {
-    "description": "Überschrift im App-Menü"
   },
   "menuOpenTooltip": "Menü öffnen",
   "@menuOpenTooltip": {

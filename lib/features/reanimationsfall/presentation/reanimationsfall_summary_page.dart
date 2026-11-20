@@ -9,8 +9,8 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_liste.da
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/demo_modus_chip.dart';
+import 'package:hp_cpr/ui/layout/content_page_scaffold.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
-import 'package:hp_cpr/ui/navigation/app_drawer.dart';
 import 'package:hp_cpr/ui/navigation/app_routes.dart';
 
 /// The in-app summary and completed Protokoll of a Reanimationsfall.
@@ -48,105 +48,78 @@ class _ReanimationsfallSummaryPageState
     final ende = snapshot.ende;
     final endZeitpunkt = ende?.zeitpunkt ?? snapshot.verworfenAm;
 
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        leading: const BackButton(),
-        title: Text(l10n.summaryTitle),
-        actions: const [
-          AppMenuButton(),
-          SizedBox(width: PageLayout.space8),
-        ],
-      ),
-      drawer: AppDrawer(routes: widget.routes),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: PageLayout.settingsContentWidth,
-            ),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(
-                PageLayout.space20,
-                PageLayout.space16,
-                PageLayout.space20,
-                PageLayout.space24,
-              ),
+    return ContentPageScaffold(
+      title: l10n.summaryTitle,
+      routes: widget.routes,
+      children: [
+        Text(
+          snapshot.istVerworfen
+              ? l10n.summaryCaseDiscarded
+              : l10n.summaryCaseEnded,
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: PageLayout.space16),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(PageLayout.space16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  snapshot.istVerworfen
-                      ? l10n.summaryCaseDiscarded
-                      : l10n.summaryCaseEnded,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: PageLayout.space16),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(PageLayout.space16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Wrap(
-                          spacing: PageLayout.space8,
-                          runSpacing: PageLayout.space8,
-                          children: [
-                            LeitlinienprofilChip(
-                              leitlinienprofil: snapshot.leitlinienprofil,
-                            ),
-                            if (snapshot.demoMode) const DemoModusChip(),
-                          ],
-                        ),
-                        const SizedBox(height: PageLayout.space12),
-                        _SummaryRow(
-                          label: l10n.summaryCprDuration,
-                          value: formatReanimationsdauer(snapshot.cprDauer),
-                        ),
-                        _SummaryRow(
-                          label: l10n.summaryShocks,
-                          value: '${snapshot.schockAnzahl}',
-                        ),
-                        _SummaryRow(
-                          label: l10n.adrenalinLabel,
-                          value: '${snapshot.adrenalinGaben.length}',
-                        ),
-                        _SummaryRow(
-                          label: l10n.amiodaronLabel,
-                          value: '${snapshot.amiodaronGaben.length}',
-                        ),
-                        _SummaryRow(
-                          label: l10n.summaryStartzeit,
-                          value: formatWallTime(snapshot.startzeit),
-                        ),
-                        if (endZeitpunkt != null)
-                          _SummaryRow(
-                            label: l10n.summaryEndzeit,
-                            value: formatWallTime(
-                              snapshot.startzeit.add(endZeitpunkt),
-                            ),
-                          ),
-                        if (ende != null)
-                          _SummaryRow(
-                            label: l10n.summaryEndReason,
-                            value: beendigungsgrundLabel(l10n, ende.grund),
-                          ),
-                      ],
+                Wrap(
+                  spacing: PageLayout.space8,
+                  runSpacing: PageLayout.space8,
+                  children: [
+                    LeitlinienprofilChip(
+                      leitlinienprofil: snapshot.leitlinienprofil,
                     ),
+                    if (snapshot.demoMode) const DemoModusChip(),
+                  ],
+                ),
+                const SizedBox(height: PageLayout.space12),
+                _SummaryRow(
+                  label: l10n.summaryCprDuration,
+                  value: formatReanimationsdauer(snapshot.cprDauer),
+                ),
+                _SummaryRow(
+                  label: l10n.summaryShocks,
+                  value: '${snapshot.schockAnzahl}',
+                ),
+                _SummaryRow(
+                  label: l10n.adrenalinLabel,
+                  value: '${snapshot.adrenalinGaben.length}',
+                ),
+                _SummaryRow(
+                  label: l10n.amiodaronLabel,
+                  value: '${snapshot.amiodaronGaben.length}',
+                ),
+                _SummaryRow(
+                  label: l10n.summaryStartzeit,
+                  value: formatWallTime(snapshot.startzeit),
+                ),
+                if (endZeitpunkt != null)
+                  _SummaryRow(
+                    label: l10n.summaryEndzeit,
+                    value: formatWallTime(snapshot.startzeit.add(endZeitpunkt)),
                   ),
-                ),
-                const SizedBox(height: PageLayout.space20),
-                ProtokollListe(
-                  protokoll: snapshot.protokoll,
-                  startzeit: snapshot.startzeit,
-                  isLive: false,
-                  onOpenEintrag: openProtokollEintrag,
-                ),
+                if (ende != null)
+                  _SummaryRow(
+                    label: l10n.summaryEndReason,
+                    value: beendigungsgrundLabel(l10n, ende.grund),
+                  ),
               ],
             ),
           ),
         ),
-      ),
+        const SizedBox(height: PageLayout.space20),
+        ProtokollListe(
+          protokoll: snapshot.protokoll,
+          startzeit: snapshot.startzeit,
+          isLive: false,
+          onOpenEintrag: openProtokollEintrag,
+        ),
+      ],
     );
   }
 }

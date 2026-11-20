@@ -104,6 +104,12 @@ class PageLayout {
   static const double dialogActionHeight = 56;
   static const double dialogOptionHeight = 52;
   static const double settingsContentWidth = 720;
+  static const EdgeInsets contentPagePadding = EdgeInsets.fromLTRB(
+    space20,
+    space16,
+    space20,
+    space24,
+  );
   static const double touchTargetSize = 48;
 
   // The Adrenalin Zeitfenster bar.

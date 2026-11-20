@@ -20,19 +20,19 @@ class PageScaffold extends StatelessWidget {
     required this.header,
     required this.content,
     this.footer,
-    this.drawer,
+    this.endDrawer,
   });
 
   final double maxWidth;
   final PageLayoutBuilder header;
   final PageLayoutBuilder content;
   final PageLayoutBuilder? footer;
-  final Widget? drawer;
+  final Widget? endDrawer;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: drawer,
+      endDrawer: endDrawer,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(

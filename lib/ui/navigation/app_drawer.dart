@@ -31,24 +31,13 @@ class AppDrawer extends StatelessWidget {
                 PageLayout.space20,
                 PageLayout.space8,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.appTitle,
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: PageLayout.appTitleLetterSpacing,
-                    ),
-                  ),
-                  Text(
-                    l10n.menuTitle,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+              child: Text(
+                l10n.appTitle,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: PageLayout.appTitleLetterSpacing,
+                ),
               ),
             ),
             const Divider(height: PageLayout.dividerHeight),
@@ -95,13 +84,20 @@ class AppDrawer extends StatelessWidget {
     navigator.pop();
     if (destination == currentDestination) return;
 
-    navigator.push(
-      MaterialPageRoute<void>(builder: (_) => routes.page(destination)),
+    final route = MaterialPageRoute<void>(
+      builder: (_) => routes.page(destination),
     );
+    // Between menu pages the stack must not grow, so back returns to the page
+    // the drawer was first opened from.
+    if (currentDestination != null) {
+      navigator.pushReplacement(route);
+    } else {
+      navigator.push(route);
+    }
   }
 }
 
-/// Opens the [AppDrawer] of the surrounding [Scaffold].
+/// Opens the end drawer ([AppDrawer]) of the surrounding [Scaffold].
 class AppMenuButton extends StatelessWidget {
   const AppMenuButton({super.key});
 
@@ -110,7 +106,7 @@ class AppMenuButton extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return IconButton(
-      onPressed: () => Scaffold.of(context).openDrawer(),
+      onPressed: () => Scaffold.of(context).openEndDrawer(),
       tooltip: l10n.menuOpenTooltip,
       icon: const Icon(Icons.menu),
       constraints: const BoxConstraints.tightFor(
