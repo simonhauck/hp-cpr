@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:hp_cpr/ui/format/wall_time_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
@@ -86,6 +87,7 @@ class ProtokollZeitpunktFieldsState extends State<ProtokollZeitpunktFields> {
               child: TextFormField(
                 controller: _minutes,
                 keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: InputDecoration(labelText: l10n.minutesLabel),
                 onChanged: (_) => setState(() {}),
                 validator: (_) => _validateMinutes(l10n),
@@ -96,6 +98,7 @@ class ProtokollZeitpunktFieldsState extends State<ProtokollZeitpunktFields> {
               child: TextFormField(
                 controller: _seconds,
                 keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: InputDecoration(labelText: l10n.secondsLabel),
                 onChanged: (_) => setState(() {}),
                 validator: (_) => _validateSeconds(l10n),

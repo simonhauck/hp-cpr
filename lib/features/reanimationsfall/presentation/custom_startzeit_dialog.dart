@@ -64,10 +64,7 @@ class _CustomStartzeitDialogState extends State<CustomStartzeitDialog> {
                     autofocus: true,
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    decoration: InputDecoration(
-                      labelText: l10n.minutesLabel,
-                      border: const OutlineInputBorder(),
-                    ),
+                    decoration: InputDecoration(labelText: l10n.minutesLabel),
                     validator: (value) {
                       final minutes = _parseOrEmptyAsZero(value ?? '');
                       if (minutes == null) return l10n.invalidBackdateMessage;
@@ -86,10 +83,7 @@ class _CustomStartzeitDialogState extends State<CustomStartzeitDialog> {
                     controller: _secondsController,
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    decoration: InputDecoration(
-                      labelText: l10n.secondsLabel,
-                      border: const OutlineInputBorder(),
-                    ),
+                    decoration: InputDecoration(labelText: l10n.secondsLabel),
                     onFieldSubmitted: (_) => _submit(),
                     validator: (value) {
                       final seconds = _parseOrEmptyAsZero(value ?? '');

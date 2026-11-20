@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:hp_cpr/features/messwerte/presentation/messwert_format.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/messwert.dart';
@@ -223,6 +224,7 @@ class _MesswertErfassenDialogState extends State<MesswertErfassenDialog> {
                 controller: _valueController,
                 autofocus: true,
                 keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: InputDecoration(
                   labelText: l10n.messwertSystolischLabel,
                 ),
@@ -242,6 +244,7 @@ class _MesswertErfassenDialogState extends State<MesswertErfassenDialog> {
               TextFormField(
                 controller: _diastolicController,
                 keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: InputDecoration(
                   labelText: l10n.messwertDiastolischLabel,
                 ),
@@ -260,6 +263,12 @@ class _MesswertErfassenDialogState extends State<MesswertErfassenDialog> {
                 keyboardType: typ == MesswertTyp.temperatur
                     ? const TextInputType.numberWithOptions(decimal: true)
                     : TextInputType.number,
+                inputFormatters: [
+                  if (typ == MesswertTyp.temperatur)
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d*[.,]?\d*$'))
+                  else
+                    FilteringTextInputFormatter.digitsOnly,
+                ],
                 decoration: InputDecoration(
                   labelText: switch (typ) {
                     MesswertTyp.temperatur => l10n.messwertTemperaturLabel,

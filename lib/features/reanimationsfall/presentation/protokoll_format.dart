@@ -20,7 +20,7 @@ IconData protokollEintragIcon(Object daten) {
     RhythmusanalyseEintrag() => Icons.monitor_heart_outlined,
     RhythmusanalyseUeberspringung() => Icons.skip_next_outlined,
     DruckphaseNeustart() => Icons.restart_alt,
-    RoscEreignis() => Icons.favorite_outline,
+    RoscEreignis() => Icons.favorite,
     Reanimationswiederbeginn() => Icons.replay,
     Messwert(:final typ) => messwertIcon(typ),
     ReanimationsfallNotiz() => Icons.notes,

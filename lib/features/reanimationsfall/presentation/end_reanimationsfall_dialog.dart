@@ -70,18 +70,30 @@ class EndReanimationsfallDialog extends StatelessWidget {
             if (grund != Beendigungsgrund.values.last)
               const SizedBox(height: PageLayout.space8),
           ],
+          const SizedBox(height: PageLayout.space8),
+          const Divider(),
+          const SizedBox(height: PageLayout.space8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: () =>
+                  Navigator.of(context).pop(const DiscardReanimationsfall()),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(
+                  PageLayout.dialogOptionHeight,
+                ),
+                foregroundColor: theme.colorScheme.error,
+                side: BorderSide(color: theme.colorScheme.error),
+              ),
+              child: Text(l10n.discardCaseButton),
+            ),
+          ),
         ],
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(l10n.cancelButton),
-        ),
-        TextButton(
-          onPressed: () =>
-              Navigator.of(context).pop(const DiscardReanimationsfall()),
-          style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
-          child: Text(l10n.discardCaseButton),
         ),
       ],
     );
