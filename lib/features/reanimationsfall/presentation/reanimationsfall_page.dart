@@ -137,7 +137,6 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => MesswertePage(
-          snapshot: widget.reanimationsfall.snapshot(),
           routes: widget.routes,
           reanimationsfall: widget.reanimationsfall,
           session: widget.session,

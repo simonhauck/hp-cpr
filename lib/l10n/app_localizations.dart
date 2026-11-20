@@ -982,18 +982,6 @@ abstract class AppLocalizations {
   /// **'Ereignisse'**
   String get summaryEvents;
 
-  /// Überschrift der Notizen in der Zusammenfassung
-  ///
-  /// In de, this message translates to:
-  /// **'Notizen'**
-  String get summaryNotes;
-
-  /// Hinweis, dass keine Notizen erfasst wurden
-  ///
-  /// In de, this message translates to:
-  /// **'Keine Notizen'**
-  String get summaryNoNotes;
-
   /// Ereignis: Beginn des Reanimationsfalls
   ///
   /// In de, this message translates to:
@@ -1191,12 +1179,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Noch keine Messwerte'**
   String get messwerteEmpty;
-
-  /// Schaltfläche zum Öffnen der Messwerte aus der Zusammenfassung
-  ///
-  /// In de, this message translates to:
-  /// **'Messwerte öffnen'**
-  String get messwerteOpenButton;
 
   /// Titel des Dialogs für einen Messwert
   ///

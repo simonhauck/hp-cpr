@@ -655,14 +655,6 @@
   "@summaryEvents": {
     "description": "Überschrift der Ereignisliste in der Zusammenfassung"
   },
-  "summaryNotes": "Notizen",
-  "@summaryNotes": {
-    "description": "Überschrift der Notizen in der Zusammenfassung"
-  },
-  "summaryNoNotes": "Keine Notizen",
-  "@summaryNoNotes": {
-    "description": "Hinweis, dass keine Notizen erfasst wurden"
-  },
   "eventCaseStart": "Reanimationsfall gestartet",
   "@eventCaseStart": {
     "description": "Ereignis: Beginn des Reanimationsfalls"
@@ -840,10 +832,6 @@
   "messwerteEmpty": "Noch keine Messwerte",
   "@messwerteEmpty": {
     "description": "Leerer Zustand der Messwerte"
-  },
-  "messwerteOpenButton": "Messwerte öffnen",
-  "@messwerteOpenButton": {
-    "description": "Schaltfläche zum Öffnen der Messwerte aus der Zusammenfassung"
   },
   "messwertErfassenTitle": "Messwert erfassen",
   "@messwertErfassenTitle": {
