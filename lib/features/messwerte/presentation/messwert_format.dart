@@ -9,7 +9,7 @@ IconData messwertIcon(MesswertTyp typ) {
     MesswertTyp.temperatur => Icons.thermostat,
     MesswertTyp.blutzucker => Icons.water_drop_outlined,
     MesswertTyp.blutdruck => Icons.speed,
-    MesswertTyp.herzfrequenz => Icons.favorite_border,
+    MesswertTyp.herzfrequenz => Icons.show_chart,
   };
 }
 

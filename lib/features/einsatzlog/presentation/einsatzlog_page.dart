@@ -6,6 +6,7 @@ import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/reanimationsfall_summary_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
+import 'package:hp_cpr/ui/dialogs/destructive_confirm_dialog.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 import 'package:hp_cpr/ui/navigation/app_destination.dart';
 import 'package:hp_cpr/ui/navigation/app_drawer.dart';
@@ -53,28 +54,13 @@ class _EinsatzlogPageState extends State<EinsatzlogPage> {
 
   Future<void> _delete(ReanimationsfallState state) async {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.deleteCaseTitle),
-        content: Text(l10n.deleteCaseDescription),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.cancelButton),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: theme.colorScheme.error,
-            ),
-            child: Text(l10n.deleteButton),
-          ),
-        ],
-      ),
+    final confirmed = await showDestructiveConfirmDialog(
+      context,
+      title: l10n.deleteCaseTitle,
+      description: l10n.deleteCaseDescription,
+      confirmLabel: l10n.deleteButton,
     );
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
 
     await widget.session.delete(state.id);
     if (!mounted) return;

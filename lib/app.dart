@@ -61,6 +61,9 @@ class _HpCprAppState extends State<HpCprApp> {
   @override
   Widget build(BuildContext context) {
     const seedColor = Color(0xFFB3261E);
+    const inputDecorationTheme = InputDecorationTheme(
+      border: OutlineInputBorder(),
+    );
 
     return MaterialApp(
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
@@ -68,6 +71,7 @@ class _HpCprAppState extends State<HpCprApp> {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: seedColor),
         useMaterial3: true,
+        inputDecorationTheme: inputDecorationTheme,
       ),
       darkTheme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
@@ -75,6 +79,7 @@ class _HpCprAppState extends State<HpCprApp> {
           brightness: Brightness.dark,
         ),
         useMaterial3: true,
+        inputDecorationTheme: inputDecorationTheme,
       ),
       locale: const Locale('de'),
       supportedLocales: AppLocalizations.supportedLocales,

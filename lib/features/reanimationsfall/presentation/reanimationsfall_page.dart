@@ -20,6 +20,7 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_di
 import 'package:hp_cpr/features/reanimationsfall/presentation/schock_count_chip.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
+import 'package:hp_cpr/ui/dialogs/destructive_confirm_dialog.dart';
 import 'package:hp_cpr/ui/dialogs/notiz_erfassen_dialog.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 import 'package:hp_cpr/ui/layout/page_scaffold.dart';
@@ -188,28 +189,13 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
 
   Future<void> _discardReanimationsfall() async {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.discardCaseTitle),
-        content: Text(l10n.discardCaseDescription),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.cancelButton),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: theme.colorScheme.error,
-            ),
-            child: Text(l10n.discardCaseConfirm),
-          ),
-        ],
-      ),
+    final confirmed = await showDestructiveConfirmDialog(
+      context,
+      title: l10n.discardCaseTitle,
+      description: l10n.discardCaseDescription,
+      confirmLabel: l10n.discardCaseConfirm,
     );
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
 
     setState(widget.reanimationsfall.discardReanimationsfall);
     await widget.session.persist(widget.reanimationsfall);
@@ -506,7 +492,7 @@ class _RoscPanel extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  Icons.monitor_heart_outlined,
+                  Icons.favorite,
                   size: PageLayout.iconLarge,
                   color: theme.colorScheme.primary,
                 ),
@@ -812,7 +798,7 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
       ),
       _RhythmusanalyseChoiceButton(
         layout: layout,
-        icon: Icons.monitor_heart_outlined,
+        icon: Icons.favorite,
         label: l10n.rhythmusanalyseRosc,
         onPressed: onRecordRosc,
         emphasis: PhaseActionEmphasis.outlined,

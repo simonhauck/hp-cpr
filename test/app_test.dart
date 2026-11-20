@@ -178,7 +178,7 @@ void main() {
     expect(find.text('Überspringen'), findsOneWidget);
     expect(find.byIcon(Icons.bolt), findsNWidgets(2));
     expect(find.byIcon(Icons.flash_off), findsOneWidget);
-    expect(find.byIcon(Icons.monitor_heart_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.favorite), findsOneWidget);
     expect(find.byIcon(Icons.question_mark), findsOneWidget);
     expect(find.text('Aktionen'), findsOneWidget);
     expect(find.text('Schock (0)'), findsNothing);
@@ -1204,7 +1204,7 @@ void main() {
 
     expect(find.text('ROSC'), findsWidgets);
     expect(find.text('ROSC · Reanimation pausiert'), findsOneWidget);
-    expect(find.byIcon(Icons.monitor_heart_outlined), findsOneWidget);
+    expect(find.byIcon(Icons.favorite), findsOneWidget);
     expect(find.text('Reanimationswiederbeginn'), findsOneWidget);
     expect(find.text('Aktionen'), findsOneWidget);
     expect(find.text('Letzte Gabe: 08:00 Uhr, vor 02:00'), findsOneWidget);
@@ -1477,6 +1477,34 @@ void main() {
     expect(find.text('Schock 1'), findsOneWidget);
   });
 
+  testWidgets('shows Fall verwerfen in the end dialog content, not actions', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await openEndCaseDialog(tester);
+    await tester.pumpAndSettle();
+
+    final discard = find.widgetWithText(OutlinedButton, 'Fall verwerfen');
+    expect(discard, findsOneWidget);
+    expect(find.byType(Divider), findsWidgets);
+    final actionButtons = find.descendant(
+      of: find.byType(AlertDialog),
+      matching: find.byType(TextButton),
+    );
+    expect(actionButtons, findsOneWidget);
+    expect(
+      find.descendant(of: actionButtons, matching: find.text('Abbrechen')),
+      findsOneWidget,
+    );
+
+    await tester.tap(discard);
+    await tester.pumpAndSettle();
+    expect(find.text('Reanimationsfall verwerfen?'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Verwerfen'), findsOneWidget);
+  });
+
   testWidgets('deletes a case only from the Einsatzlog after confirmation', (
     tester,
   ) async {
@@ -1578,6 +1606,17 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
   }
+
+  testWidgets('integer Messwert fields reject non-digits', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+    await openMesswerte(tester);
+    await openMesswertDialog(tester, 'Blutzucker');
+
+    final field = find.byType(TextFormField).first;
+    await tester.enterText(field, 'a1-.,2');
+    expect(tester.widget<TextFormField>(field).controller!.text, '12');
+  });
 
   testWidgets('does not show Messwerte in the drawer during a case', (
     tester,
