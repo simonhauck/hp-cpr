@@ -490,12 +490,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get summaryEvents => 'Ereignisse';
 
   @override
-  String get summaryNotes => 'Notizen';
-
-  @override
-  String get summaryNoNotes => 'Keine Notizen';
-
-  @override
   String get eventCaseStart => 'Reanimationsfall gestartet';
 
   @override
@@ -606,9 +600,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get messwerteEmpty => 'Noch keine Messwerte';
-
-  @override
-  String get messwerteOpenButton => 'Messwerte öffnen';
 
   @override
   String get messwertErfassenTitle => 'Messwert erfassen';

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/features/reanimationsfall/domain/protokoll.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_format.dart';
-import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
+import 'package:hp_cpr/ui/zeitstempel_zeile.dart';
 
 /// The shared timeline for a live or completed Protokoll.
 ///
@@ -226,28 +226,7 @@ class _ProtokollZeile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              width: PageLayout.timelineTimeWidth,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    formatReanimationsdauer(zeile.zeitpunkt),
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: muted,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                  Text(
-                    formatWallTime(startzeit.add(zeile.zeitpunkt)),
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: muted,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ZeitstempelSpalte(zeitpunkt: zeile.zeitpunkt, startzeit: startzeit),
             Icon(
               protokollEintragIcon(zeile.daten),
               size: PageLayout.iconSmall,

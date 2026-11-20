@@ -1499,8 +1499,8 @@ void main() {
     await tester.tap(find.text('Abbruch'));
     await tester.pumpAndSettle();
 
-    await tester.scrollUntilVisible(find.text('Patient kalt'), 200);
-    expect(find.text('Patient kalt'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Notiz: Patient kalt'), 200);
+    expect(find.text('Notiz: Patient kalt'), findsOneWidget);
   });
 
   testWidgets('ends the Reanimationsfall from Weitere Aktionen', (
@@ -1659,6 +1659,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
+    await tester.scrollUntilVisible(find.text('Patient kalt'), 200);
     expect(find.text('Patient kalt'), findsOneWidget);
   });
 
@@ -1682,8 +1683,9 @@ void main() {
     expect(find.text('90 /min'), findsOneWidget);
   });
 
-  testWidgets('shows Messwerte and notes in the summary and opens the '
-      'read-only view', (tester) async {
+  testWidgets('shows Messwerte and notes once in the summary Protokoll', (
+    tester,
+  ) async {
     await pumpApp(tester);
     await startNow(tester);
     await openMesswerte(tester);
@@ -1716,37 +1718,14 @@ void main() {
     await tester.tap(find.text('Übergabe'));
     await tester.pumpAndSettle();
 
-    await tester.scrollUntilVisible(find.text('Messwerte öffnen'), 300);
-    expect(find.text('37,2 °C'), findsOneWidget);
-
-    await tester.tap(find.text('Messwerte öffnen'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('37,2 °C'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Nach der Übergabe'), 200);
-    expect(find.text('Nach der Übergabe'), findsOneWidget);
-    for (final typ in [
-      'Temperatur',
-      'Blutzucker',
-      'Blutdruck',
-      'Herzfrequenz',
-    ]) {
-      expect(find.text(typ), findsNothing);
-    }
-    expect(find.text('Notiz erfassen'), findsNothing);
-
-    await tester.tap(
-      find
-          .descendant(
-            of: find.byType(AppBar),
-            matching: find.byType(BackButton),
-          )
-          .hitTestable(),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.scrollUntilVisible(find.text('Nach der Übergabe'), 300);
-    expect(find.text('Nach der Übergabe'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Notiz: Nach der Übergabe'), 300);
+    expect(find.text('Temperatur: 37,2 °C'), findsOneWidget);
+    expect(find.text('Notiz: Nach der Übergabe'), findsOneWidget);
+    expect(find.text('Messwerte öffnen'), findsNothing);
+    expect(find.text('Messwerte'), findsNothing);
+    expect(find.text('Notizen'), findsNothing);
+    expect(find.text('37,2 °C'), findsNothing);
+    expect(find.text('Nach der Übergabe'), findsNothing);
   });
 
   testWidgets('opens the app menu and closes it on the current destination', (
@@ -2597,21 +2576,18 @@ void main() {
     await tester.tap(find.text('Übergabe'));
     await tester.pumpAndSettle();
 
-    await tester.scrollUntilVisible(find.text('Messwerte öffnen'), 300);
-    expect(find.text('36,5 °C'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Patient kalt'), 300);
-    expect(find.text('Patient kalt'), findsOneWidget);
-
-    await tester.scrollUntilVisible(find.text('Notiz: Patient kalt'), -300);
+    await tester.scrollUntilVisible(find.text('Temperatur: 36,5 °C'), 300);
+    expect(find.text('Temperatur: 36,5 °C'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Notiz: Patient kalt'), 300);
+    await tester.ensureVisible(find.text('Notiz: Patient kalt'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Notiz: Patient kalt'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Entfernen'));
     await tester.pumpAndSettle();
     await tester.pump(const Duration(seconds: 5));
 
-    await tester.scrollUntilVisible(find.text('Keine Notizen'), 300);
-    expect(find.text('Patient kalt'), findsNothing);
-    expect(find.text('Keine Notizen'), findsOneWidget);
+    expect(find.text('Notiz: Patient kalt'), findsNothing);
 
     await tester.scrollUntilVisible(find.text('Temperatur: 36,5 °C'), -300);
     await tester.tap(find.text('Temperatur: 36,5 °C'));
@@ -2620,9 +2596,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.pump(const Duration(seconds: 5));
 
-    await tester.scrollUntilVisible(find.text('Noch keine Messwerte'), 300);
-    expect(find.text('36,5 °C'), findsNothing);
-    expect(find.text('Noch keine Messwerte'), findsOneWidget);
+    expect(find.text('Temperatur: 36,5 °C'), findsNothing);
   });
 
   testWidgets('fits the Protokoll into a portrait phone', (tester) async {

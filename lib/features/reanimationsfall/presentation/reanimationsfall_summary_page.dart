@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_chip.dart';
-import 'package:hp_cpr/features/messwerte/presentation/messwert_tile.dart';
-import 'package:hp_cpr/features/messwerte/presentation/messwerte_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/end_reanimationsfall_dialog.dart';
@@ -42,17 +40,6 @@ class _ReanimationsfallSummaryPageState
   @override
   ReanimationsfallSession get protokollSession => widget.session;
 
-  void _openMesswerte() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => MesswertePage(
-          snapshot: widget.reanimationsfall.snapshot(),
-          routes: widget.routes,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -60,8 +47,6 @@ class _ReanimationsfallSummaryPageState
     final snapshot = widget.reanimationsfall.snapshot();
     final ende = snapshot.ende;
     final endZeitpunkt = ende?.zeitpunkt ?? snapshot.verworfenAm;
-    final notizen = [...snapshot.notizen]
-      ..sort((a, b) => a.zeitpunkt.compareTo(b.zeitpunkt));
 
     return Scaffold(
       appBar: AppBar(
@@ -157,88 +142,6 @@ class _ReanimationsfallSummaryPageState
                   isLive: false,
                   onOpenEintrag: openProtokollEintrag,
                 ),
-                const SizedBox(height: PageLayout.space20),
-                Text(
-                  l10n.messwerteTitle,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: PageLayout.space8),
-                if (snapshot.messwerte.isEmpty)
-                  Text(
-                    l10n.messwerteEmpty,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  )
-                else
-                  Card(
-                    child: Column(
-                      children: [
-                        for (final (index, messwert)
-                            in snapshot.messwerte.indexed) ...[
-                          if (index > 0)
-                            const Divider(height: PageLayout.dividerHeight),
-                          MesswertTile(messwert: messwert),
-                        ],
-                      ],
-                    ),
-                  ),
-                const SizedBox(height: PageLayout.space8),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: _openMesswerte,
-                    icon: const Icon(Icons.assignment_outlined),
-                    label: Text(l10n.messwerteOpenButton),
-                  ),
-                ),
-                const SizedBox(height: PageLayout.space20),
-                Text(
-                  l10n.summaryNotes,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: PageLayout.space8),
-                if (notizen.isEmpty)
-                  Text(
-                    l10n.summaryNoNotes,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  )
-                else
-                  Card(
-                    child: Column(
-                      children: [
-                        for (final notiz in notizen)
-                          ListTile(
-                            leading: Text(
-                              formatReanimationsdauer(notiz.zeitpunkt),
-                              style: theme.textTheme.labelLarge?.copyWith(
-                                fontFeatures: const [
-                                  FontFeature.tabularFigures(),
-                                ],
-                              ),
-                            ),
-                            title: Text(notiz.text),
-                            subtitle: Text(
-                              formatWallTime(
-                                snapshot.startzeit.add(notiz.zeitpunkt),
-                              ),
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                                fontFeatures: const [
-                                  FontFeature.tabularFigures(),
-                                ],
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
               ],
             ),
           ),
