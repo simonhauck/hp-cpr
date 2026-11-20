@@ -12,6 +12,7 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/actions_sheet.dart
 import 'package:hp_cpr/features/reanimationsfall/presentation/adrenalin_panel.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/amiodaron_panel.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/end_reanimationsfall_dialog.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/leave_reanimationsfall_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/phase_action_bar.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/phase_strip.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_page.dart';
@@ -186,6 +187,21 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     }
   }
 
+  /// Asks before a running (or ROSC) case is left via back.
+  Future<void> _requestLeave() async {
+    final choice = await showLeaveReanimationsfallDialog(context);
+    if (choice == null || !mounted) return;
+
+    switch (choice) {
+      case LeaveReanimationsfallChoice.stay:
+        return;
+      case LeaveReanimationsfallChoice.endCase:
+        await _endReanimationsfall();
+      case LeaveReanimationsfallChoice.leave:
+        Navigator.of(context).pop();
+    }
+  }
+
   Future<void> _discardReanimationsfall() async {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
@@ -268,91 +284,108 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
   Widget build(BuildContext context) {
     final snapshot = widget.reanimationsfall.snapshot();
 
-    return PageScaffold(
-      maxWidth: PageLayout.maxContentWidth,
-      drawer: AppDrawer(routes: widget.routes),
-      header: (context, layout) =>
-          _ReanimationsfallHeader(snapshot: snapshot, layout: layout),
-      content: (context, layout) {
-        final reanimationsdauerPanel = _ReanimationsdauerPanel(
-          snapshot: snapshot,
-          layout: layout,
-        );
-        final timer = _PhaseTimerPanel(
-          snapshot: snapshot,
-          layout: layout,
-          onEnterAnalysephase: _enterAnalysephase,
-          onRecordRhythmusanalyse: _recordRhythmusanalyse,
-          onRecordRosc: _recordRosc,
-          onRecordUnklar: _recordUnklar,
-        );
+    final isRunning = snapshot.istLaufend || snapshot.istRosc;
 
-        final main = layout.isLandscape
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    flex: PageLayout.elapsedPanelFlex,
-                    child: reanimationsdauerPanel,
-                  ),
-                  SizedBox(width: layout.panelGap),
-                  Expanded(flex: PageLayout.timerPanelFlex, child: timer),
-                ],
-              )
-            : Column(
-                children: [
-                  reanimationsdauerPanel,
-                  SizedBox(height: layout.panelGap),
-                  Expanded(child: timer),
-                ],
-              );
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(child: main),
-            SizedBox(height: layout.contentGap),
-            AdrenalinPanel(
-              snapshot: snapshot,
-              layout: layout,
-              onRecordAdrenalin: _recordAdrenalin,
-              isRecordingEnabled: snapshot.istLaufend,
-            ),
-            SizedBox(height: layout.contentGap),
-            AmiodaronPanel(
-              snapshot: snapshot,
-              layout: layout,
-              onRecordAmiodaron: _recordAmiodaron,
-            ),
-          ],
-        );
+    return PopScope(
+      canPop: !isRunning,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        unawaited(_requestLeave());
       },
-      footer: (context, layout) => snapshot.istRosc
-          ? _RoscActionBar(
-              layout: layout,
-              onResumeResuscitation: _resumeResuscitation,
-              onEndCase: _endReanimationsfall,
-              onOpenActions: _openActions,
-              onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
-            )
-          : PhaseActionBar(
-              layout: layout,
-              onOpenActions: _openActions,
-              onSkipRhythmusanalyse:
-                  snapshot.phase == Reanimationsphase.analysephase
-                  ? _skipRhythmusanalyse
-                  : null,
-              onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
-            ),
+      child: PageScaffold(
+        maxWidth: PageLayout.maxContentWidth,
+        drawer: AppDrawer(routes: widget.routes),
+        header: (context, layout) => _ReanimationsfallHeader(
+          snapshot: snapshot,
+          layout: layout,
+          onBack: _requestLeave,
+        ),
+        content: (context, layout) {
+          final reanimationsdauerPanel = _ReanimationsdauerPanel(
+            snapshot: snapshot,
+            layout: layout,
+          );
+          final timer = _PhaseTimerPanel(
+            snapshot: snapshot,
+            layout: layout,
+            onEnterAnalysephase: _enterAnalysephase,
+            onRecordRhythmusanalyse: _recordRhythmusanalyse,
+            onRecordRosc: _recordRosc,
+            onRecordUnklar: _recordUnklar,
+          );
+
+          final main = layout.isLandscape
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(
+                      flex: PageLayout.elapsedPanelFlex,
+                      child: reanimationsdauerPanel,
+                    ),
+                    SizedBox(width: layout.panelGap),
+                    Expanded(flex: PageLayout.timerPanelFlex, child: timer),
+                  ],
+                )
+              : Column(
+                  children: [
+                    reanimationsdauerPanel,
+                    SizedBox(height: layout.panelGap),
+                    Expanded(child: timer),
+                  ],
+                );
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: main),
+              SizedBox(height: layout.contentGap),
+              AdrenalinPanel(
+                snapshot: snapshot,
+                layout: layout,
+                onRecordAdrenalin: _recordAdrenalin,
+                isRecordingEnabled: snapshot.istLaufend,
+              ),
+              SizedBox(height: layout.contentGap),
+              AmiodaronPanel(
+                snapshot: snapshot,
+                layout: layout,
+                onRecordAmiodaron: _recordAmiodaron,
+              ),
+            ],
+          );
+        },
+        footer: (context, layout) => snapshot.istRosc
+            ? _RoscActionBar(
+                layout: layout,
+                onResumeResuscitation: _resumeResuscitation,
+                onEndCase: _endReanimationsfall,
+                onOpenActions: _openActions,
+                onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
+              )
+            : PhaseActionBar(
+                layout: layout,
+                onOpenActions: _openActions,
+                onSkipRhythmusanalyse:
+                    snapshot.phase == Reanimationsphase.analysephase
+                    ? _skipRhythmusanalyse
+                    : null,
+                onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
+              ),
+      ),
     );
   }
 }
 
 class _ReanimationsfallHeader extends StatelessWidget {
-  const _ReanimationsfallHeader({required this.snapshot, required this.layout});
+  const _ReanimationsfallHeader({
+    required this.snapshot,
+    required this.layout,
+    required this.onBack,
+  });
 
   final ReanimationsfallSnapshot snapshot;
   final PageLayout layout;
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
@@ -371,7 +404,7 @@ class _ReanimationsfallHeader extends StatelessWidget {
 
     return Row(
       children: [
-        const BackButton(),
+        BackButton(onPressed: onBack),
         const SizedBox(width: PageLayout.space8),
         Expanded(
           child: Align(
