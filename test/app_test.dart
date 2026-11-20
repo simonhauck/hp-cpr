@@ -95,6 +95,13 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  Future<void> leaveRunningCase(WidgetTester tester) async {
+    await tester.tap(find.byType(BackButton).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Verlassen'));
+    await tester.pumpAndSettle();
+  }
+
   Future<void> recordSchock(WidgetTester tester) async {
     await openActions(tester);
     await tester.scrollUntilVisible(
@@ -1161,8 +1168,7 @@ void main() {
       expect(find.text('CPR fortsetzen'), findsNothing);
       expect(tester.takeException(), isNull, reason: 'size $size Schock');
 
-      await tester.tap(find.byType(BackButton));
-      await tester.pumpAndSettle();
+      await leaveRunningCase(tester);
     }
   });
 
@@ -2190,8 +2196,7 @@ void main() {
     await pumpApp(tester);
     await startNow(tester);
 
-    await tester.tap(find.byType(BackButton));
-    await tester.pumpAndSettle();
+    await leaveRunningCase(tester);
 
     expect(find.text('Aktiver Reanimationsfall'), findsOneWidget);
     expect(find.text('Demo-Modus'), findsNothing);
@@ -2776,5 +2781,93 @@ void main() {
       findsOneWidget,
     );
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('asks before leaving a running case via back', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await tester.tap(find.byType(BackButton).first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reanimationsfall verlassen?'), findsOneWidget);
+    expect(
+      find.text(
+        'Der Fall läuft weiter und kann auf der Startseite fortgesetzt werden.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Abbrechen'), findsOneWidget);
+    expect(find.text('Fall beenden'), findsOneWidget);
+    expect(find.text('Verlassen'), findsOneWidget);
+  });
+
+  testWidgets('asks before leaving a running case via system back', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reanimationsfall verlassen?'), findsOneWidget);
+    expect(find.text('Druckphase'), findsOneWidget);
+  });
+
+  testWidgets('Abbrechen keeps the running case open', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await tester.tap(find.byType(BackButton).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Abbrechen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reanimationsfall verlassen?'), findsNothing);
+    expect(find.text('Druckphase'), findsOneWidget);
+    expect(find.text('Aktionen'), findsOneWidget);
+  });
+
+  testWidgets('Verlassen returns to the start page with the case resumable', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await leaveRunningCase(tester);
+
+    expect(find.text('Aktiver Reanimationsfall'), findsOneWidget);
+    expect(find.text('Fortsetzen'), findsOneWidget);
+  });
+
+  testWidgets('Fall beenden from the leave dialog opens the end dialog', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await tester.tap(find.byType(BackButton).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Fall beenden'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reanimationsfall verlassen?'), findsNothing);
+    expect(find.text('Grund'), findsOneWidget);
+    expect(find.text('Druckphase'), findsOneWidget);
+  });
+
+  testWidgets('ending via Aktionen does not show the leave dialog', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    await openEndCaseDialog(tester);
+    await tester.tap(find.text('Übergabe'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reanimationsfall verlassen?'), findsNothing);
+    expect(find.text('Zusammenfassung'), findsOneWidget);
   });
 }

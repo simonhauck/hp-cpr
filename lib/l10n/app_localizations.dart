@@ -1108,6 +1108,24 @@ abstract class AppLocalizations {
   /// **'Verwerfen'**
   String get discardCaseConfirm;
 
+  /// Titel der Rückfrage beim Verlassen eines laufenden Falls
+  ///
+  /// In de, this message translates to:
+  /// **'Reanimationsfall verlassen?'**
+  String get leaveCaseTitle;
+
+  /// Erklärung der Rückfrage beim Verlassen eines laufenden Falls
+  ///
+  /// In de, this message translates to:
+  /// **'Der Fall läuft weiter und kann auf der Startseite fortgesetzt werden.'**
+  String get leaveCaseDescription;
+
+  /// Schaltfläche zum Verlassen des laufenden Falls ohne Beenden
+  ///
+  /// In de, this message translates to:
+  /// **'Verlassen'**
+  String get leaveCaseButton;
+
   /// Titel des Einsatzlogs
   ///
   /// In de, this message translates to:

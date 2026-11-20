@@ -772,6 +772,18 @@
   "@discardCaseConfirm": {
     "description": "Bestätigung des Verwerfens"
   },
+  "leaveCaseTitle": "Reanimationsfall verlassen?",
+  "@leaveCaseTitle": {
+    "description": "Titel der Rückfrage beim Verlassen eines laufenden Falls"
+  },
+  "leaveCaseDescription": "Der Fall läuft weiter und kann auf der Startseite fortgesetzt werden.",
+  "@leaveCaseDescription": {
+    "description": "Erklärung der Rückfrage beim Verlassen eines laufenden Falls"
+  },
+  "leaveCaseButton": "Verlassen",
+  "@leaveCaseButton": {
+    "description": "Schaltfläche zum Verlassen des laufenden Falls ohne Beenden"
+  },
   "einsatzlogTitle": "Einsatzlog",
   "@einsatzlogTitle": {
     "description": "Titel des Einsatzlogs"
