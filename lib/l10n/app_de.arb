@@ -200,6 +200,14 @@
   "@actionsProtokoll": {
     "description": "Aktion zum Öffnen des laufenden Protokolls"
   },
+  "actionsSectionRecord": "Erfassen",
+  "@actionsSectionRecord": {
+    "description": "Abschnittsüberschrift im Aktionen-Sheet für Erfassungsaktionen"
+  },
+  "actionsSectionView": "Ansehen",
+  "@actionsSectionView": {
+    "description": "Abschnittsüberschrift im Aktionen-Sheet für Ansichten"
+  },
   "protokollTitle": "Protokoll",
   "@protokollTitle": {
     "description": "Titel des Protokolls und seiner Zusammenfassungssektion"

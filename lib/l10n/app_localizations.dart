@@ -364,6 +364,18 @@ abstract class AppLocalizations {
   /// **'Protokoll'**
   String get actionsProtokoll;
 
+  /// Abschnittsüberschrift im Aktionen-Sheet für Erfassungsaktionen
+  ///
+  /// In de, this message translates to:
+  /// **'Erfassen'**
+  String get actionsSectionRecord;
+
+  /// Abschnittsüberschrift im Aktionen-Sheet für Ansichten
+  ///
+  /// In de, this message translates to:
+  /// **'Ansehen'**
+  String get actionsSectionView;
+
   /// Titel des Protokolls und seiner Zusammenfassungssektion
   ///
   /// In de, this message translates to:

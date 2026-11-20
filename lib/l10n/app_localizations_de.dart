@@ -159,6 +159,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get actionsProtokoll => 'Protokoll';
 
   @override
+  String get actionsSectionRecord => 'Erfassen';
+
+  @override
+  String get actionsSectionView => 'Ansehen';
+
+  @override
   String get protokollTitle => 'Protokoll';
 
   @override
