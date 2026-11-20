@@ -426,6 +426,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get amiodaronStateConsider => 'erwägen';
 
   @override
+  String get amiodaronStateNotRecommended => 'nicht empfohlen';
+
+  @override
   String amiodaronDose(int dosis) {
     return '$dosis mg';
   }

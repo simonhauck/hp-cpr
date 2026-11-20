@@ -856,6 +856,12 @@ abstract class AppLocalizations {
   /// **'erwägen'**
   String get amiodaronStateConsider;
 
+  /// Status des Amiodaron-Hinweises, wenn keine Gabe empfohlen ist
+  ///
+  /// In de, this message translates to:
+  /// **'nicht empfohlen'**
+  String get amiodaronStateNotRecommended;
+
   /// Vorgeschlagene Amiodaron-Dosis
   ///
   /// In de, this message translates to:

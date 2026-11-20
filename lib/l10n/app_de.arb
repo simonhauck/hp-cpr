@@ -561,6 +561,10 @@
   "@amiodaronStateConsider": {
     "description": "Status des Amiodaron-Hinweises, wenn eine Gabe erwogen werden sollte"
   },
+  "amiodaronStateNotRecommended": "nicht empfohlen",
+  "@amiodaronStateNotRecommended": {
+    "description": "Status des Amiodaron-Hinweises, wenn keine Gabe empfohlen ist"
+  },
   "amiodaronDose": "{dosis} mg",
   "@amiodaronDose": {
     "description": "Vorgeschlagene Amiodaron-Dosis",
