@@ -337,6 +337,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
                 snapshot: snapshot,
                 layout: layout,
                 onRecordAmiodaron: _recordAmiodaron,
+                isRecordingEnabled: snapshot.istLaufend,
               ),
             ],
           );

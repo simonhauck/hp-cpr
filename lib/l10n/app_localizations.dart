@@ -664,11 +664,11 @@ abstract class AppLocalizations {
   /// **'Adrenalin'**
   String get adrenalinLabel;
 
-  /// Schaltfläche zum Erfassen einer Adrenalin-Gabe
+  /// Schaltfläche zum Erfassen einer Medikamenten-Gabe (Adrenalin, Amiodaron)
   ///
   /// In de, this message translates to:
-  /// **'Gabe'**
-  String get adrenalinRecordButton;
+  /// **'Gabe erfassen'**
+  String get medikamentGabeButton;
 
   /// Hinweis, dass die erste Adrenalin-Gabe jetzt fällig ist
   ///
@@ -700,11 +700,11 @@ abstract class AppLocalizations {
   /// **'überfällig'**
   String get adrenalinStateOverdue;
 
-  /// Uhrzeit und verstrichene Zeit seit der letzten Adrenalin-Gabe
+  /// Uhrzeit und verstrichene Zeit seit der letzten Medikamenten-Gabe
   ///
   /// In de, this message translates to:
   /// **'Letzte Gabe: {time} Uhr, vor {since}'**
-  String adrenalinLastDoseAt(String time, String since);
+  String medikamentLetzteGabe(String time, String since);
 
   /// Schaltfläche zum Speichern eines Dialogs
   ///
@@ -855,18 +855,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'{dosis} mg'**
   String amiodaronDose(int dosis);
-
-  /// Schaltfläche zum Erfassen einer Amiodaron-Gabe
-  ///
-  /// In de, this message translates to:
-  /// **'Gegeben'**
-  String get amiodaronGiveButton;
-
-  /// Zeitpunkt der letzten Amiodaron-Gabe
-  ///
-  /// In de, this message translates to:
-  /// **'Letzte Gabe {time}'**
-  String amiodaronLastDose(String time);
 
   /// Erklärung des ROSC-Zustands auf dem laufenden Fall
   ///

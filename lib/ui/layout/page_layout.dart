@@ -202,6 +202,10 @@ class PageLayout {
 
   double get secondaryActionHeight => isCompact ? 48 : 52;
 
+  /// The height of the "Gabe erfassen" button on the medication cards. Both
+  /// cards always show it, so it stays low to leave room for the phase panel.
+  double get medicationActionHeight => isCompact ? 44 : 40;
+
   /// The gap between a card title and its subtitle.
   double get cardTitleGap => isCompact ? space2 : space4;
 
@@ -270,7 +274,7 @@ class PageLayout {
   /// The padding inside the medication panels.
   EdgeInsets get medicationPanelPadding => EdgeInsets.symmetric(
     horizontal: isCompact ? space10 : space14,
-    vertical: isCompact ? space0 : space4,
+    vertical: isCompact ? space0 : space2,
   );
 
   /// The padding inside the rhythm-analysis result summary.
