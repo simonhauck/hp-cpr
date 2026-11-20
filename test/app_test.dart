@@ -184,6 +184,8 @@ void main() {
 
     await openActions(tester);
     expect(find.text('Weitere Aktionen'), findsOneWidget);
+    expect(find.text('Erfassen'), findsOneWidget);
+    expect(find.text('Ansehen'), findsOneWidget);
     expect(find.text('Messwerte'), findsOneWidget);
     expect(find.text('Notiz'), findsOneWidget);
     expect(find.text('Schock erfassen'), findsOneWidget);
@@ -2469,6 +2471,8 @@ void main() {
     await startNow(tester);
     await recordSchock(tester);
     await openActions(tester);
+    await tester.ensureVisible(find.text('Protokoll'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Protokoll'));
     await tester.pumpAndSettle();
 
