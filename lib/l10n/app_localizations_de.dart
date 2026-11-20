@@ -283,9 +283,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rhythmusanalyseUnklar => 'Unklar';
 
   @override
-  String get rhythmusanalyseStepKategorie => 'Rhythmusart';
-
-  @override
   String get rhythmusanalyseStepRhythmus => 'Rhythmus';
 
   @override

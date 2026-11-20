@@ -358,6 +358,80 @@ void main() {
     expect(find.text('02:00'), findsNWidgets(2));
   });
 
+  testWidgets('starts the Rhythmusanalyse at the rhythm step without a back '
+      'arrow and steps back from the Schock question', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Analyse starten'));
+    await tester.pump();
+
+    await tester.tap(find.text('Schockbar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Rhythmus'), findsOneWidget);
+    expect(find.text('Rhythmusart'), findsNothing);
+    expect(find.text('Kammerflimmern (VF)'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.byIcon(Icons.arrow_back),
+      ),
+      findsNothing,
+    );
+
+    await tester.tap(find.text('Kammerflimmern (VF)'));
+    await tester.pumpAndSettle();
+    expect(find.text('Schock abgegeben?'), findsOneWidget);
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.byIcon(Icons.arrow_back),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Schock abgegeben?'), findsNothing);
+    expect(find.text('Kammerflimmern (VF)'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.byIcon(Icons.arrow_back),
+      ),
+      findsNothing,
+    );
+  });
+
+  testWidgets('records a non-shockable rhythm directly from the rhythm step', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Analyse starten'));
+    await tester.pump();
+
+    await tester.tap(find.text('Nicht schockbar'));
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.byIcon(Icons.arrow_back),
+      ),
+      findsNothing,
+    );
+    await tester.tap(find.text('Asystolie'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Schock abgegeben?'), findsNothing);
+    expect(find.text('Druckphase'), findsOneWidget);
+  });
+
   testWidgets('records a confirmed Schock from the wizard and resumes', (
     tester,
   ) async {

@@ -586,12 +586,6 @@ abstract class AppLocalizations {
   /// **'Unklar'**
   String get rhythmusanalyseUnklar;
 
-  /// Erster Schritt der geführten Rhythmusanalyse
-  ///
-  /// In de, this message translates to:
-  /// **'Rhythmusart'**
-  String get rhythmusanalyseStepKategorie;
-
   /// Zweiter Schritt der geführten Rhythmusanalyse
   ///
   /// In de, this message translates to:

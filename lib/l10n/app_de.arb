@@ -368,10 +368,6 @@
   "@rhythmusanalyseUnklar": {
     "description": "Ergebnis: Rhythmus unklar"
   },
-  "rhythmusanalyseStepKategorie": "Rhythmusart",
-  "@rhythmusanalyseStepKategorie": {
-    "description": "Erster Schritt der geführten Rhythmusanalyse"
-  },
   "rhythmusanalyseStepRhythmus": "Rhythmus",
   "@rhythmusanalyseStepRhythmus": {
     "description": "Zweiter Schritt der geführten Rhythmusanalyse"
