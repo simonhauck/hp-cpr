@@ -388,13 +388,16 @@ class _StartNowCard extends StatelessWidget {
           const SizedBox(height: PageLayout.space16),
         ] else
           const SizedBox(height: PageLayout.space8),
-        FilledButton.icon(
-          onPressed: onStart,
-          icon: const Icon(Icons.play_arrow),
-          label: Text(l10n.startNowButton),
-          style: FilledButton.styleFrom(
-            minimumSize: Size.fromHeight(layout.primaryActionHeight),
-            textStyle: theme.textTheme.titleMedium,
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: onStart,
+            icon: const Icon(Icons.play_arrow),
+            label: Text(l10n.startNowButton),
+            style: FilledButton.styleFrom(
+              minimumSize: Size.fromHeight(layout.primaryActionHeight),
+              textStyle: theme.textTheme.titleMedium,
+            ),
           ),
         ),
       ],
@@ -461,12 +464,16 @@ class _RunningReanimationsfallCard extends StatelessWidget {
           ],
         ),
         SizedBox(height: layout.cardActionGap),
-        OutlinedButton.icon(
-          onPressed: onCustomStartzeit,
-          icon: const Icon(Icons.edit_outlined),
-          label: Text(l10n.customStartzeitButton),
-          style: OutlinedButton.styleFrom(
-            minimumSize: Size.fromHeight(layout.secondaryActionHeight),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: onCustomStartzeit,
+            icon: const Icon(Icons.edit_outlined),
+            label: Text(l10n.customStartzeitButton),
+            style: OutlinedButton.styleFrom(
+              minimumSize: Size.fromHeight(layout.primaryActionHeight),
+              textStyle: theme.textTheme.titleMedium,
+            ),
           ),
         ),
       ],

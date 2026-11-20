@@ -121,6 +121,18 @@ void main() {
     }
     expect(find.text('Eigene Startzeit'), findsOneWidget);
     expect(find.text('ERC 2025'), findsOneWidget);
+
+    final startNowButton = find.widgetWithText(FilledButton, 'Jetzt starten');
+    final customStartButton = find.widgetWithText(
+      OutlinedButton,
+      'Eigene Startzeit',
+    );
+    expect(startNowButton, findsOneWidget);
+    expect(customStartButton, findsOneWidget);
+    final startNowSize = tester.getSize(startNowButton);
+    final customStartSize = tester.getSize(customStartButton);
+    expect(startNowSize.height, customStartSize.height);
+    expect(startNowSize.width, customStartSize.width);
   });
 
   testWidgets('starting immediately records time zero and starts the '
