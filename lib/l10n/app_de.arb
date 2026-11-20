@@ -792,9 +792,17 @@
   "@einsatzlogEmpty": {
     "description": "Leerer Zustand des Einsatzlogs"
   },
+  "einsatzlogToday": "Heute",
+  "@einsatzlogToday": {
+    "description": "Gruppenüberschrift der Einsatzlog-Einträge von heute"
+  },
+  "einsatzlogYesterday": "Gestern",
+  "@einsatzlogYesterday": {
+    "description": "Gruppenüberschrift der Einsatzlog-Einträge von gestern"
+  },
   "einsatzlogEntryTitle": "Reanimationsfall {time}",
   "@einsatzlogEntryTitle": {
-    "description": "Titel eines Einsatzlog-Eintrags",
+    "description": "Titel eines Einsatzlog-Eintrags; {time} ist Datum und Uhrzeit des Fallbeginns (dd.MM.yyyy, HH:mm)",
     "placeholders": {
       "time": {
         "type": "String"

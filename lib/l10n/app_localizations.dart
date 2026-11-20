@@ -1138,7 +1138,19 @@ abstract class AppLocalizations {
   /// **'Noch keine abgeschlossenen Reanimationsfälle'**
   String get einsatzlogEmpty;
 
-  /// Titel eines Einsatzlog-Eintrags
+  /// Gruppenüberschrift der Einsatzlog-Einträge von heute
+  ///
+  /// In de, this message translates to:
+  /// **'Heute'**
+  String get einsatzlogToday;
+
+  /// Gruppenüberschrift der Einsatzlog-Einträge von gestern
+  ///
+  /// In de, this message translates to:
+  /// **'Gestern'**
+  String get einsatzlogYesterday;
+
+  /// Titel eines Einsatzlog-Eintrags; {time} ist Datum und Uhrzeit des Fallbeginns (dd.MM.yyyy, HH:mm)
   ///
   /// In de, this message translates to:
   /// **'Reanimationsfall {time}'**
