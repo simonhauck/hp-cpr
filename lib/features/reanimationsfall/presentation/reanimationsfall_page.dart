@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:hp_cpr/core/vibrator.dart';
 import 'package:hp_cpr/core/wake_lock.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/features/messwerte/presentation/messwerte_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
+import 'package:hp_cpr/features/reanimationsfall/domain/signal_detector.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/actions_sheet.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/adrenalin_panel.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/amiodaron_panel.dart';
@@ -35,12 +37,14 @@ class ReanimationsfallPage extends StatefulWidget {
     super.key,
     required this.reanimationsfall,
     required this.wakeLock,
+    required this.vibrator,
     required this.routes,
     required this.session,
   });
 
   final Reanimationsfall reanimationsfall;
   final WakeLock wakeLock;
+  final Vibrator vibrator;
   final AppRoutes routes;
   final ReanimationsfallSession session;
 
@@ -51,14 +55,19 @@ class ReanimationsfallPage extends StatefulWidget {
 class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     with WidgetsBindingObserver {
   Timer? _ticker;
+  final _signalDetector = SignalDetector();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     unawaited(widget.wakeLock.enable());
+    // Seeds the detector so a case that is already due does not signal.
+    _signalDetector.update(widget.reanimationsfall.snapshot());
     _ticker = Timer.periodic(const Duration(milliseconds: 200), (_) {
-      if (mounted) setState(() {});
+      if (!mounted) return;
+      setState(() {});
+      _signalDueActions();
     });
   }
 
@@ -75,11 +84,19 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     if (state == AppLifecycleState.resumed && mounted) {
       widget.reanimationsfall.reconcileWithWallClock();
       setState(() {});
+      _signalDueActions();
     }
+  }
+
+  /// Vibrates once for every action that became due since the last check.
+  void _signalDueActions() {
+    final anlaesse = _signalDetector.update(widget.reanimationsfall.snapshot());
+    if (anlaesse.isNotEmpty) unawaited(widget.vibrator.vibrate());
   }
 
   void _mutate(VoidCallback action) {
     setState(action);
+    _signalDueActions();
     unawaited(widget.session.persist(widget.reanimationsfall));
   }
 

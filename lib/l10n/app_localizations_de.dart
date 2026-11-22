@@ -368,6 +368,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsVibrationDescription => 'Vibration bei fälligen Aktionen';
 
   @override
+  String get settingsVibrationSystemHapticsOff =>
+      'Das haptische Feedback ist in den Systemeinstellungen des Geräts ausgeschaltet. Solange es aus ist, vibriert die App nicht.';
+
+  @override
   String get settingsSound => 'Ton';
 
   @override

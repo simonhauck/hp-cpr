@@ -484,6 +484,10 @@
   "@settingsVibrationDescription": {
     "description": "Erklärung der Vibrationseinstellung"
   },
+  "settingsVibrationSystemHapticsOff": "Das haptische Feedback ist in den Systemeinstellungen des Geräts ausgeschaltet. Solange es aus ist, vibriert die App nicht.",
+  "@settingsVibrationSystemHapticsOff": {
+    "description": "Hinweis, wenn die Vibration in der App an, das haptische Feedback des Geräts aber aus ist"
+  },
   "settingsSound": "Ton",
   "@settingsSound": {
     "description": "Einstellung für Tonsignale"

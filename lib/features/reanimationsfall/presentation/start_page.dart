@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/core/clock.dart';
+import 'package:hp_cpr/core/vibrator.dart';
 import 'package:hp_cpr/core/wake_lock.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
@@ -26,12 +27,14 @@ class StartPage extends StatefulWidget {
     required this.clock,
     required this.routes,
     required this.wakeLock,
+    required this.vibrator,
     required this.session,
   });
 
   final AppClock clock;
   final AppRoutes routes;
   final WakeLock wakeLock;
+  final Vibrator vibrator;
   final ReanimationsfallSession session;
 
   @override
@@ -63,6 +66,7 @@ class _StartPageState extends State<StartPage> {
         builder: (_) => ReanimationsfallPage(
           reanimationsfall: reanimationsfall,
           wakeLock: widget.wakeLock,
+          vibrator: widget.vibrator,
           routes: widget.routes,
           session: widget.session,
         ),
