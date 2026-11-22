@@ -66,6 +66,11 @@ class ActionsSheet extends StatelessWidget {
           onPressed: recordSchock,
         ),
       _SheetAction(
+        icon: Icons.straighten,
+        label: l10n.messwerteTitle,
+        onPressed: onOpenMesswerte,
+      ),
+      _SheetAction(
         icon: Icons.notes,
         label: l10n.actionsNotiz,
         onPressed: onRecordNotiz,
@@ -79,11 +84,6 @@ class ActionsSheet extends StatelessWidget {
     ];
 
     final viewActions = <_SheetAction>[
-      _SheetAction(
-        icon: Icons.straighten,
-        label: l10n.messwerteTitle,
-        onPressed: onOpenMesswerte,
-      ),
       _SheetAction(
         icon: Icons.receipt_long_outlined,
         label: l10n.actionsProtokoll,
