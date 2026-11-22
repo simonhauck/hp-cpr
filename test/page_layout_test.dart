@@ -15,7 +15,6 @@ void main() {
     expect(small.isCompact, isFalse);
     expect(small.stacksMedicationPanel, isTrue);
     expect(small.stacksStartHeader, isTrue);
-    expect(small.usesTwoColumnStartCards, isFalse);
     expect(small.usesCompactHeaderChip, isTrue);
     expect(small.druckphaseTimerFontSize, PageLayout.phonePhaseTimerFontSize);
     expect(small.analysephaseTimerFontSize, PageLayout.phonePhaseTimerFontSize);
@@ -25,7 +24,6 @@ void main() {
     expect(large.isPhone, isTrue);
     expect(large.stacksMedicationPanel, isTrue);
     expect(large.stacksStartHeader, isTrue);
-    expect(large.usesTwoColumnStartCards, isFalse);
   });
 
   test('keeps landscape phones compact and side by side', () {
@@ -35,14 +33,12 @@ void main() {
     expect(smallLandscape.isCompact, isTrue);
     expect(smallLandscape.stacksMedicationPanel, isFalse);
     expect(smallLandscape.stacksStartHeader, isFalse);
-    expect(smallLandscape.usesTwoColumnStartCards, isTrue);
 
     final largeLandscape = layout(844, 390);
     expect(largeLandscape.windowSize, WindowSizeClass.largePhone);
     expect(largeLandscape.isLandscape, isTrue);
     expect(largeLandscape.isCompact, isTrue);
     expect(largeLandscape.stacksMedicationPanel, isFalse);
-    expect(largeLandscape.usesTwoColumnStartCards, isTrue);
   });
 
   test('uses the tablet layout above the phone breakpoint', () {
@@ -52,7 +48,6 @@ void main() {
     expect(tablet.isTablet, isTrue);
     expect(tablet.stacksMedicationPanel, isFalse);
     expect(tablet.stacksStartHeader, isFalse);
-    expect(tablet.usesTwoColumnStartCards, isTrue);
     expect(
       tablet.druckphaseTimerFontSize,
       PageLayout.wideDruckphaseTimerFontSize,
@@ -71,7 +66,6 @@ void main() {
     expect(desktop.windowSize, WindowSizeClass.desktop);
     expect(desktop.isDesktop, isTrue);
     expect(desktop.isPhone, isFalse);
-    expect(desktop.usesTwoColumnStartCards, isTrue);
     expect(
       desktop.druckphaseTimerFontSize,
       PageLayout.wideDruckphaseTimerFontSize,

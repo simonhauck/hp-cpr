@@ -4,6 +4,7 @@ import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 /// The kind of an entry in a [Protokoll].
 enum ProtokollEintragTyp {
   startzeit,
+  uebernahme,
   schock,
   adrenalin,
   amiodaron,
@@ -30,7 +31,7 @@ enum ProtokollEintragTyp {
 
   /// Whether the entry belongs to the case lifecycle rather than clinical data.
   bool get istLebenszyklus => switch (this) {
-    startzeit || reanimationsfallEnde || verworfen => true,
+    startzeit || uebernahme || reanimationsfallEnde || verworfen => true,
     _ => false,
   };
 
@@ -152,6 +153,48 @@ final class RoscKorrigiert extends ProtokollKorrektur {
   const RoscKorrigiert({required super.ziel, required this.zeitpunkt});
 
   final Duration zeitpunkt;
+}
+
+/// Replaces the Vorbehandlung: the Übernahme and how long the resuscitation
+/// had been running by then, which together define the Startzeit.
+///
+/// Each save of the Vorbehandlung form appends one of these and the latest one
+/// wins. Both times are clock-stable: they are relative to the Übernahme
+/// recorded at the start tap, which never moves, so recorded events keep their
+/// wall-clock time when the Startzeit changes.
+final class VorbehandlungKorrigiert extends ProtokollKorrektur {
+  const VorbehandlungKorrigiert({
+    required this.uebernahme,
+    required this.laufzeitBeiUebernahme,
+  }) : super(ziel: zielRef);
+
+  /// The single target shared by every Vorbehandlung correction.
+  static const zielRef = ProtokollEintragRef(
+    typ: ProtokollEintragTyp.uebernahme,
+    id: 'uebernahme',
+  );
+
+  /// The Übernahme relative to the Übernahme recorded at the start tap;
+  /// negative when the team took over before the tap.
+  final Duration uebernahme;
+
+  /// How long the resuscitation had been running at the Übernahme, that is
+  /// the distance from the Startzeit to the Übernahme.
+  final Duration laufzeitBeiUebernahme;
+
+  /// The Startzeit relative to the Übernahme recorded at the start tap.
+  Duration get startzeit => uebernahme - laufzeitBeiUebernahme;
+}
+
+/// The latest Vorbehandlung correction in [korrekturen], if any.
+VorbehandlungKorrigiert? letzteVorbehandlung(
+  Iterable<ProtokollKorrektur> korrekturen,
+) {
+  VorbehandlungKorrigiert? letzte;
+  for (final korrektur in korrekturen) {
+    if (korrektur is VorbehandlungKorrigiert) letzte = korrektur;
+  }
+  return letzte;
 }
 
 /// One entry in the effective Protokoll timeline.

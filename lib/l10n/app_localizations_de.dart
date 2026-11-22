@@ -35,27 +35,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get startNowButton => 'Jetzt starten';
 
   @override
-  String get runningCaseTitle => 'Laufende Reanimation';
-
-  @override
-  String get backdateMinutesLabel => 'Minuten seit Beginn';
-
-  @override
-  String backdateChip(int minutes) {
-    return '$minutes min';
-  }
-
-  @override
-  String get customStartzeitButton => 'Eigene Startzeit';
-
-  @override
-  String get customStartzeitTitle => 'Eigene Startzeit';
-
-  @override
-  String get customStartzeitDescription =>
-      'Wie lange läuft die Reanimation bereits?';
-
-  @override
   String get minutesLabel => 'Minuten';
 
   @override
@@ -63,13 +42,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get cancelButton => 'Abbrechen';
-
-  @override
-  String get startCaseButton => 'Starten';
-
-  @override
-  String get invalidBackdateMessage =>
-      'Bitte eine Dauer größer als 0 eingeben.';
 
   @override
   String get invalidSecondsMessage =>
@@ -166,7 +138,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get protokollLiveEditHint =>
-      'Im laufenden Fall sind nur Schocks, Medikamente, Messwerte und Notizen korrigierbar.';
+      'Im laufenden Fall sind nur Startzeit, Übernahme, Schocks, Medikamente, Messwerte und Notizen korrigierbar.';
 
   @override
   String get protokollEdit => 'Bearbeiten';
@@ -701,4 +673,54 @@ class AppLocalizationsDe extends AppLocalizations {
   String versionWithBuild(String version, String build) {
     return '$version (Build $build)';
   }
+
+  @override
+  String get vorbehandlungTitle => 'Vorbehandlung';
+
+  @override
+  String get vorbehandlungErfassen => 'Vorbehandlung erfassen';
+
+  @override
+  String get vorbehandlungHinweisAusblenden => 'Hinweis ausblenden';
+
+  @override
+  String get vorbehandlungLaufzeitLabel => 'Lief bei Übernahme seit';
+
+  @override
+  String vorbehandlungLaufzeitChip(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get vorbehandlungLaufzeitMinuten => 'Eigener Wert (Minuten)';
+
+  @override
+  String get vorbehandlungLaufzeitInvalid =>
+      'Bitte eine ganze Zahl an Minuten eingeben.';
+
+  @override
+  String get vorbehandlungStartzeitWaehlen => 'Startzeit wählen';
+
+  @override
+  String vorbehandlungStartzeitValue(String time) {
+    return 'Startzeit: $time Uhr';
+  }
+
+  @override
+  String get vorbehandlungUebernahmeLabel => 'Übernahme';
+
+  @override
+  String vorbehandlungUebernahmeZuSpaet(String time) {
+    return 'Die Übernahme darf nicht nach $time Uhr liegen (erstes Ereignis oder jetzt).';
+  }
+
+  @override
+  String get vorbehandlungStartzeitNachUebernahme =>
+      'Die Startzeit darf nicht nach der Übernahme liegen.';
+
+  @override
+  String get vorbehandlungSavedSnackbar => 'Vorbehandlung gespeichert';
+
+  @override
+  String get eventUebernahme => 'Übernahme';
 }

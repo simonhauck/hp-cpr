@@ -8,7 +8,6 @@ import 'package:hp_cpr/core/wake_lock.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/reanimationsfall_page.dart';
-import 'package:hp_cpr/features/reanimationsfall/presentation/custom_startzeit_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/start_card.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_chip.dart';
@@ -76,7 +75,7 @@ class _StartPageState extends State<StartPage> {
     await _loadActive();
   }
 
-  Future<void> _startReanimationsfall(Duration backdate) async {
+  Future<void> _startReanimationsfall() async {
     final settings = widget.routes.settings;
     final reanimationsfall = Reanimationsfall.start(
       clock: widget.clock,
@@ -84,7 +83,6 @@ class _StartPageState extends State<StartPage> {
       vibrationEnabled: settings.vibrationEnabled,
       soundEnabled: settings.soundEnabled,
       demoMode: settings.demoMode,
-      backdate: backdate,
     );
 
     await widget.session.persist(reanimationsfall);
@@ -135,32 +133,21 @@ class _StartPageState extends State<StartPage> {
           );
         }
 
-        final startNowCard = _StartNowCard(
-          layout: layout,
-          onStart: () => _startReanimationsfall(Duration.zero),
+        // A resuscitation that was already running is captured afterwards in
+        // the Vorbehandlung form, so the start page asks nothing up front.
+        return Center(
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: PageLayout.activeCaseMaxWidth,
+              ),
+              child: _StartNowCard(
+                layout: layout,
+                onStart: _startReanimationsfall,
+              ),
+            ),
+          ),
         );
-        final runningReanimationsfallCard = _RunningReanimationsfallCard(
-          layout: layout,
-          onStartBackdated: _startReanimationsfall,
-          onCustomStartzeit: () => _showCustomStartzeit(context),
-        );
-
-        return layout.usesTwoColumnStartCards
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(child: startNowCard),
-                  const SizedBox(width: PageLayout.space12),
-                  Expanded(child: runningReanimationsfallCard),
-                ],
-              )
-            : ListView(
-                children: [
-                  startNowCard,
-                  const SizedBox(height: PageLayout.space12),
-                  runningReanimationsfallCard,
-                ],
-              );
       },
     );
   }
@@ -171,16 +158,6 @@ class _StartPageState extends State<StartPage> {
         builder: (_) => widget.routes.page(AppDestination.einstellungen),
       ),
     );
-  }
-
-  Future<void> _showCustomStartzeit(BuildContext context) async {
-    final backdate = await showDialog<Duration>(
-      context: context,
-      builder: (_) => const CustomStartzeitDialog(),
-    );
-
-    if (backdate == null || !context.mounted) return;
-    _startReanimationsfall(backdate);
   }
 }
 
@@ -399,82 +376,6 @@ class _StartNowCard extends StatelessWidget {
             icon: const Icon(Icons.play_arrow),
             label: Text(l10n.startNowButton),
             style: FilledButton.styleFrom(
-              minimumSize: Size.fromHeight(layout.primaryActionHeight),
-              textStyle: theme.textTheme.titleMedium,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _RunningReanimationsfallCard extends StatelessWidget {
-  const _RunningReanimationsfallCard({
-    required this.layout,
-    required this.onStartBackdated,
-    required this.onCustomStartzeit,
-  });
-
-  final PageLayout layout;
-  final ValueChanged<Duration> onStartBackdated;
-  final VoidCallback onCustomStartzeit;
-
-  static const _backdatePresets = [
-    Duration(minutes: 1),
-    Duration(minutes: 2),
-    Duration(minutes: 5),
-    Duration(minutes: 8),
-    Duration(minutes: 10),
-    Duration(minutes: 12),
-    Duration(minutes: 15),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-
-    return StartCard(
-      layout: layout,
-      children: [
-        StartCardTitle(l10n.runningCaseTitle, layout: layout),
-        SizedBox(height: layout.cardTitleGap),
-        Text(
-          l10n.backdateMinutesLabel,
-          textAlign: TextAlign.center,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        SizedBox(height: layout.cardLabelGap),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: layout.actionWrapRunSpacing,
-          runSpacing: layout.actionWrapRunSpacing,
-          children: [
-            for (final backdate in _backdatePresets)
-              ActionChip(
-                label: Text('${backdate.inMinutes}'),
-                labelStyle: theme.textTheme.titleSmall,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: PageLayout.space8,
-                  vertical: PageLayout.space4,
-                ),
-                tooltip: l10n.backdateChip(backdate.inMinutes),
-                visualDensity: layout.backdateChipDensity,
-                onPressed: () => onStartBackdated(backdate),
-              ),
-          ],
-        ),
-        SizedBox(height: layout.cardActionGap),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: onCustomStartzeit,
-            icon: const Icon(Icons.edit_outlined),
-            label: Text(l10n.customStartzeitButton),
-            style: OutlinedButton.styleFrom(
               minimumSize: Size.fromHeight(layout.primaryActionHeight),
               textStyle: theme.textTheme.titleMedium,
             ),

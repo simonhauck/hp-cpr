@@ -35,6 +35,26 @@ void main() {
     expect(await store.load(), isEmpty);
   });
 
+  test('keeps a Startzeit correction across a reload', () async {
+    final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+    final store = const SharedPreferencesReanimationsfallStore(key: 'test');
+    clock.advance(const Duration(minutes: 1));
+    reanimationsfall.correctVorbehandlung(
+      uebernahme: DateTime(2026, 10, 25, 8),
+      laufzeitBeiUebernahme: const Duration(minutes: 8),
+    );
+
+    await store.save(reanimationsfall.exportState());
+    final restored = Reanimationsfall.restore(
+      clock: clock,
+      state: (await store.load()).single,
+    );
+
+    expect(restored.snapshot().startzeit, DateTime(2026, 10, 25, 7, 52));
+    expect(restored.snapshot().reanimationsdauer, const Duration(minutes: 9));
+  });
+
   test('ignores a damaged store', () async {
     SharedPreferences.setMockInitialValues({'test': 'not json'});
     final store = const SharedPreferencesReanimationsfallStore(key: 'test');

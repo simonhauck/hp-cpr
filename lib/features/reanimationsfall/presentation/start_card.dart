@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 
-/// The shared shell for the two start choices.
+/// The shared shell for the start page cards.
 class StartCard extends StatelessWidget {
   const StartCard({super.key, required this.layout, required this.children});
 
