@@ -11,6 +11,7 @@ import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/navigation/app_routes.dart';
 
 import 'support/fake_clock.dart';
+import 'support/fake_vibrator.dart';
 
 void main() {
   testWidgets('sorts Messwerte and Notizen by time and shows both times', (
@@ -67,6 +68,7 @@ void main() {
           routes: AppRoutes(
             settings: AppSettings(),
             clock: clock,
+            vibrator: FakeVibrator(),
             session: session,
           ),
           reanimationsfall: reanimationsfall,

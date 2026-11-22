@@ -13,20 +13,23 @@ import 'package:hp_cpr/features/settings/domain/app_settings.dart';
 import 'package:hp_cpr/ui/theme/due_colors.dart';
 
 import 'support/fake_clock.dart';
+import 'support/fake_vibrator.dart';
+import 'support/fake_wake_lock.dart';
 import 'support/medikament_finders.dart';
 import 'support/roboto_font.dart';
-import 'support/fake_wake_lock.dart';
 
 void main() {
   setUpAll(loadRobotoFont);
 
   late FakeClock clock;
   late FakeWakeLock wakeLock;
+  late FakeVibrator vibrator;
   late InMemoryReanimationsfallStore store;
 
   setUp(() {
     clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
     wakeLock = FakeWakeLock();
+    vibrator = FakeVibrator();
     store = InMemoryReanimationsfallStore();
     PackageInfo.setMockInitialValues(
       appName: 'HP-CPR',
@@ -62,6 +65,7 @@ void main() {
         clock: clock,
         settings: settings,
         wakeLock: wakeLock,
+        vibrator: vibrator,
         store: appStore ?? store,
       ),
     );
@@ -542,6 +546,46 @@ void main() {
     expect(find.textContaining('Analysephase ·'), findsOneWidget);
     expect(find.text('Schockbar'), findsOneWidget);
     expect(find.text('Kreislauf zurückgekehrt'), findsNothing);
+  });
+
+  testWidgets('warns in settings while the system haptic feedback is off', (
+    tester,
+  ) async {
+    const hint =
+        'Das haptische Feedback ist in den Systemeinstellungen des Geräts '
+        'ausgeschaltet. Solange es aus ist, vibriert die App nicht.';
+    final settings = AppSettings();
+    vibrator.systemHapticsEnabled = false;
+    await pumpApp(tester, settings: settings);
+
+    await tester.tap(find.text('ERC 2025'));
+    await tester.pumpAndSettle();
+    expect(find.text(hint), findsOneWidget);
+
+    await tester.tap(find.text('Vibration'));
+    await tester.pump();
+    expect(find.text(hint), findsNothing);
+
+    await tester.tap(find.text('Vibration'));
+    await tester.pump();
+    expect(find.text(hint), findsOneWidget);
+
+    vibrator.systemHapticsEnabled = true;
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(find.text(hint), findsNothing);
+  });
+
+  testWidgets('shows no haptic hint when the platform cannot tell', (
+    tester,
+  ) async {
+    vibrator.systemHapticsEnabled = null;
+    await pumpApp(tester);
+
+    await tester.tap(find.text('ERC 2025'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('haptische Feedback'), findsNothing);
   });
 
   testWidgets('opens settings from the Leitlinienprofil chip and applies the '
@@ -3048,5 +3092,40 @@ void main() {
 
     expect(find.text('Reanimationsfall verlassen?'), findsNothing);
     expect(find.text('Zusammenfassung'), findsOneWidget);
+  });
+
+  testWidgets('vibrates once when the compression timer runs out and not again '
+      'on rebuild or resume', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    clock.advance(const Duration(seconds: 119));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(vibrator.calls, 0);
+
+    clock.advance(const Duration(seconds: 1));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(vibrator.calls, 1);
+
+    clock.advance(const Duration(seconds: 10));
+    await tester.pump(const Duration(milliseconds: 250));
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump(const Duration(milliseconds: 250));
+
+    expect(vibrator.calls, 1);
+  });
+
+  testWidgets('does not vibrate when a case opens already due', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+    clock.advance(const Duration(minutes: 3));
+    await pumpApp(tester);
+    await tester.tap(find.text('Fortsetzen'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.textContaining('Druckphase ·'), findsOneWidget);
+    expect(vibrator.calls, 0);
   });
 }

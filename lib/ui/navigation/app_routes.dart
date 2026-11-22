@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/core/clock.dart';
+import 'package:hp_cpr/core/vibrator.dart';
 import 'package:hp_cpr/features/about/presentation/about_page.dart';
 import 'package:hp_cpr/features/einsatzlog/presentation/einsatzlog_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
@@ -15,17 +16,20 @@ class AppRoutes {
   const AppRoutes({
     required this.settings,
     required this.clock,
+    required this.vibrator,
     required this.session,
   });
 
   final AppSettings settings;
   final AppClock clock;
+  final Vibrator vibrator;
   final ReanimationsfallSession session;
 
   Widget page(AppDestination destination) => switch (destination) {
     AppDestination.einsatzlog => EinsatzlogPage(session: session, routes: this),
     AppDestination.einstellungen => SettingsPage(
       settings: settings,
+      vibrator: vibrator,
       routes: this,
     ),
     AppDestination.ueber => AboutPage(routes: this),

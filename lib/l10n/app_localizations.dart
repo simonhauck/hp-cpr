@@ -748,6 +748,12 @@ abstract class AppLocalizations {
   /// **'Vibration bei fälligen Aktionen'**
   String get settingsVibrationDescription;
 
+  /// Hinweis, wenn die Vibration in der App an, das haptische Feedback des Geräts aber aus ist
+  ///
+  /// In de, this message translates to:
+  /// **'Das haptische Feedback ist in den Systemeinstellungen des Geräts ausgeschaltet. Solange es aus ist, vibriert die App nicht.'**
+  String get settingsVibrationSystemHapticsOff;
+
   /// Einstellung für Tonsignale
   ///
   /// In de, this message translates to:
