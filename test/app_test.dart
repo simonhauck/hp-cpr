@@ -284,6 +284,14 @@ void main() {
 
     Color? colorOf(String text) =>
         tester.widget<Text>(find.text(text)).style?.color;
+    Color? badgeColorOf(String text) {
+      final badge = tester.widget<DecoratedBox>(
+        find
+            .ancestor(of: find.text(text), matching: find.byType(DecoratedBox))
+            .first,
+      );
+      return (badge.decoration as BoxDecoration).color;
+    }
 
     clock.advance(const Duration(minutes: 2));
     await tester.pump(const Duration(milliseconds: 250));
@@ -293,13 +301,15 @@ void main() {
     await tester.pump();
     clock.advance(const Duration(minutes: 3));
     await tester.pump(const Duration(milliseconds: 250));
-    expect(colorOf('fällig'), DueColors.light.due);
+    expect(badgeColorOf('fällig'), DueColors.light.due);
+    expect(colorOf('fällig'), DueColors.light.onDue);
 
     clock.advance(const Duration(minutes: 2, seconds: 1));
     await tester.pump(const Duration(milliseconds: 250));
     final scheme = Theme.of(tester.element(find.text('überfällig')))
         .colorScheme;
-    expect(colorOf('überfällig'), scheme.error);
+    expect(badgeColorOf('überfällig'), scheme.error);
+    expect(colorOf('überfällig'), scheme.onError);
     expect(scheme.primary, isNot(scheme.error));
   });
 
@@ -1226,6 +1236,93 @@ void main() {
     expect(find.text('Reanimation wieder aufnehmen'), findsOneWidget);
     expect(isButtonEnabled(tester, adrenalinGabe), isFalse);
     expect(isButtonEnabled(tester, amiodaronGabe), isFalse);
+  });
+
+  testWidgets('emphasizes a due medication card and calms it during ROSC', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    BoxDecoration cardDecoration(String label) =>
+        tester
+                .widget<Container>(
+                  find
+                      .ancestor(
+                        of: find.text(label),
+                        matching: find.byType(Container),
+                      )
+                      .first,
+                )
+                .decoration!
+            as BoxDecoration;
+    // The closest decoration is the badge's, or the card's without one.
+    bool hasBadge(String state) =>
+        tester
+            .widget<DecoratedBox>(
+              find
+                  .ancestor(
+                    of: find.text(state),
+                    matching: find.byType(DecoratedBox),
+                  )
+                  .first,
+            )
+            .decoration !=
+        cardDecoration('Amiodaron');
+
+    final neutral = cardDecoration('Amiodaron');
+    expect(neutral.boxShadow, isEmpty);
+    expect(hasBadge('nicht empfohlen'), isFalse);
+
+    for (var count = 0; count < 3; count++) {
+      await recordSchock(tester);
+    }
+
+    final due = cardDecoration('Amiodaron');
+    expect(due.color, DueColors.light.dueContainer);
+    expect(due.boxShadow!.single.color, DueColors.light.due);
+    expect(hasBadge('erwägen'), isTrue);
+
+    await tester.tap(find.text('Analyse starten'));
+    await tester.pump();
+    await tester.tap(find.text('ROSC'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ROSC bestätigen'));
+    await tester.pumpAndSettle();
+
+    expect(cardDecoration('Amiodaron').boxShadow, isEmpty);
+    expect(cardDecoration('Adrenalin').boxShadow, isEmpty);
+  });
+
+  testWidgets('places the medication cards beside the phase on landscape '
+      'phones', (tester) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.devicePixelRatio = 1;
+
+    for (final size in [const Size(844, 390), const Size(390, 844)]) {
+      tester.view.physicalSize = size;
+      clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
+      store = InMemoryReanimationsfallStore();
+
+      await pumpApp(tester);
+      await startNow(tester);
+
+      final phase = tester.getRect(find.textContaining('Druckphase ·'));
+      final adrenalin = tester.getRect(find.text('Adrenalin'));
+      final amiodaron = tester.getRect(find.text('Amiodaron'));
+      if (size.width > size.height) {
+        expect(adrenalin.left, greaterThan(phase.right), reason: '$size');
+        expect(adrenalin.top, lessThan(phase.bottom), reason: '$size');
+      } else {
+        expect(adrenalin.top, greaterThan(phase.bottom), reason: '$size');
+      }
+      expect(amiodaron.top, greaterThan(adrenalin.bottom), reason: '$size');
+      expectInsideViewport(tester, amiodaronGabe);
+      expect(tester.takeException(), isNull, reason: '$size');
+
+      await leaveRunningCase(tester);
+    }
   });
 
   testWidgets('keeps the case open after ROSC and continues the medication '

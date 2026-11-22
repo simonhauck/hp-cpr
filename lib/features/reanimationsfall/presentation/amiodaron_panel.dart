@@ -5,7 +5,7 @@ import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/medikament_card.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
-import 'package:hp_cpr/ui/theme/due_colors.dart';
+import 'package:hp_cpr/ui/theme/panel_tone.dart';
 
 /// The Amiodaron recommendation status and the last recorded dose.
 ///
@@ -38,16 +38,17 @@ class AmiodaronPanel extends StatelessWidget {
     final stateLabel = isRecommended
         ? l10n.amiodaronStateConsider
         : l10n.amiodaronStateNotRecommended;
-    final stateColor = isRecommended
-        ? DueColors.of(context).due
-        : theme.colorScheme.onSurfaceVariant;
+    final tone = isRecommended && isRecordingEnabled
+        ? PanelTone.due
+        : PanelTone.neutral;
+    final stateColor = tone.colors(context).accent;
 
     return MedikamentCard(
       layout: layout,
       icon: Icons.vaccines_outlined,
       label: l10n.amiodaronLabel,
       stateLabel: stateLabel,
-      stateColor: stateColor,
+      tone: tone,
       onRecord: isRecommended && isRecordingEnabled ? onRecordAmiodaron : null,
       details: !isRecommended && lastDose == null
           ? null
