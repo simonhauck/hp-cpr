@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:hp_cpr/features/messwerte/presentation/messwert_erfassen_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/adrenalin.dart';
@@ -78,6 +79,7 @@ Future<ProtokollKorrektur?> showProtokollEditDialog(
       ),
     ),
     RhythmusanalyseUeberspringung() ||
+    AnalysephaseBeginn() ||
     DruckphaseNeustart() ||
     RoscEreignis() ||
     Reanimationswiederbeginn() => showDialog<ProtokollKorrektur>(
@@ -251,6 +253,7 @@ class _SchockDialogState extends State<_SchockDialog> {
             TextFormField(
               controller: _energie,
               keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: InputDecoration(labelText: l10n.protokollEnergyLabel),
               validator: (value) => _validateEnergie(value, l10n),
             ),
@@ -347,6 +350,7 @@ class _DoseDialogState extends State<_DoseDialog> {
             TextFormField(
               controller: _dosis,
               keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: InputDecoration(labelText: l10n.protokollDoseLabel),
               validator: (value) => _validateDosis(value, l10n),
             ),

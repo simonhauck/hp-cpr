@@ -415,36 +415,6 @@ void main() {
     );
   });
 
-  test('rejects structural corrections while the case is open', () {
-    final clock = FakeClock();
-    final reanimationsfall = Reanimationsfall.start(clock: clock);
-    reanimationsfall.enterAnalysephase();
-    reanimationsfall.completeRhythmusanalyse(
-      RhythmusanalyseErgebnis.kammerflimmern,
-    );
-
-    final rhythmusanalyse = single(
-      reanimationsfall.snapshot(),
-      ProtokollEintragTyp.rhythmusanalyse,
-    );
-    expect(
-      () => reanimationsfall.applyProtokollKorrektur(
-        RhythmusanalyseKorrigiert(
-          ziel: rhythmusanalyse.ref,
-          zeitpunkt: Duration.zero,
-          ergebnis: RhythmusanalyseErgebnis.pulsloseKammertachykardie,
-        ),
-      ),
-      throwsStateError,
-    );
-    expect(
-      () => reanimationsfall.applyProtokollKorrektur(
-        ProtokollEintragEntfernt(ziel: rhythmusanalyse.ref),
-      ),
-      throwsStateError,
-    );
-  });
-
   test('rebuilds CPR duration after a completed ROSC correction', () {
     final clock = FakeClock();
     final reanimationsfall = Reanimationsfall.start(clock: clock);

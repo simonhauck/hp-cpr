@@ -1,12 +1,16 @@
+import 'package:hp_cpr/features/reanimationsfall/domain/ereignisse.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/messwert.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 
 /// The kind of an entry in a [Protokoll].
 enum ProtokollEintragTyp {
   startzeit,
+  uebernahme,
+  vorbehandlung,
   schock,
   adrenalin,
   amiodaron,
+  analysephaseBeginn,
   rhythmusanalyse,
   ueberspringung,
   druckphaseNeustart,
@@ -17,9 +21,10 @@ enum ProtokollEintragTyp {
   reanimationsfallEnde,
   verworfen;
 
-  /// Whether the entry changes the running case state and is therefore locked
-  /// while the case is open.
+  /// Whether the entry drives the live case state; correcting it recalculates
+  /// the phase, the timers, and the ROSC state.
   bool get istStrukturell => switch (this) {
+    analysephaseBeginn ||
     rhythmusanalyse ||
     ueberspringung ||
     druckphaseNeustart ||
@@ -30,7 +35,11 @@ enum ProtokollEintragTyp {
 
   /// Whether the entry belongs to the case lifecycle rather than clinical data.
   bool get istLebenszyklus => switch (this) {
-    startzeit || reanimationsfallEnde || verworfen => true,
+    startzeit ||
+    uebernahme ||
+    vorbehandlung ||
+    reanimationsfallEnde ||
+    verworfen => true,
     _ => false,
   };
 
@@ -154,6 +163,74 @@ final class RoscKorrigiert extends ProtokollKorrektur {
   final Duration zeitpunkt;
 }
 
+/// Replaces the Vorbehandlung: the Übernahme and how long the resuscitation
+/// had been running by then, which together define the Startzeit, plus the
+/// counts of Schocks, Adrenalin and Amiodaron given before the Übernahme and
+/// an optional Notiz.
+///
+/// Each save of the Vorbehandlung form appends one of these and the latest one
+/// wins. Both times are clock-stable: they are relative to the Übernahme
+/// recorded at the start tap, which never moves, so recorded events keep their
+/// wall-clock time when the Startzeit changes.
+final class VorbehandlungKorrigiert extends ProtokollKorrektur {
+  const VorbehandlungKorrigiert({
+    required this.uebernahme,
+    required this.laufzeitBeiUebernahme,
+    this.schocks = 0,
+    this.adrenalin = 0,
+    this.amiodaron = 0,
+    this.notiz,
+  }) : super(ziel: zielRef);
+
+  /// The single target shared by every Vorbehandlung correction.
+  static const zielRef = ProtokollEintragRef(
+    typ: ProtokollEintragTyp.uebernahme,
+    id: 'uebernahme',
+  );
+
+  /// The Übernahme relative to the Übernahme recorded at the start tap;
+  /// negative when the team took over before the tap.
+  final Duration uebernahme;
+
+  /// How long the resuscitation had been running at the Übernahme, that is
+  /// the distance from the Startzeit to the Übernahme.
+  final Duration laufzeitBeiUebernahme;
+
+  /// The number of Schocks given before the Übernahme.
+  final int schocks;
+
+  /// The number of Adrenalin Gaben given before the Übernahme.
+  final int adrenalin;
+
+  /// The number of Amiodaron Gaben given before the Übernahme.
+  final int amiodaron;
+
+  /// An optional remark about anything else done before the Übernahme.
+  final String? notiz;
+
+  /// The Startzeit relative to the Übernahme recorded at the start tap.
+  Duration get startzeit => uebernahme - laufzeitBeiUebernahme;
+
+  /// The counts and the Notiz of this correction.
+  Vorbehandlung get vorbehandlung => Vorbehandlung(
+    schocks: schocks,
+    adrenalin: adrenalin,
+    amiodaron: amiodaron,
+    notiz: notiz,
+  );
+}
+
+/// The latest Vorbehandlung correction in [korrekturen], if any.
+VorbehandlungKorrigiert? letzteVorbehandlung(
+  Iterable<ProtokollKorrektur> korrekturen,
+) {
+  VorbehandlungKorrigiert? letzte;
+  for (final korrektur in korrekturen) {
+    if (korrektur is VorbehandlungKorrigiert) letzte = korrektur;
+  }
+  return letzte;
+}
+
 /// One entry in the effective Protokoll timeline.
 ///
 /// [daten] is the effective event after corrections; [originalDaten] keeps the
@@ -192,13 +269,6 @@ class ProtokollEintrag {
   final int? nummer;
 
   bool get istLebenszyklus => typ.istLebenszyklus;
-
-  /// Whether the entry is a structural event locked by the running case.
-  bool get istGesperrt =>
-      typ.istStrukturell &&
-      !istBearbeitbar &&
-      !istWiederherstellbar &&
-      !istEntfernt;
 
   ProtokollEintrag withNummer(int? nummer) {
     return ProtokollEintrag(

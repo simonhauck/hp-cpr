@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/l10n/app_localizations.dart';
-import 'package:hp_cpr/ui/layout/page_layout.dart';
 
 /// Opens the free-text note dialog and returns its trimmed text.
 Future<String?> showNotizErfassenDialog(BuildContext context) {
@@ -61,13 +60,7 @@ class _NotizErfassenDialogState extends State<NotizErfassenDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: Text(l10n.cancelButton),
         ),
-        FilledButton(
-          onPressed: _save,
-          style: FilledButton.styleFrom(
-            minimumSize: const Size(PageLayout.space0, PageLayout.space40),
-          ),
-          child: Text(l10n.saveButton),
-        ),
+        FilledButton(onPressed: _save, child: Text(l10n.saveButton)),
       ],
     );
   }

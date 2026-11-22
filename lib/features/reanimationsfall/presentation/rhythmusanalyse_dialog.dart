@@ -39,62 +39,29 @@ Future<bool?> showRoscConfirmDialog(BuildContext context) {
 
 /// The guided selection of a Rhythmusanalyse result.
 ///
-/// The flow branches from the rhythm category to the rhythm and, for a
-/// shockable rhythm, to the shock confirmation. ROSC asks for confirmation
-/// before it is recorded.
-///
-/// When [initialKategorie] is set, the dialog starts at the rhythm step for
-/// that category. Only [RhythmusanalyseKategorie.schockbar] and
-/// [RhythmusanalyseKategorie.nichtSchockbar] are valid starting categories.
+/// The caller has already asked for the rhythm category, so the dialog starts
+/// at the rhythm step for [initialKategorie] and, for a shockable rhythm,
+/// continues to the shock confirmation. Only
+/// [RhythmusanalyseKategorie.schockbar] and
+/// [RhythmusanalyseKategorie.nichtSchockbar] are valid categories.
 class RhythmusanalyseDialog extends StatefulWidget {
-  const RhythmusanalyseDialog({super.key, this.initialKategorie})
+  const RhythmusanalyseDialog({super.key, required this.initialKategorie})
     : assert(
-        initialKategorie == null ||
-            initialKategorie == RhythmusanalyseKategorie.schockbar ||
+        initialKategorie == RhythmusanalyseKategorie.schockbar ||
             initialKategorie == RhythmusanalyseKategorie.nichtSchockbar,
       );
 
-  final RhythmusanalyseKategorie? initialKategorie;
+  final RhythmusanalyseKategorie initialKategorie;
 
   @override
   State<RhythmusanalyseDialog> createState() => _RhythmusanalyseDialogState();
 }
 
-enum _Step { category, rhythm, shock }
+enum _Step { rhythm, shock }
 
 class _RhythmusanalyseDialogState extends State<RhythmusanalyseDialog> {
-  _Step _step = _Step.category;
-  RhythmusanalyseKategorie? _kategorie;
+  _Step _step = _Step.rhythm;
   RhythmusanalyseErgebnis? _ergebnis;
-
-  @override
-  void initState() {
-    super.initState();
-    final initial = widget.initialKategorie;
-    if (initial == null) return;
-    _kategorie = initial;
-    _step = _Step.rhythm;
-  }
-
-  Future<void> _selectKategorie(RhythmusanalyseKategorie kategorie) async {
-    switch (kategorie) {
-      case RhythmusanalyseKategorie.rosc:
-        final confirmed = await showRoscConfirmDialog(context);
-        if (!mounted) return;
-        if (confirmed == true) {
-          _finish(RhythmusanalyseErgebnis.rosc);
-        }
-      case RhythmusanalyseKategorie.unklar:
-        _finish(RhythmusanalyseErgebnis.unklar);
-      case RhythmusanalyseKategorie.schockbar:
-      case RhythmusanalyseKategorie.nichtSchockbar:
-        setState(() {
-          _kategorie = kategorie;
-          _ergebnis = null;
-          _step = _Step.rhythm;
-        });
-    }
-  }
 
   void _selectRhythmus(RhythmusanalyseErgebnis ergebnis) {
     if (ergebnis.kategorie == RhythmusanalyseKategorie.schockbar) {
@@ -122,14 +89,8 @@ class _RhythmusanalyseDialogState extends State<RhythmusanalyseDialog> {
 
   void _back() {
     switch (_step) {
-      case _Step.category:
-        return;
       case _Step.rhythm:
-        setState(() {
-          _kategorie = null;
-          _ergebnis = null;
-          _step = _Step.category;
-        });
+        return;
       case _Step.shock:
         setState(() {
           _ergebnis = null;
@@ -146,7 +107,7 @@ class _RhythmusanalyseDialogState extends State<RhythmusanalyseDialog> {
       scrollable: true,
       title: Row(
         children: [
-          if (_step != _Step.category) ...[
+          if (_step != _Step.rhythm) ...[
             IconButton(
               onPressed: _back,
               tooltip: l10n.backButton,
@@ -169,13 +130,11 @@ class _RhythmusanalyseDialogState extends State<RhythmusanalyseDialog> {
 
   Widget _buildContent(AppLocalizations l10n) {
     final stepLabel = switch (_step) {
-      _Step.category => l10n.rhythmusanalyseStepKategorie,
       _Step.rhythm => l10n.rhythmusanalyseStepRhythmus,
       _Step.shock => null,
     };
 
     final body = switch (_step) {
-      _Step.category => _buildKategorien(l10n),
       _Step.rhythm => _buildRhythmen(l10n),
       _Step.shock => _buildSchock(l10n),
     };
@@ -197,36 +156,8 @@ class _RhythmusanalyseDialogState extends State<RhythmusanalyseDialog> {
     );
   }
 
-  Widget _buildKategorien(AppLocalizations l10n) {
-    return Wrap(
-      spacing: PageLayout.space12,
-      runSpacing: PageLayout.space12,
-      children: [
-        _choiceButton(
-          label: l10n.rhythmusanalyseSchockbar,
-          onPressed: () => _selectKategorie(RhythmusanalyseKategorie.schockbar),
-        ),
-        _choiceButton(
-          label: l10n.rhythmusanalyseNichtSchockbar,
-          onPressed: () =>
-              _selectKategorie(RhythmusanalyseKategorie.nichtSchockbar),
-        ),
-        _choiceButton(
-          label: l10n.rhythmusanalyseRosc,
-          onPressed: () => _selectKategorie(RhythmusanalyseKategorie.rosc),
-          emphasis: _ChoiceEmphasis.outlined,
-        ),
-        _choiceButton(
-          label: l10n.rhythmusanalyseUnklar,
-          onPressed: () => _selectKategorie(RhythmusanalyseKategorie.unklar),
-          emphasis: _ChoiceEmphasis.outlined,
-        ),
-      ],
-    );
-  }
-
   Widget _buildRhythmen(AppLocalizations l10n) {
-    final (options, unknownAedErgebnis) = switch (_kategorie!) {
+    final (options, unknownAedErgebnis) = switch (widget.initialKategorie) {
       RhythmusanalyseKategorie.schockbar => (
         [
           (
@@ -248,7 +179,7 @@ class _RhythmusanalyseDialogState extends State<RhythmusanalyseDialog> {
         RhythmusanalyseErgebnis.unbekanntAedNichtSchockbar,
       ),
       RhythmusanalyseKategorie.rosc || RhythmusanalyseKategorie.unklar =>
-        throw StateError('no rhythm options for $_kategorie'),
+        throw StateError('no rhythm options for ${widget.initialKategorie}'),
     };
 
     return Wrap(

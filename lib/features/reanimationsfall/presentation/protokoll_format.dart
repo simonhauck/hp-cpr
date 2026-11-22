@@ -19,12 +19,15 @@ IconData protokollEintragIcon(Object daten) {
     AmiodaronGabe() => Icons.vaccines_outlined,
     RhythmusanalyseEintrag() => Icons.monitor_heart_outlined,
     RhythmusanalyseUeberspringung() => Icons.skip_next_outlined,
+    AnalysephaseBeginn() => Icons.pause_circle_outline,
     DruckphaseNeustart() => Icons.restart_alt,
-    RoscEreignis() => Icons.favorite_outline,
+    RoscEreignis() => Icons.favorite,
     Reanimationswiederbeginn() => Icons.replay,
     Messwert(:final typ) => messwertIcon(typ),
     ReanimationsfallNotiz() => Icons.notes,
     ReanimationsfallEnde() => Icons.stop_circle_outlined,
+    Uebernahme() => Icons.history,
+    Vorbehandlung() => Icons.history_edu_outlined,
     DateTime() => Icons.play_arrow,
     Duration() => Icons.block,
     _ => Icons.circle_outlined,
@@ -48,6 +51,7 @@ String protokollDatenText(AppLocalizations l10n, Object daten, {int? nummer}) {
       rhythmusanalyseErgebnisLabel(l10n, ergebnis),
     ),
     RhythmusanalyseUeberspringung() => l10n.eventRhythmusanalyseSkipped,
+    AnalysephaseBeginn() => l10n.eventAnalysephaseStarted,
     DruckphaseNeustart() => l10n.eventDruckphaseRestarted,
     RoscEreignis() => l10n.eventRosc,
     Reanimationswiederbeginn() => l10n.eventResuscitationResumed,
@@ -59,6 +63,8 @@ String protokollDatenText(AppLocalizations l10n, Object daten, {int? nummer}) {
     ReanimationsfallEnde(:final grund) => l10n.eventCaseEnded(
       beendigungsgrundLabel(l10n, grund),
     ),
+    Uebernahme() => l10n.eventUebernahme,
+    Vorbehandlung() => l10n.eventVorbehandlung,
     DateTime() => l10n.eventCaseStart,
     Duration() => l10n.eventCaseDiscarded,
     _ => '',
@@ -66,9 +72,19 @@ String protokollDatenText(AppLocalizations l10n, Object daten, {int? nummer}) {
 }
 
 /// The optional secondary text for one Protokoll entry.
-String? protokollDatenDetail(Object daten) {
+String? protokollDatenDetail(AppLocalizations l10n, Object daten) {
   return switch (daten) {
     Messwert(:final notiz) => notiz,
+    Vorbehandlung(
+      :final schocks,
+      :final adrenalin,
+      :final amiodaron,
+      :final notiz,
+    ) =>
+      [
+        l10n.protokollVorbehandlungDetail(schocks, adrenalin, amiodaron),
+        ?notiz,
+      ].join('\n'),
     _ => null,
   };
 }

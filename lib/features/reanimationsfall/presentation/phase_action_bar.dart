@@ -8,45 +8,45 @@ enum PhaseActionEmphasis { filled, outlined }
 /// The secondary actions for the running Reanimationsfall.
 ///
 /// Phase-specific primary actions live in the timer panel; this bar keeps the
-/// compact Überspringen fallback, the Aktionen entry point, and the Demo-Modus
-/// control within reach.
+/// Aktionen entry point and the Demo-Modus control within reach.
 class PhaseActionBar extends StatelessWidget {
   const PhaseActionBar({
     super.key,
     required this.layout,
     required this.onOpenActions,
-    this.onSkipRhythmusanalyse,
+    this.onRecordVorbehandlung,
     this.onAdvanceDemoTime,
   });
 
   final PageLayout layout;
   final VoidCallback onOpenActions;
 
-  /// Shown only on compact layouts, where the timer panel has no room for it.
-  final VoidCallback? onSkipRhythmusanalyse;
+  /// Opens the Vorbehandlung form; null once it was saved or the case ended.
+  final VoidCallback? onRecordVorbehandlung;
 
   /// Advances the simulated case time; null outside Demo-Modus.
   final VoidCallback? onAdvanceDemoTime;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final skipRhythmusanalyse = onSkipRhythmusanalyse;
     final advanceDemoTime = onAdvanceDemoTime;
+    final recordVorbehandlung = onRecordVorbehandlung;
+    // Phones keep the buttons and Aktionen on one row. The Demo-Modus button
+    // is dense while the Vorbehandlung button needs the room.
+    final inline = recordVorbehandlung != null && layout.isPhone;
 
     return PhaseActionRow(
       layout: layout,
+      inline: inline,
       buttons: [
-        if (skipRhythmusanalyse != null)
-          PhaseActionButton(
-            layout: layout,
-            emphasis: PhaseActionEmphasis.outlined,
-            label: l10n.skipAnalysisButton,
-            icon: Icons.skip_next_outlined,
-            onPressed: skipRhythmusanalyse,
-          ),
         if (advanceDemoTime != null)
-          DemoAdvanceButton(layout: layout, onPressed: advanceDemoTime),
+          DemoAdvanceButton(
+            layout: layout,
+            onPressed: advanceDemoTime,
+            dense: recordVorbehandlung != null ? true : null,
+          ),
+        if (recordVorbehandlung != null)
+          VorbehandlungButton(layout: layout, onPressed: recordVorbehandlung),
       ],
       actionsButton: ActionsButton(layout: layout, onPressed: onOpenActions),
     );
@@ -60,15 +60,20 @@ class PhaseActionRow extends StatelessWidget {
     required this.layout,
     required this.buttons,
     required this.actionsButton,
+    this.inline = false,
   });
 
   final PageLayout layout;
   final List<Widget> buttons;
   final Widget actionsButton;
 
+  /// Whether to lay the buttons out in one row beside the Aktionen entry even
+  /// when the layout is not compact. The buttons must then be dense.
+  final bool inline;
+
   @override
   Widget build(BuildContext context) {
-    if (layout.isCompact) {
+    if (layout.isCompact || inline) {
       return Row(
         children: [
           for (var i = 0; i < buttons.length; i++) ...[
@@ -97,10 +102,14 @@ class DemoAdvanceButton extends StatelessWidget {
     super.key,
     required this.layout,
     required this.onPressed,
+    this.dense,
   });
 
   final PageLayout layout;
   final VoidCallback onPressed;
+
+  /// Overrides the dense style; null follows the layout.
+  final bool? dense;
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +123,34 @@ class DemoAdvanceButton extends StatelessWidget {
         icon: Icons.fast_forward,
         onPressed: onPressed,
         emphasis: PhaseActionEmphasis.outlined,
+        dense: dense,
       ),
+    );
+  }
+}
+
+/// Opens the Vorbehandlung form until it was saved once in the case.
+class VorbehandlungButton extends StatelessWidget {
+  const VorbehandlungButton({
+    super.key,
+    required this.layout,
+    required this.onPressed,
+  });
+
+  final PageLayout layout;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return PhaseActionButton(
+      layout: layout,
+      label: l10n.vorbehandlungErfassen,
+      icon: Icons.history,
+      onPressed: onPressed,
+      emphasis: PhaseActionEmphasis.outlined,
+      dense: layout.usesDensePhaseActions,
     );
   }
 }
@@ -159,6 +195,7 @@ class PhaseActionButton extends StatelessWidget {
     required this.icon,
     required this.onPressed,
     this.emphasis = PhaseActionEmphasis.filled,
+    this.dense,
   });
 
   final PageLayout layout;
@@ -167,12 +204,16 @@ class PhaseActionButton extends StatelessWidget {
   final VoidCallback? onPressed;
   final PhaseActionEmphasis emphasis;
 
+  /// Whether to use the dense icon-less style; defaults to the compact layout.
+  final bool? dense;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final style = _style(theme);
+    final isDense = dense ?? layout.isCompact;
+    final style = _style(theme, isDense);
 
-    if (layout.isCompact) {
+    if (isDense) {
       final child = FittedBox(fit: BoxFit.scaleDown, child: Text(label));
       return switch (emphasis) {
         PhaseActionEmphasis.filled => FilledButton(
@@ -204,10 +245,15 @@ class PhaseActionButton extends StatelessWidget {
     };
   }
 
-  ButtonStyle _style(ThemeData theme) {
-    final minimumSize = Size(layout.phaseActionMinWidth, layout.actionHeight);
-    final padding = layout.phaseActionPadding;
-    final textStyle = layout.isCompact
+  ButtonStyle _style(ThemeData theme, bool isDense) {
+    final minimumSize = Size(
+      isDense ? PageLayout.space0 : layout.phaseActionMinWidth,
+      layout.actionHeight,
+    );
+    final padding = isDense
+        ? PageLayout.densePhaseActionPadding
+        : layout.phaseActionPadding;
+    final textStyle = isDense
         ? theme.textTheme.labelLarge
         : theme.textTheme.titleMedium;
 

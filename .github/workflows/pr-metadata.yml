@@ -17,10 +17,10 @@ permissions:
 jobs:
   pr-metadata:
     name: PR metadata
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - name: Check conventional title
-        uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6
+        uses: amannn/action-semantic-pull-request@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -37,6 +37,7 @@ jobs:
             chore
             revert
           requireScope: false
+
       - name: Check type label
         env:
           EVENT_PATH: ${{ github.event_path }}

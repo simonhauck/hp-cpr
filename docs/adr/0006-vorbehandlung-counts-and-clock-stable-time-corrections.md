@@ -1,0 +1,17 @@
+# Vorbehandlung as counts and clock-stable Startzeit/Übernahme corrections
+
+**Status:** accepted
+
+When the team arrives at a resuscitation that is already running, the scene is too chaotic to answer the app's questions before starting. The start page therefore offers a single `Jetzt starten`, and everything that happened before the `Übernahme` is captured later in one `Vorbehandlung` form: how long the resuscitation had been running, and how many `Schocks`, `Adrenalin` and `Amiodaron` Gaben were given. The Vorbehandlung records counts only, without times, because nobody knows them reliably and the team that gave them must keep track of their own timing. The counts feed the Schock count, the Amiodaron hint, the Adrenalin-after-n-th-Schock rule and the two-dose Amiodaron limit as if recorded in the app. The Adrenalin Zeitfenster, which needs a time, starts only with the first Gabe recorded in the app; a Vorbehandlung Adrenalin only suppresses the "first dose due" hint.
+
+Both the `Startzeit` and the `Übernahme` can be corrected at any time through that form, within `Startzeit ≤ Übernahme ≤ first event recorded in the app`. Every recorded event keeps its wall-clock time across such a correction. Only the Reanimationsdauer and the event offsets since the Startzeit change; the running Druckphase, the Adrenalin Zeitfenster and the phase stay untouched. This is the dedicated lifecycle flow that ADR 0005 left as future work for the `Startzeit`.
+
+**Considered options:** Asking for the duration, Schocks and drugs on the start page was rejected because it puts questions in the most chaotic moment. Recording each pre-Übernahme Schock or Gabe as a timed event was rejected because the times would be guesses. Starting the Adrenalin Zeitfenster when the Vorbehandlung is entered was rejected because it invents a timing nobody observed. Shifting all recorded events together with a corrected Startzeit, or asking the Zeitnehmer each time, was rejected because every in-app event was tapped live, so its clock time is already correct; a single wrong event time is fixed through the regular Protokoll corrections.
+
+**Consequences:** The `Laufende Reanimation` start card and its backdate chips are removed. A dismissible `Vorbehandlung erfassen` prompt appears on every new case until saved or dismissed; afterwards the form is reachable from `Weitere Aktionen` and from the Startzeit and Übernahme entries in the Protokoll, including after the case has ended. Each save is an append-only Korrektur. The Protokoll shows an Übernahme entry only when it differs from the Startzeit, and the summary breaks out the Vorbehandlung share of each total.
+
+## Amendment 2026-11-23: bottom-bar button instead of a dismissible prompt
+
+The `Vorbehandlung erfassen` entry point is a button in the bottom action bar, directly before `Aktionen`, instead of a dismissible prompt in the phase strip. It is shown on an open case (laufend or ROSC) until the Vorbehandlung form has been saved once, and there is no dismiss action any more. The persisted `vorbehandlungHinweisAusgeblendet` flag is gone; stored states that still carry the key decode and ignore it. After the first save the form stays reachable from `Weitere Aktionen` and from the Startzeit and Übernahme entries in the Protokoll, which also covers a case that has already ended.
+
+Reason: on phones the prompt shrank to an icon and truncated the phase label, so it was easy to miss at the Übernahme. The button costs bar space only until the form is saved once.

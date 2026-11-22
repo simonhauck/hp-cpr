@@ -17,7 +17,6 @@ void main() {
       clock: clock,
       leitlinienprofil: Leitlinienprofil.aha2025,
       vibrationEnabled: false,
-      soundEnabled: true,
     );
 
     clock.advance(const Duration(seconds: 10));
@@ -59,9 +58,12 @@ void main() {
       'schockRueckgaengigkeiten',
       'schockKorrekturen',
       'rhythmusanalyseNotizKorrekturen',
+      'soundEnabled',
     ]) {
       expect(encoded.containsKey(removed), isFalse, reason: removed);
     }
+    // Cases stored before the sound option was removed still carry the key.
+    encoded['soundEnabled'] = true;
     expect(
       ((encoded['uebersprungeneRhythmusanalysen'] as List<dynamic>).first
               as Map<String, dynamic>)
@@ -79,12 +81,13 @@ void main() {
     );
 
     expect(decoded.id, state.id);
+    expect(decoded.erfassteUebernahme, state.erfassteUebernahme);
+    expect(decoded.erfassteUebernahmeUtc, state.erfassteUebernahmeUtc);
     expect(decoded.startzeit, state.startzeit);
     expect(decoded.startzeitUtc, state.startzeitUtc);
     expect(decoded.utcOffsetMinutes, state.utcOffsetMinutes);
     expect(decoded.leitlinienprofil, Leitlinienprofil.aha2025);
     expect(decoded.vibrationEnabled, isFalse);
-    expect(decoded.soundEnabled, isTrue);
     expect(decoded.zustand, ReanimationsfallZustand.beendet);
     expect(decoded.ende!.grund, Beendigungsgrund.uebergabe);
     expect(decoded.schocks, hasLength(4));
@@ -286,6 +289,50 @@ void main() {
     );
   });
 
+  test('round-trips a corrected Analysephasenbeginn', () {
+    final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+    clock.advance(const Duration(minutes: 2));
+    reanimationsfall.enterAnalysephase();
+
+    final beginn = reanimationsfall.snapshot().protokoll.eintraege.singleWhere(
+      (e) => e.typ == ProtokollEintragTyp.analysephaseBeginn,
+    );
+    reanimationsfall.applyProtokollKorrektur(
+      ZeitpunktKorrigiert(
+        ziel: beginn.ref,
+        zeitpunkt: const Duration(minutes: 1, seconds: 50),
+      ),
+    );
+
+    final decoded = reanimationsfallStateFromJson(
+      jsonDecode(
+        jsonEncode(reanimationsfallStateToJson(reanimationsfall.exportState())),
+      ) as Map<String, dynamic>,
+    );
+    expect(decoded.analysephaseBeginne, hasLength(1));
+
+    final restored = Reanimationsfall.restore(
+      clock: FakeClock(wallTime: clock.now()),
+      state: decoded,
+    );
+    final restoredSnapshot = restored.snapshot();
+    expect(restoredSnapshot.analysephaseBeginne, hasLength(1));
+    final restoredBeginn = restoredSnapshot.protokoll.eintraege.singleWhere(
+      (e) => e.typ == ProtokollEintragTyp.analysephaseBeginn,
+    );
+    expect(restoredBeginn.zeitpunkt, const Duration(minutes: 1, seconds: 50));
+  });
+
+  test('decodes a missing analysephaseBeginne key to an empty list', () {
+    final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
+    final encoded = reanimationsfallStateToJson(
+      Reanimationsfall.start(clock: clock).exportState(),
+    )..remove('analysephaseBeginne');
+
+    expect(reanimationsfallStateFromJson(encoded).analysephaseBeginne, isEmpty);
+  });
+
   test('defaults missing Demo-Modus fields for older states', () {
     final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
     final state = Reanimationsfall.start(clock: clock).exportState();
@@ -297,5 +344,110 @@ void main() {
 
     expect(decoded.demoMode, isFalse);
     expect(decoded.demoOffset, Duration.zero);
+  });
+
+  test('round-trips the Übernahme and the Vorbehandlung so the corrected '
+      'times survive a restart', () {
+    final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+    clock.advance(const Duration(seconds: 30));
+    reanimationsfall.recordSchock();
+    clock.advance(const Duration(seconds: 30));
+    reanimationsfall.correctVorbehandlung(
+      uebernahme: DateTime(2026, 10, 25, 7, 59),
+      laufzeitBeiUebernahme: const Duration(minutes: 3),
+    );
+    final before = reanimationsfall.snapshot();
+
+    final encoded = reanimationsfallStateToJson(reanimationsfall.exportState());
+    final decoded = reanimationsfallStateFromJson(
+      jsonDecode(jsonEncode(encoded)) as Map<String, dynamic>,
+    );
+
+    expect(decoded.erfassteUebernahme, DateTime(2026, 10, 25, 8));
+    expect(decoded.startzeit, DateTime(2026, 10, 25, 7, 56));
+    final korrektur = decoded.korrekturen.single as VorbehandlungKorrigiert;
+    expect(korrektur.uebernahme, const Duration(minutes: -1));
+    expect(korrektur.laufzeitBeiUebernahme, const Duration(minutes: 3));
+
+    final restored = Reanimationsfall.restore(clock: clock, state: decoded);
+    final after = restored.snapshot();
+
+    expect(after.startzeit, DateTime(2026, 10, 25, 7, 56));
+    expect(after.uebernahme, DateTime(2026, 10, 25, 7, 59));
+    expect(after.reanimationsdauer, before.reanimationsdauer);
+    expect(after.compressionRemaining, before.compressionRemaining);
+    expect(after.schocks.single.zeitpunkt, before.schocks.single.zeitpunkt);
+    expect(after.zeigeVorbehandlungErfassen, isFalse);
+    expect(
+      after.protokoll.eintraege.map((e) => e.typ),
+      contains(ProtokollEintragTyp.uebernahme),
+    );
+  });
+
+  test('round-trips the Vorbehandlung counts and Notiz', () {
+    final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+    reanimationsfall.correctVorbehandlung(
+      uebernahme: DateTime(2026, 10, 25, 8),
+      laufzeitBeiUebernahme: const Duration(minutes: 3),
+      schocks: 3,
+      adrenalin: 2,
+      amiodaron: 1,
+      notiz: 'Larynxtubus',
+    );
+
+    final encoded = reanimationsfallStateToJson(reanimationsfall.exportState());
+    final decoded = reanimationsfallStateFromJson(
+      jsonDecode(jsonEncode(encoded)) as Map<String, dynamic>,
+    );
+    final restored = Reanimationsfall.restore(clock: clock, state: decoded);
+
+    final korrektur = decoded.korrekturen.single as VorbehandlungKorrigiert;
+    expect(korrektur.schocks, 3);
+    expect(korrektur.adrenalin, 2);
+    expect(korrektur.amiodaron, 1);
+    expect(korrektur.notiz, 'Larynxtubus');
+    final snapshot = restored.snapshot();
+    expect(snapshot.schockAnzahl, 3);
+    expect(snapshot.vorbehandlung.adrenalin, 2);
+    expect(snapshot.amiodaronAnzahl, 1);
+  });
+
+  test('decodes a Vorbehandlung without counts to zero and no Notiz', () {
+    final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+    reanimationsfall.correctVorbehandlung(
+      uebernahme: DateTime(2026, 10, 25, 8),
+      laufzeitBeiUebernahme: const Duration(minutes: 3),
+      schocks: 2,
+    );
+    final encoded = reanimationsfallStateToJson(reanimationsfall.exportState());
+    final korrektur =
+        (encoded['korrekturen'] as List).single as Map<String, dynamic>;
+    for (final key in ['schocks', 'adrenalin', 'amiodaron', 'notiz']) {
+      korrektur.remove(key);
+    }
+
+    final decoded = reanimationsfallStateFromJson(encoded);
+
+    final vorbehandlung = decoded.korrekturen.single as VorbehandlungKorrigiert;
+    expect(vorbehandlung.vorbehandlung.istLeer, isTrue);
+    expect(vorbehandlung.laufzeitBeiUebernahme, const Duration(minutes: 3));
+  });
+
+  test('falls back to the Startzeit for states without an Übernahme', () {
+    final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
+    final state = Reanimationsfall.start(clock: clock).exportState();
+    final encoded = reanimationsfallStateToJson(state);
+    encoded['startzeit'] = encoded.remove('erfassteUebernahme');
+    encoded['startzeitUtc'] = encoded.remove('erfassteUebernahmeUtc');
+    // A state stored while the prompt could still be dismissed still decodes.
+    encoded['vorbehandlungHinweisAusgeblendet'] = true;
+
+    final decoded = reanimationsfallStateFromJson(encoded);
+
+    expect(decoded.erfassteUebernahme, DateTime(2026, 10, 25, 8));
+    expect(decoded.startzeit, DateTime(2026, 10, 25, 8));
   });
 }

@@ -1,0 +1,16 @@
+name: Build web release
+description: Build the Flutter web release for GitHub Pages and verify the app license is bundled. Requires Nix to be installed.
+
+runs:
+  using: composite
+  steps:
+    - name: Build web
+      uses: ./.github/actions/nix
+      with:
+        command: |
+          base_href="/${GITHUB_REPOSITORY#*/}/"
+          flutter build web --release --base-href "$base_href"
+
+    - name: Verify app license is bundled
+      shell: bash
+      run: grep -q '^hp_cpr$' build/web/assets/NOTICES

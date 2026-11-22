@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/features/reanimationsfall/domain/adrenalin.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/medikament_card.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
+import 'package:hp_cpr/ui/theme/panel_tone.dart';
 
 /// The Adrenalin Zeitfenster and the action to record a dose.
 class AdrenalinPanel extends StatelessWidget {
@@ -28,13 +30,20 @@ class AdrenalinPanel extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final state = snapshot.adrenalinZeitfensterZustand;
-    final stateColor = switch (state) {
+    final isFirstDoseDue = snapshot.istErsteAdrenalinGabeFaellig;
+    final stateTone = switch (state) {
+      AdrenalinZeitfensterZustand.keine when isFirstDoseDue => PanelTone.due,
       AdrenalinZeitfensterZustand.keine ||
-      AdrenalinZeitfensterZustand.wartet => theme.colorScheme.onSurfaceVariant,
-      AdrenalinZeitfensterZustand.faellig => theme.colorScheme.primary,
-      AdrenalinZeitfensterZustand.ueberfaellig => theme.colorScheme.error,
+      AdrenalinZeitfensterZustand.wartet => PanelTone.neutral,
+      AdrenalinZeitfensterZustand.faellig => PanelTone.due,
+      AdrenalinZeitfensterZustand.ueberfaellig => PanelTone.overdue,
     };
+    // Without a way to record, the card does not call for a dose.
+    final tone = isRecordingEnabled ? stateTone : PanelTone.neutral;
+    final stateColor = tone.colors(context).accent;
     final stateLabel = switch (state) {
+      AdrenalinZeitfensterZustand.keine when isFirstDoseDue =>
+        l10n.adrenalinStateDue,
       AdrenalinZeitfensterZustand.keine => '',
       AdrenalinZeitfensterZustand.wartet => l10n.adrenalinStateWaiting,
       AdrenalinZeitfensterZustand.faellig => l10n.adrenalinStateDue,
@@ -47,141 +56,82 @@ class AdrenalinPanel extends StatelessWidget {
     final windowEnd = snapshot.leitlinienprofil.adrenalinZeitfensterSpaetestens;
     final startFraction = windowStart.inMilliseconds / windowEnd.inMilliseconds;
 
-    return Container(
-      padding: layout.medicationPanelPadding,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(layout.cardRadius),
-      ),
-      child: Row(
+    Widget details(bool allowWrap) {
+      if (lastDose == null || sinceLastDose == null) {
+        // A Vorbehandlung Adrenalin has no time: show its count instead of a
+        // Zeitfenster until the first Gabe is recorded in the app.
+        final vorbehandlung = snapshot.vorbehandlung.adrenalin;
+        return Text(
+          vorbehandlung > 0
+              ? l10n.adrenalinVorbehandlung(vorbehandlung)
+              : isFirstDoseDue
+              ? l10n.adrenalinFirstDoseDue
+              : l10n.adrenalinNotDue,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: stateColor,
+            fontWeight: isFirstDoseDue ? FontWeight.w700 : null,
+          ),
+        );
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
+          MedikamentLetzteGabeText(
+            snapshot: snapshot,
+            zeitpunkt: lastDose.zeitpunkt,
+            color: stateColor,
+            allowWrap: allowWrap,
+          ),
+          const SizedBox(height: PageLayout.space2),
+          _ZeitfensterBar(
+            seitLetzterGabe: sinceLastDose,
+            startFraction: startFraction,
+            total: windowEnd,
+            color: stateColor,
+          ),
+          const SizedBox(height: PageLayout.space2),
+          SizedBox(
+            height: PageLayout.space16,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth;
+                final labelStyle = theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                );
+
+                return Stack(
+                  clipBehavior: Clip.none,
                   children: [
-                    Icon(
-                      Icons.medication_outlined,
-                      size: PageLayout.iconSmall,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(width: PageLayout.space6),
-                    Text(
-                      l10n.adrenalinLabel,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
+                    Positioned(
+                      left: width * startFraction - PageLayout.space14,
+                      child: Text(
+                        formatElapsed(windowStart),
+                        style: labelStyle,
                       ),
                     ),
-                    const SizedBox(width: PageLayout.space8),
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            stateLabel,
-                            style: theme.textTheme.labelMedium?.copyWith(
-                              color: stateColor,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ),
+                    Positioned(
+                      right: 0,
+                      child: Text(formatElapsed(windowEnd), style: labelStyle),
                     ),
                   ],
-                ),
-                const SizedBox(height: PageLayout.space2),
-                if (lastDose != null && sinceLastDose != null) ...[
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      l10n.adrenalinLastDoseAt(
-                        formatWallTimeMinutes(
-                          snapshot.startzeit.add(lastDose.zeitpunkt),
-                        ),
-                        formatElapsed(sinceLastDose),
-                      ),
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: stateColor,
-                        fontWeight: FontWeight.w700,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: PageLayout.space2),
-                  _ZeitfensterBar(
-                    seitLetzterGabe: sinceLastDose,
-                    startFraction: startFraction,
-                    total: windowEnd,
-                    color: stateColor,
-                  ),
-                  const SizedBox(height: PageLayout.space2),
-                  SizedBox(
-                    height: PageLayout.space16,
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final width = constraints.maxWidth;
-                        final labelStyle = theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        );
-
-                        return Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Positioned(
-                              left: width * startFraction - PageLayout.space14,
-                              child: Text(
-                                formatElapsed(windowStart),
-                                style: labelStyle,
-                              ),
-                            ),
-                            Positioned(
-                              right: 0,
-                              child: Text(
-                                formatElapsed(windowEnd),
-                                style: labelStyle,
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ] else
-                  Text(
-                    snapshot.istErsteAdrenalinGabeFaellig
-                        ? l10n.adrenalinFirstDoseDue
-                        : l10n.adrenalinNotDue,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: snapshot.istErsteAdrenalinGabeFaellig
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurfaceVariant,
-                      fontWeight: snapshot.istErsteAdrenalinGabeFaellig
-                          ? FontWeight.w700
-                          : null,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(width: PageLayout.space8),
-          FilledButton.tonalIcon(
-            onPressed: isRecordingEnabled ? onRecordAdrenalin : null,
-            icon: const Icon(Icons.medication_outlined),
-            label: Text(l10n.adrenalinRecordButton),
-            style: FilledButton.styleFrom(
-              minimumSize: Size(PageLayout.space0, layout.actionHeight),
-              padding: const EdgeInsets.symmetric(
-                horizontal: PageLayout.space12,
-              ),
-              textStyle: theme.textTheme.titleSmall,
+                );
+              },
             ),
           ),
         ],
-      ),
+      );
+    }
+
+    return MedikamentCard(
+      layout: layout,
+      icon: Icons.medication_outlined,
+      label: l10n.adrenalinLabel,
+      stateLabel: stateLabel,
+      tone: tone,
+      onRecord: isRecordingEnabled ? onRecordAdrenalin : null,
+      details: details,
     );
   }
 }

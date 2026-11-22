@@ -1,0 +1,28 @@
+name: Run in Nix dev shell
+description: Run a bash command inside a Nix development shell. Requires Nix to be installed.
+
+inputs:
+  command:
+    description: Command to run, interpreted by bash inside the development shell.
+    required: true
+  flake:
+    description: Flake reference of the development shell to enter.
+    required: false
+    default: ".#ci"
+  working-directory:
+    description: Directory to run the command from.
+    required: false
+    default: "."
+
+runs:
+  using: composite
+  steps:
+    - name: Run command
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        NIX_FLAKE: ${{ inputs.flake }}
+        NIX_COMMAND: ${{ inputs.command }}
+      run: |
+        set -euo pipefail
+        nix develop "$NIX_FLAKE" --command bash -euo pipefail -c "$NIX_COMMAND"

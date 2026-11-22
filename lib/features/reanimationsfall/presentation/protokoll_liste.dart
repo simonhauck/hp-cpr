@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/features/reanimationsfall/domain/protokoll.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_format.dart';
-import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
+import 'package:hp_cpr/ui/zeitstempel_zeile.dart';
 
 /// The shared timeline for a live or completed Protokoll.
 ///
@@ -15,13 +15,11 @@ class ProtokollListe extends StatefulWidget {
     super.key,
     required this.protokoll,
     required this.startzeit,
-    required this.isLive,
     required this.onOpenEintrag,
   });
 
   final Protokoll protokoll;
   final DateTime startzeit;
-  final bool isLive;
   final ValueChanged<ProtokollEintrag> onOpenEintrag;
 
   @override
@@ -62,15 +60,6 @@ class _ProtokollListeState extends State<ProtokollListe> {
             ),
           ],
         ),
-        if (widget.isLive) ...[
-          const SizedBox(height: PageLayout.space4),
-          Text(
-            l10n.protokollLiveEditHint,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
         const SizedBox(height: PageLayout.space8),
         Card(
           margin: EdgeInsets.zero,
@@ -207,7 +196,7 @@ class _ProtokollZeile extends StatelessWidget {
       color: textColor,
       decoration: zeile.istEntfernt ? TextDecoration.lineThrough : null,
     );
-    final detail = protokollDatenDetail(zeile.daten);
+    final detail = protokollDatenDetail(l10n, zeile.daten);
     final status = zeile.istOriginal
         ? l10n.protokollCorrected
         : zeile.istEntfernt
@@ -226,28 +215,7 @@ class _ProtokollZeile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              width: PageLayout.timelineTimeWidth,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    formatReanimationsdauer(zeile.zeitpunkt),
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: muted,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                  Text(
-                    formatWallTime(startzeit.add(zeile.zeitpunkt)),
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: muted,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ZeitstempelSpalte(zeitpunkt: zeile.zeitpunkt, startzeit: startzeit),
             Icon(
               protokollEintragIcon(zeile.daten),
               size: PageLayout.iconSmall,
@@ -283,15 +251,6 @@ class _ProtokollZeile extends StatelessWidget {
                 Icons.chevron_right,
                 size: PageLayout.iconSmall,
                 color: muted,
-              )
-            else if (zeile.eintrag.istGesperrt && !zeile.istOriginal)
-              Tooltip(
-                message: l10n.protokollLockedTooltip,
-                child: Icon(
-                  Icons.lock_outline,
-                  size: PageLayout.iconSmall,
-                  color: muted,
-                ),
               ),
           ],
         ),

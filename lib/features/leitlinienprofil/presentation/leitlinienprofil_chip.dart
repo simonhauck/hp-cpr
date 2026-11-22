@@ -51,7 +51,11 @@ class LeitlinienprofilChip extends StatelessWidget {
               label: Text(label),
             )
           : ActionChip(
-              avatar: avatar,
+              avatar: Icon(
+                Icons.tune,
+                size: PageLayout.iconSmall,
+                color: theme.colorScheme.primary,
+              ),
               labelStyle: labelStyle,
               visualDensity: visualDensity,
               materialTapTargetSize: tapTargetSize,

@@ -3,11 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/core/clock.dart';
+import 'package:hp_cpr/core/vibrator.dart';
 import 'package:hp_cpr/core/wake_lock.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/reanimationsfall_page.dart';
-import 'package:hp_cpr/features/reanimationsfall/presentation/custom_startzeit_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/start_card.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_chip.dart';
@@ -26,12 +26,14 @@ class StartPage extends StatefulWidget {
     required this.clock,
     required this.routes,
     required this.wakeLock,
+    required this.vibrator,
     required this.session,
   });
 
   final AppClock clock;
   final AppRoutes routes;
   final WakeLock wakeLock;
+  final Vibrator vibrator;
   final ReanimationsfallSession session;
 
   @override
@@ -63,6 +65,7 @@ class _StartPageState extends State<StartPage> {
         builder: (_) => ReanimationsfallPage(
           reanimationsfall: reanimationsfall,
           wakeLock: widget.wakeLock,
+          vibrator: widget.vibrator,
           routes: widget.routes,
           session: widget.session,
         ),
@@ -72,15 +75,13 @@ class _StartPageState extends State<StartPage> {
     await _loadActive();
   }
 
-  Future<void> _startReanimationsfall(Duration backdate) async {
+  Future<void> _startReanimationsfall() async {
     final settings = widget.routes.settings;
     final reanimationsfall = Reanimationsfall.start(
       clock: widget.clock,
       leitlinienprofil: settings.leitlinienprofil,
       vibrationEnabled: settings.vibrationEnabled,
-      soundEnabled: settings.soundEnabled,
       demoMode: settings.demoMode,
-      backdate: backdate,
     );
 
     await widget.session.persist(reanimationsfall);
@@ -98,7 +99,7 @@ class _StartPageState extends State<StartPage> {
   Widget build(BuildContext context) {
     return PageScaffold(
       maxWidth: PageLayout.maxContentWidth,
-      drawer: AppDrawer(routes: widget.routes),
+      endDrawer: AppDrawer(routes: widget.routes),
       footer: !_loading && _activeFall == null
           ? (context, layout) => _DemoModusToggle(
               settings: widget.routes.settings,
@@ -131,32 +132,21 @@ class _StartPageState extends State<StartPage> {
           );
         }
 
-        final startNowCard = _StartNowCard(
-          layout: layout,
-          onStart: () => _startReanimationsfall(Duration.zero),
+        // A resuscitation that was already running is captured afterwards in
+        // the Vorbehandlung form, so the start page asks nothing up front.
+        return Center(
+          child: SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                maxWidth: PageLayout.activeCaseMaxWidth,
+              ),
+              child: _StartNowCard(
+                layout: layout,
+                onStart: _startReanimationsfall,
+              ),
+            ),
+          ),
         );
-        final runningReanimationsfallCard = _RunningReanimationsfallCard(
-          layout: layout,
-          onStartBackdated: _startReanimationsfall,
-          onCustomStartzeit: () => _showCustomStartzeit(context),
-        );
-
-        return layout.isLandscape
-            ? Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(child: startNowCard),
-                  const SizedBox(width: PageLayout.space12),
-                  Expanded(child: runningReanimationsfallCard),
-                ],
-              )
-            : ListView(
-                children: [
-                  startNowCard,
-                  const SizedBox(height: PageLayout.space12),
-                  runningReanimationsfallCard,
-                ],
-              );
       },
     );
   }
@@ -167,16 +157,6 @@ class _StartPageState extends State<StartPage> {
         builder: (_) => widget.routes.page(AppDestination.einstellungen),
       ),
     );
-  }
-
-  Future<void> _showCustomStartzeit(BuildContext context) async {
-    final backdate = await showDialog<Duration>(
-      context: context,
-      builder: (_) => const CustomStartzeitDialog(),
-    );
-
-    if (backdate == null || !context.mounted) return;
-    _startReanimationsfall(backdate);
   }
 }
 
@@ -251,6 +231,47 @@ class _StartHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final appTitleStyle =
+        (layout.isCompact
+                ? theme.textTheme.labelSmall
+                : theme.textTheme.labelLarge)
+            ?.copyWith(
+              color: theme.colorScheme.primary,
+              letterSpacing: PageLayout.appTitleLetterSpacing,
+            );
+    final titleStyle =
+        (layout.isCompact
+                ? theme.textTheme.titleMedium
+                : theme.textTheme.headlineSmall)
+            ?.copyWith(fontWeight: FontWeight.w700);
+
+    final chip = AnimatedBuilder(
+      animation: settings,
+      builder: (context, _) => LeitlinienprofilChip(
+        leitlinienprofil: settings.leitlinienprofil,
+        compact: layout.isCompact,
+        onPressed: onOpenSettings,
+      ),
+    );
+
+    if (layout.stacksStartHeader) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Text(l10n.appTitle, style: appTitleStyle),
+              const Spacer(),
+              chip,
+              const SizedBox(width: PageLayout.space8),
+              const AppMenuButton(),
+            ],
+          ),
+          const SizedBox(height: PageLayout.space4),
+          Text(l10n.newCaseTitle, style: titleStyle),
+        ],
+      );
+    }
 
     return Row(
       children: [
@@ -258,40 +279,16 @@ class _StartHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                l10n.appTitle,
-                style:
-                    (layout.isCompact
-                            ? theme.textTheme.labelSmall
-                            : theme.textTheme.labelLarge)
-                        ?.copyWith(
-                          color: theme.colorScheme.primary,
-                          letterSpacing: PageLayout.appTitleLetterSpacing,
-                        ),
-              ),
+              Text(l10n.appTitle, style: appTitleStyle),
               FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  l10n.newCaseTitle,
-                  style:
-                      (layout.isCompact
-                              ? theme.textTheme.titleMedium
-                              : theme.textTheme.headlineSmall)
-                          ?.copyWith(fontWeight: FontWeight.w700),
-                ),
+                child: Text(l10n.newCaseTitle, style: titleStyle),
               ),
             ],
           ),
         ),
-        AnimatedBuilder(
-          animation: settings,
-          builder: (context, _) => LeitlinienprofilChip(
-            leitlinienprofil: settings.leitlinienprofil,
-            compact: layout.isCompact,
-            onPressed: onOpenSettings,
-          ),
-        ),
+        chip,
         const SizedBox(width: PageLayout.space8),
         const AppMenuButton(),
       ],
@@ -371,85 +368,16 @@ class _StartNowCard extends StatelessWidget {
           const SizedBox(height: PageLayout.space16),
         ] else
           const SizedBox(height: PageLayout.space8),
-        FilledButton.icon(
-          onPressed: onStart,
-          icon: const Icon(Icons.play_arrow),
-          label: Text(l10n.startNowButton),
-          style: FilledButton.styleFrom(
-            minimumSize: Size.fromHeight(layout.primaryActionHeight),
-            textStyle: theme.textTheme.titleMedium,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _RunningReanimationsfallCard extends StatelessWidget {
-  const _RunningReanimationsfallCard({
-    required this.layout,
-    required this.onStartBackdated,
-    required this.onCustomStartzeit,
-  });
-
-  final PageLayout layout;
-  final ValueChanged<Duration> onStartBackdated;
-  final VoidCallback onCustomStartzeit;
-
-  static const _backdatePresets = [
-    Duration(minutes: 1),
-    Duration(minutes: 2),
-    Duration(minutes: 5),
-    Duration(minutes: 8),
-    Duration(minutes: 10),
-    Duration(minutes: 12),
-    Duration(minutes: 15),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-
-    return StartCard(
-      layout: layout,
-      children: [
-        StartCardTitle(l10n.runningCaseTitle, layout: layout),
-        SizedBox(height: layout.cardTitleGap),
-        Text(
-          l10n.backdateMinutesLabel,
-          textAlign: TextAlign.center,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
-        ),
-        SizedBox(height: layout.cardLabelGap),
-        Wrap(
-          alignment: WrapAlignment.center,
-          spacing: layout.actionWrapRunSpacing,
-          runSpacing: layout.actionWrapRunSpacing,
-          children: [
-            for (final backdate in _backdatePresets)
-              ActionChip(
-                label: Text('${backdate.inMinutes}'),
-                labelStyle: theme.textTheme.titleSmall,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: PageLayout.space8,
-                  vertical: PageLayout.space4,
-                ),
-                tooltip: l10n.backdateChip(backdate.inMinutes),
-                visualDensity: layout.backdateChipDensity,
-                onPressed: () => onStartBackdated(backdate),
-              ),
-          ],
-        ),
-        SizedBox(height: layout.cardActionGap),
-        OutlinedButton.icon(
-          onPressed: onCustomStartzeit,
-          icon: const Icon(Icons.edit_outlined),
-          label: Text(l10n.customStartzeitButton),
-          style: OutlinedButton.styleFrom(
-            minimumSize: Size.fromHeight(layout.secondaryActionHeight),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: onStart,
+            icon: const Icon(Icons.play_arrow),
+            label: Text(l10n.startNowButton),
+            style: FilledButton.styleFrom(
+              minimumSize: Size.fromHeight(layout.primaryActionHeight),
+              textStyle: theme.textTheme.titleMedium,
+            ),
           ),
         ),
       ],

@@ -142,42 +142,6 @@ abstract class AppLocalizations {
   /// **'Jetzt starten'**
   String get startNowButton;
 
-  /// Überschrift der Karte für eine bereits laufende Reanimation
-  ///
-  /// In de, this message translates to:
-  /// **'Laufende Reanimation'**
-  String get runningCaseTitle;
-
-  /// Beschriftung der Minuten-Auswahl für eine zurückdatierte Startzeit
-  ///
-  /// In de, this message translates to:
-  /// **'Minuten seit Beginn'**
-  String get backdateMinutesLabel;
-
-  /// Voreinstellung für eine zurückdatierte Startzeit
-  ///
-  /// In de, this message translates to:
-  /// **'{minutes} min'**
-  String backdateChip(int minutes);
-
-  /// Schaltfläche zum Eingeben einer eigenen Startzeit
-  ///
-  /// In de, this message translates to:
-  /// **'Eigene Startzeit'**
-  String get customStartzeitButton;
-
-  /// Titel des Dialogs für eine eigene Startzeit
-  ///
-  /// In de, this message translates to:
-  /// **'Eigene Startzeit'**
-  String get customStartzeitTitle;
-
-  /// Erklärung im Dialog für eine eigene Startzeit
-  ///
-  /// In de, this message translates to:
-  /// **'Wie lange läuft die Reanimation bereits?'**
-  String get customStartzeitDescription;
-
   /// Beschriftung des Minutenfelds
   ///
   /// In de, this message translates to:
@@ -196,18 +160,6 @@ abstract class AppLocalizations {
   /// **'Abbrechen'**
   String get cancelButton;
 
-  /// Schaltfläche zum Starten eines Falls aus einem Dialog
-  ///
-  /// In de, this message translates to:
-  /// **'Starten'**
-  String get startCaseButton;
-
-  /// Fehlermeldung bei einer leeren oder nullwertigen Startzeit
-  ///
-  /// In de, this message translates to:
-  /// **'Bitte eine Dauer größer als 0 eingeben.'**
-  String get invalidBackdateMessage;
-
   /// Fehlermeldung bei einem ungültigen Sekundenwert
   ///
   /// In de, this message translates to:
@@ -223,7 +175,7 @@ abstract class AppLocalizations {
   /// Anzeige der Startzeit mit Uhrzeit
   ///
   /// In de, this message translates to:
-  /// **'Startzeit {time}'**
+  /// **'Startzeit {time} Uhr'**
   String startzeitValue(String time);
 
   /// Beschriftung des Demo-Modus-Schalters auf der Startseite
@@ -262,12 +214,6 @@ abstract class AppLocalizations {
   /// **'30 Sekunden vorspulen'**
   String get demoModusAdvanceTooltip;
 
-  /// Name der aktiven Phase mit Thoraxkompressionen
-  ///
-  /// In de, this message translates to:
-  /// **'Druckphase'**
-  String get phaseDruckphase;
-
   /// Beschriftung des Kompressionstimers vor Ablauf
   ///
   /// In de, this message translates to:
@@ -285,12 +231,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'+{time}'**
   String overdueTimer(String time);
-
-  /// Name der aktiven Phase mit pausierter Kompression
-  ///
-  /// In de, this message translates to:
-  /// **'Analysephase'**
-  String get phaseAnalysephase;
 
   /// Schaltfläche zum Starten der Analysephase
   ///
@@ -321,30 +261,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'ROSC · Reanimation pausiert'**
   String get phaseStripRosc;
-
-  /// Kompakte Aufgabe in der Druckphase
-  ///
-  /// In de, this message translates to:
-  /// **'Druckphase · Komprimieren'**
-  String get phaseStripDruckphaseCompact;
-
-  /// Kompakte Aufgabe, wenn die Rhythmusanalyse fällig ist
-  ///
-  /// In de, this message translates to:
-  /// **'Druckphase · Analyse starten'**
-  String get phaseStripDruckphaseDueCompact;
-
-  /// Kompakte Aufgabe in der Analysephase
-  ///
-  /// In de, this message translates to:
-  /// **'Analysephase · Rhythmus prüfen'**
-  String get phaseStripAnalysephaseCompact;
-
-  /// Kompakte Statuszeile im ROSC-Zustand
-  ///
-  /// In de, this message translates to:
-  /// **'ROSC · Pausiert'**
-  String get phaseStripRoscCompact;
 
   /// Kompakte Anzeige der Schockanzahl
   ///
@@ -388,6 +304,18 @@ abstract class AppLocalizations {
   /// **'Protokoll'**
   String get actionsProtokoll;
 
+  /// Abschnittsüberschrift im Aktionen-Sheet für Erfassungsaktionen
+  ///
+  /// In de, this message translates to:
+  /// **'Erfassen'**
+  String get actionsSectionRecord;
+
+  /// Abschnittsüberschrift im Aktionen-Sheet für Ansichten
+  ///
+  /// In de, this message translates to:
+  /// **'Ansehen'**
+  String get actionsSectionView;
+
   /// Titel des Protokolls und seiner Zusammenfassungssektion
   ///
   /// In de, this message translates to:
@@ -399,12 +327,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Änderungsverlauf'**
   String get protokollAuditToggle;
-
-  /// Hinweis auf die gesperrten Strukturereignisse im laufenden Fall
-  ///
-  /// In de, this message translates to:
-  /// **'Im laufenden Fall sind nur Schocks, Medikamente, Messwerte und Notizen korrigierbar.'**
-  String get protokollLiveEditHint;
 
   /// Aktion zum Bearbeiten eines Protokolleintrags
   ///
@@ -445,13 +367,13 @@ abstract class AppLocalizations {
   /// Beschriftung der fallrelativen Zeit
   ///
   /// In de, this message translates to:
-  /// **'Fallzeit'**
+  /// **'Zeitpunkt (seit Start)'**
   String get protokollCaseTime;
 
   /// Vorschau der Wanduhrzeit eines korrigierten Zeitpunkts
   ///
   /// In de, this message translates to:
-  /// **'Uhrzeit {time}'**
+  /// **'{time} Uhr'**
   String protokollWallTime(String time);
 
   /// Titel des Dialogs für eine korrigierte Medikamentendosis
@@ -501,12 +423,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Eintrag wiederhergestellt'**
   String get protokollRestoredSnackbar;
-
-  /// Tooltip für ein gesperrtes Strukturereignis
-  ///
-  /// In de, this message translates to:
-  /// **'Strukturereignis – während des Falls gesperrt'**
-  String get protokollLockedTooltip;
 
   /// Fehlermeldung bei einem Zeitpunkt außerhalb des Falls
   ///
@@ -559,7 +475,7 @@ abstract class AppLocalizations {
   /// Überfälligkeitshinweis in der Analysephase für AHA 2025
   ///
   /// In de, this message translates to:
-  /// **'Pulscheck über {seconds} s – CPR fortsetzen'**
+  /// **'Pulskontrolle über {seconds} s – CPR fortsetzen'**
   String pauseOverdueAha(int seconds);
 
   /// Überfälligkeitshinweis in der Analysephase für ERC 2025
@@ -597,12 +513,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Unklar'**
   String get rhythmusanalyseUnklar;
-
-  /// Erster Schritt der geführten Rhythmusanalyse
-  ///
-  /// In de, this message translates to:
-  /// **'Rhythmusart'**
-  String get rhythmusanalyseStepKategorie;
 
   /// Zweiter Schritt der geführten Rhythmusanalyse
   ///
@@ -646,12 +556,6 @@ abstract class AppLocalizations {
   /// **'ROSC bestätigen'**
   String get roscConfirmButton;
 
-  /// Kurze Bestätigung nach dem Überspringen der Rhythmusanalyse
-  ///
-  /// In de, this message translates to:
-  /// **'Analyse übersprungen'**
-  String get rhythmusanalyseSkippedSnackbar;
-
   /// Schockbarer Rhythmus: Kammerflimmern
   ///
   /// In de, this message translates to:
@@ -682,23 +586,17 @@ abstract class AppLocalizations {
   /// **'Unbekannt (AED)'**
   String get rhythmusanalyseUnbekanntAed;
 
-  /// Schaltfläche zum Überspringen der Rhythmusanalyse
-  ///
-  /// In de, this message translates to:
-  /// **'Überspringen'**
-  String get skipAnalysisButton;
-
   /// Beschriftung des Adrenalin-Zeitfensters
   ///
   /// In de, this message translates to:
   /// **'Adrenalin'**
   String get adrenalinLabel;
 
-  /// Schaltfläche zum Erfassen einer Adrenalin-Gabe
+  /// Schaltfläche zum Erfassen einer Medikamenten-Gabe (Adrenalin, Amiodaron)
   ///
   /// In de, this message translates to:
-  /// **'Gabe'**
-  String get adrenalinRecordButton;
+  /// **'Gabe erfassen'**
+  String get medikamentGabeButton;
 
   /// Hinweis, dass die erste Adrenalin-Gabe jetzt fällig ist
   ///
@@ -730,11 +628,11 @@ abstract class AppLocalizations {
   /// **'überfällig'**
   String get adrenalinStateOverdue;
 
-  /// Uhrzeit und verstrichene Zeit seit der letzten Adrenalin-Gabe
+  /// Uhrzeit und verstrichene Zeit seit der letzten Medikamenten-Gabe
   ///
   /// In de, this message translates to:
   /// **'Letzte Gabe: {time} Uhr, vor {since}'**
-  String adrenalinLastDoseAt(String time, String since);
+  String medikamentLetzteGabe(String time, String since);
 
   /// Schaltfläche zum Speichern eines Dialogs
   ///
@@ -790,23 +688,11 @@ abstract class AppLocalizations {
   /// **'Vibration bei fälligen Aktionen'**
   String get settingsVibrationDescription;
 
-  /// Einstellung für Tonsignale
+  /// Hinweis, wenn die Vibration in der App an, das haptische Feedback des Geräts aber aus ist
   ///
   /// In de, this message translates to:
-  /// **'Ton'**
-  String get settingsSound;
-
-  /// Erklärung der Toneinstellung
-  ///
-  /// In de, this message translates to:
-  /// **'Ton bei fälligen Aktionen'**
-  String get settingsSoundDescription;
-
-  /// Überschrift im App-Menü
-  ///
-  /// In de, this message translates to:
-  /// **'Menü'**
-  String get menuTitle;
+  /// **'Das haptische Feedback ist in den Systemeinstellungen des Geräts ausgeschaltet. Solange es aus ist, vibriert die App nicht.'**
+  String get settingsVibrationSystemHapticsOff;
 
   /// Tooltip der Menü-Schaltfläche
   ///
@@ -874,29 +760,23 @@ abstract class AppLocalizations {
   /// **'Amiodaron'**
   String get amiodaronLabel;
 
-  /// Hinweis auf eine mögliche Amiodaron-Gabe
+  /// Status des Amiodaron-Hinweises, wenn eine Gabe erwogen werden sollte
   ///
   /// In de, this message translates to:
-  /// **'Amiodaron erwägen – {dosis} mg'**
-  String amiodaronHint(int dosis);
+  /// **'erwägen'**
+  String get amiodaronStateConsider;
 
-  /// Schaltfläche zum Erfassen einer Amiodaron-Gabe
+  /// Status des Amiodaron-Hinweises, wenn keine Gabe empfohlen ist
   ///
   /// In de, this message translates to:
-  /// **'Gegeben'**
-  String get amiodaronGiveButton;
+  /// **'nicht empfohlen'**
+  String get amiodaronStateNotRecommended;
 
-  /// Schaltfläche zum Ausblenden des Amiodaron-Hinweises
+  /// Vorgeschlagene Amiodaron-Dosis
   ///
   /// In de, this message translates to:
-  /// **'Nicht jetzt'**
-  String get amiodaronDismissButton;
-
-  /// Zeitpunkt der letzten Amiodaron-Gabe
-  ///
-  /// In de, this message translates to:
-  /// **'Letzte Gabe {time}'**
-  String amiodaronLastDose(String time);
+  /// **'{dosis} mg'**
+  String amiodaronDose(int dosis);
 
   /// Erklärung des ROSC-Zustands auf dem laufenden Fall
   ///
@@ -907,7 +787,7 @@ abstract class AppLocalizations {
   /// Schaltfläche zum Start eines neuen Reanimationsabschnitts nach ROSC
   ///
   /// In de, this message translates to:
-  /// **'Reanimationswiederbeginn'**
+  /// **'Reanimation wieder aufnehmen'**
   String get resumeResuscitationButton;
 
   /// Schaltfläche zum Beenden des Reanimationsfalls
@@ -961,14 +841,32 @@ abstract class AppLocalizations {
   /// Beschriftung der gesamten CPR-Dauer
   ///
   /// In de, this message translates to:
-  /// **'CPR-Dauer'**
+  /// **'CPR-Dauer (ohne ROSC)'**
   String get summaryCprDuration;
+
+  /// Beschriftung der Gesamtdauer von Startzeit bis Ende
+  ///
+  /// In de, this message translates to:
+  /// **'Reanimationsdauer (gesamt)'**
+  String get summaryReanimationsdauer;
+
+  /// Uhrzeit mit Einheit, z. B. 12:03:45 Uhr
+  ///
+  /// In de, this message translates to:
+  /// **'{time} Uhr'**
+  String wallTimeValue(String time);
 
   /// Beschriftung der Startzeit in der Zusammenfassung
   ///
   /// In de, this message translates to:
   /// **'Startzeit'**
   String get summaryStartzeit;
+
+  /// Beschriftung der Übernahme in der Zusammenfassung
+  ///
+  /// In de, this message translates to:
+  /// **'Übernahme'**
+  String get summaryUebernahme;
 
   /// Beschriftung der Endzeit in der Zusammenfassung
   ///
@@ -988,23 +886,17 @@ abstract class AppLocalizations {
   /// **'Schocks'**
   String get summaryShocks;
 
+  /// Anteil der Vorbehandlung hinter einer Gesamtanzahl in der Zusammenfassung
+  ///
+  /// In de, this message translates to:
+  /// **'(davon {anzahl} vor Übernahme)'**
+  String summaryVorbehandlungDavon(int anzahl);
+
   /// Überschrift der Ereignisliste in der Zusammenfassung
   ///
   /// In de, this message translates to:
   /// **'Ereignisse'**
   String get summaryEvents;
-
-  /// Überschrift der Notizen in der Zusammenfassung
-  ///
-  /// In de, this message translates to:
-  /// **'Notizen'**
-  String get summaryNotes;
-
-  /// Hinweis, dass keine Notizen erfasst wurden
-  ///
-  /// In de, this message translates to:
-  /// **'Keine Notizen'**
-  String get summaryNoNotes;
 
   /// Ereignis: Beginn des Reanimationsfalls
   ///
@@ -1047,6 +939,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Rhythmusanalyse übersprungen'**
   String get eventRhythmusanalyseSkipped;
+
+  /// Ereignis: Beginn der Analysephase
+  ///
+  /// In de, this message translates to:
+  /// **'Analyse begonnen'**
+  String get eventAnalysephaseStarted;
 
   /// Ereignis: Manueller Neustart der Druckphase
   ///
@@ -1099,7 +997,7 @@ abstract class AppLocalizations {
   /// Erklärung der Fortsetzen-Karte
   ///
   /// In de, this message translates to:
-  /// **'Der Reanimationsfall läuft bereits. Setze ihn fort, um weiterzutimen.'**
+  /// **'Der Reanimationsfall läuft noch und kann fortgesetzt werden.'**
   String get activeCaseDescription;
 
   /// Schaltfläche zum Fortsetzen des gespeicherten aktiven Falls
@@ -1132,6 +1030,24 @@ abstract class AppLocalizations {
   /// **'Verwerfen'**
   String get discardCaseConfirm;
 
+  /// Titel der Rückfrage beim Verlassen eines laufenden Falls
+  ///
+  /// In de, this message translates to:
+  /// **'Reanimationsfall verlassen?'**
+  String get leaveCaseTitle;
+
+  /// Erklärung der Rückfrage beim Verlassen eines laufenden Falls
+  ///
+  /// In de, this message translates to:
+  /// **'Der Fall läuft weiter und kann auf der Startseite fortgesetzt werden.'**
+  String get leaveCaseDescription;
+
+  /// Schaltfläche zum Verlassen des laufenden Falls ohne Beenden
+  ///
+  /// In de, this message translates to:
+  /// **'Verlassen'**
+  String get leaveCaseButton;
+
   /// Titel des Einsatzlogs
   ///
   /// In de, this message translates to:
@@ -1144,7 +1060,19 @@ abstract class AppLocalizations {
   /// **'Noch keine abgeschlossenen Reanimationsfälle'**
   String get einsatzlogEmpty;
 
-  /// Titel eines Einsatzlog-Eintrags
+  /// Gruppenüberschrift der Einsatzlog-Einträge von heute
+  ///
+  /// In de, this message translates to:
+  /// **'Heute'**
+  String get einsatzlogToday;
+
+  /// Gruppenüberschrift der Einsatzlog-Einträge von gestern
+  ///
+  /// In de, this message translates to:
+  /// **'Gestern'**
+  String get einsatzlogYesterday;
+
+  /// Titel eines Einsatzlog-Eintrags; {time} ist Datum und Uhrzeit des Fallbeginns (dd.MM.yyyy, HH:mm)
   ///
   /// In de, this message translates to:
   /// **'Reanimationsfall {time}'**
@@ -1191,12 +1119,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Noch keine Messwerte'**
   String get messwerteEmpty;
-
-  /// Schaltfläche zum Öffnen der Messwerte aus der Zusammenfassung
-  ///
-  /// In de, this message translates to:
-  /// **'Messwerte öffnen'**
-  String get messwerteOpenButton;
 
   /// Titel des Dialogs für einen Messwert
   ///
@@ -1353,6 +1275,148 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'{version} (Build {build})'**
   String versionWithBuild(String version, String build);
+
+  /// Titel des Vorbehandlung-Formulars
+  ///
+  /// In de, this message translates to:
+  /// **'Vorbehandlung'**
+  String get vorbehandlungTitle;
+
+  /// Schaltfläche in der Aktionsleiste und Eintrag in Weitere Aktionen zum Öffnen des Vorbehandlung-Formulars
+  ///
+  /// In de, this message translates to:
+  /// **'Vorbehandlung erfassen'**
+  String get vorbehandlungErfassen;
+
+  /// Beschriftung der Auswahl, wie lange die Reanimation bei der Übernahme bereits lief
+  ///
+  /// In de, this message translates to:
+  /// **'Lief bei Übernahme seit'**
+  String get vorbehandlungLaufzeitLabel;
+
+  /// Voreinstellung für die Laufzeit bei Übernahme in Minuten
+  ///
+  /// In de, this message translates to:
+  /// **'{minutes} min'**
+  String vorbehandlungLaufzeitChip(int minutes);
+
+  /// Beschriftung des Felds für eine eigene Laufzeit bei Übernahme in Minuten
+  ///
+  /// In de, this message translates to:
+  /// **'Eigener Wert (Minuten)'**
+  String get vorbehandlungLaufzeitMinuten;
+
+  /// Fehlermeldung bei einer ungültigen eigenen Laufzeit
+  ///
+  /// In de, this message translates to:
+  /// **'Bitte eine ganze Zahl an Minuten eingeben.'**
+  String get vorbehandlungLaufzeitInvalid;
+
+  /// Schaltfläche zum Wählen der Startzeit als Uhrzeit
+  ///
+  /// In de, this message translates to:
+  /// **'Startzeit wählen'**
+  String get vorbehandlungStartzeitWaehlen;
+
+  /// Anzeige der Startzeit, die sich aus Übernahme und Laufzeit ergibt
+  ///
+  /// In de, this message translates to:
+  /// **'Startzeit: {time} Uhr'**
+  String vorbehandlungStartzeitValue(String time);
+
+  /// Beschriftung der Uhrzeit der Übernahme
+  ///
+  /// In de, this message translates to:
+  /// **'Übernahme'**
+  String get vorbehandlungUebernahmeLabel;
+
+  /// Fehlermeldung, wenn die Übernahme nach dem ersten erfassten Ereignis oder in der Zukunft liegt
+  ///
+  /// In de, this message translates to:
+  /// **'Die Übernahme darf nicht nach {time} Uhr liegen (erstes Ereignis oder jetzt).'**
+  String vorbehandlungUebernahmeZuSpaet(String time);
+
+  /// Fehlermeldung, wenn die gewählte Startzeit nach der Übernahme liegt
+  ///
+  /// In de, this message translates to:
+  /// **'Die Startzeit darf nicht nach der Übernahme liegen.'**
+  String get vorbehandlungStartzeitNachUebernahme;
+
+  /// Bestätigung nach dem Speichern der Vorbehandlung
+  ///
+  /// In de, this message translates to:
+  /// **'Vorbehandlung gespeichert'**
+  String get vorbehandlungSavedSnackbar;
+
+  /// Ereignis: Übernahme der Zeitnahme durch das Team
+  ///
+  /// In de, this message translates to:
+  /// **'Übernahme'**
+  String get eventUebernahme;
+
+  /// Protokolleintrag der Vorbehandlung vor der Übernahme
+  ///
+  /// In de, this message translates to:
+  /// **'Vorbehandlung'**
+  String get eventVorbehandlung;
+
+  /// Überschrift der Anzahlen im Vorbehandlung-Formular
+  ///
+  /// In de, this message translates to:
+  /// **'Vor der Übernahme gegeben'**
+  String get vorbehandlungCountsLabel;
+
+  /// Beschriftung der Schock-Anzahl im Vorbehandlung-Formular
+  ///
+  /// In de, this message translates to:
+  /// **'Schocks'**
+  String get vorbehandlungSchocksLabel;
+
+  /// Beschriftung der Adrenalin-Anzahl im Vorbehandlung-Formular
+  ///
+  /// In de, this message translates to:
+  /// **'Adrenalin'**
+  String get vorbehandlungAdrenalinLabel;
+
+  /// Beschriftung der Amiodaron-Anzahl im Vorbehandlung-Formular
+  ///
+  /// In de, this message translates to:
+  /// **'Amiodaron'**
+  String get vorbehandlungAmiodaronLabel;
+
+  /// Tooltip der Plus-Schaltfläche einer Anzahl
+  ///
+  /// In de, this message translates to:
+  /// **'{label} erhöhen'**
+  String vorbehandlungAnzahlMehr(String label);
+
+  /// Tooltip der Minus-Schaltfläche einer Anzahl
+  ///
+  /// In de, this message translates to:
+  /// **'{label} verringern'**
+  String vorbehandlungAnzahlWeniger(String label);
+
+  /// Beschriftung des Notizfelds im Vorbehandlung-Formular
+  ///
+  /// In de, this message translates to:
+  /// **'Notiz (optional)'**
+  String get vorbehandlungNotizLabel;
+
+  /// Anzahlen der Vorbehandlung im Protokoll
+  ///
+  /// In de, this message translates to:
+  /// **'Schocks: {schocks} · Adrenalin: {adrenalin} · Amiodaron: {amiodaron}'**
+  String protokollVorbehandlungDetail(
+    int schocks,
+    int adrenalin,
+    int amiodaron,
+  );
+
+  /// Adrenalin-Karte: Anzahl der Gaben vor der Übernahme, solange noch keine Gabe in der App erfasst wurde
+  ///
+  /// In de, this message translates to:
+  /// **'{count} × vor Übernahme'**
+  String adrenalinVorbehandlung(int count);
 }
 
 class _AppLocalizationsDelegate

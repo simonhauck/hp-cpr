@@ -107,7 +107,7 @@ All commits follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 ## MCP
 
-The Dart/Flutter MCP server is configured in `opencode.json` and started directly via `dart mcp-server`. OpenCode must therefore run from the Nix dev shell so that `dart` is on the `PATH`. If a shared OpenCode background service is already running outside the dev shell, use `opencode --standalone` or stop the service before starting and restart it inside the dev shell. After code changes to a running app, use hot reload or hot restart.
+The Dart/Flutter MCP server is configured in `opencode.json` (OpenCode) and `.mcp.json` (Claude Code); keep both in sync. It is started directly via `dart mcp-server`, so OpenCode and Claude Code must run from the Nix dev shell so that `dart` is on the `PATH`. If a shared OpenCode background service is already running outside the dev shell, use `opencode --standalone` or stop the service before starting and restart it inside the dev shell. After code changes to a running app, use hot reload or hot restart.
 
 ## Agent skills
 

@@ -35,27 +35,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get startNowButton => 'Jetzt starten';
 
   @override
-  String get runningCaseTitle => 'Laufende Reanimation';
-
-  @override
-  String get backdateMinutesLabel => 'Minuten seit Beginn';
-
-  @override
-  String backdateChip(int minutes) {
-    return '$minutes min';
-  }
-
-  @override
-  String get customStartzeitButton => 'Eigene Startzeit';
-
-  @override
-  String get customStartzeitTitle => 'Eigene Startzeit';
-
-  @override
-  String get customStartzeitDescription =>
-      'Wie lange läuft die Reanimation bereits?';
-
-  @override
   String get minutesLabel => 'Minuten';
 
   @override
@@ -63,13 +42,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get cancelButton => 'Abbrechen';
-
-  @override
-  String get startCaseButton => 'Starten';
-
-  @override
-  String get invalidBackdateMessage =>
-      'Bitte eine Dauer größer als 0 eingeben.';
 
   @override
   String get invalidSecondsMessage =>
@@ -80,7 +52,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String startzeitValue(String time) {
-    return 'Startzeit $time';
+    return 'Startzeit $time Uhr';
   }
 
   @override
@@ -103,9 +75,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get demoModusAdvanceTooltip => '30 Sekunden vorspulen';
 
   @override
-  String get phaseDruckphase => 'Druckphase';
-
-  @override
   String get nextAnalysisLabel => 'Nächste Analyse';
 
   @override
@@ -115,9 +84,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String overdueTimer(String time) {
     return '+$time';
   }
-
-  @override
-  String get phaseAnalysephase => 'Analysephase';
 
   @override
   String get analyseButton => 'Analyse starten';
@@ -134,18 +100,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get phaseStripRosc => 'ROSC · Reanimation pausiert';
-
-  @override
-  String get phaseStripDruckphaseCompact => 'Druckphase · Komprimieren';
-
-  @override
-  String get phaseStripDruckphaseDueCompact => 'Druckphase · Analyse starten';
-
-  @override
-  String get phaseStripAnalysephaseCompact => 'Analysephase · Rhythmus prüfen';
-
-  @override
-  String get phaseStripRoscCompact => 'ROSC · Pausiert';
 
   @override
   String schockCountChip(int count) {
@@ -171,14 +125,16 @@ class AppLocalizationsDe extends AppLocalizations {
   String get actionsProtokoll => 'Protokoll';
 
   @override
+  String get actionsSectionRecord => 'Erfassen';
+
+  @override
+  String get actionsSectionView => 'Ansehen';
+
+  @override
   String get protokollTitle => 'Protokoll';
 
   @override
   String get protokollAuditToggle => 'Änderungsverlauf';
-
-  @override
-  String get protokollLiveEditHint =>
-      'Im laufenden Fall sind nur Schocks, Medikamente, Messwerte und Notizen korrigierbar.';
 
   @override
   String get protokollEdit => 'Bearbeiten';
@@ -199,11 +155,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get protokollTimeTitle => 'Zeitpunkt korrigieren';
 
   @override
-  String get protokollCaseTime => 'Fallzeit';
+  String get protokollCaseTime => 'Zeitpunkt (seit Start)';
 
   @override
   String protokollWallTime(String time) {
-    return 'Uhrzeit $time';
+    return '$time Uhr';
   }
 
   @override
@@ -229,10 +185,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get protokollRestoredSnackbar => 'Eintrag wiederhergestellt';
-
-  @override
-  String get protokollLockedTooltip =>
-      'Strukturereignis – während des Falls gesperrt';
 
   @override
   String get protokollTimeInvalid =>
@@ -265,7 +217,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String pauseOverdueAha(int seconds) {
-    return 'Pulscheck über $seconds s – CPR fortsetzen';
+    return 'Pulskontrolle über $seconds s – CPR fortsetzen';
   }
 
   @override
@@ -287,9 +239,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get rhythmusanalyseUnklar => 'Unklar';
-
-  @override
-  String get rhythmusanalyseStepKategorie => 'Rhythmusart';
 
   @override
   String get rhythmusanalyseStepRhythmus => 'Rhythmus';
@@ -314,9 +263,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get roscConfirmButton => 'ROSC bestätigen';
 
   @override
-  String get rhythmusanalyseSkippedSnackbar => 'Analyse übersprungen';
-
-  @override
   String get rhythmusanalyseKammerflimmern => 'Kammerflimmern (VF)';
 
   @override
@@ -332,13 +278,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get rhythmusanalyseUnbekanntAed => 'Unbekannt (AED)';
 
   @override
-  String get skipAnalysisButton => 'Überspringen';
-
-  @override
   String get adrenalinLabel => 'Adrenalin';
 
   @override
-  String get adrenalinRecordButton => 'Gabe';
+  String get medikamentGabeButton => 'Gabe erfassen';
 
   @override
   String get adrenalinFirstDoseDue => 'Erste Gabe fällig';
@@ -356,7 +299,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get adrenalinStateOverdue => 'überfällig';
 
   @override
-  String adrenalinLastDoseAt(String time, String since) {
+  String medikamentLetzteGabe(String time, String since) {
     return 'Letzte Gabe: $time Uhr, vor $since';
   }
 
@@ -389,13 +332,8 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settingsVibrationDescription => 'Vibration bei fälligen Aktionen';
 
   @override
-  String get settingsSound => 'Ton';
-
-  @override
-  String get settingsSoundDescription => 'Ton bei fälligen Aktionen';
-
-  @override
-  String get menuTitle => 'Menü';
+  String get settingsVibrationSystemHapticsOff =>
+      'Das haptische Feedback ist in den Systemeinstellungen des Geräts ausgeschaltet. Solange es aus ist, vibriert die App nicht.';
 
   @override
   String get menuOpenTooltip => 'Menü öffnen';
@@ -435,26 +373,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get amiodaronLabel => 'Amiodaron';
 
   @override
-  String amiodaronHint(int dosis) {
-    return 'Amiodaron erwägen – $dosis mg';
-  }
+  String get amiodaronStateConsider => 'erwägen';
 
   @override
-  String get amiodaronGiveButton => 'Gegeben';
+  String get amiodaronStateNotRecommended => 'nicht empfohlen';
 
   @override
-  String get amiodaronDismissButton => 'Nicht jetzt';
-
-  @override
-  String amiodaronLastDose(String time) {
-    return 'Letzte Gabe $time';
+  String amiodaronDose(int dosis) {
+    return '$dosis mg';
   }
 
   @override
   String get roscDescription => 'Kreislauf zurückgekehrt';
 
   @override
-  String get resumeResuscitationButton => 'Reanimationswiederbeginn';
+  String get resumeResuscitationButton => 'Reanimation wieder aufnehmen';
 
   @override
   String get endCaseButton => 'Fall beenden';
@@ -481,10 +414,21 @@ class AppLocalizationsDe extends AppLocalizations {
   String get summaryCaseEnded => 'Reanimationsfall beendet';
 
   @override
-  String get summaryCprDuration => 'CPR-Dauer';
+  String get summaryCprDuration => 'CPR-Dauer (ohne ROSC)';
+
+  @override
+  String get summaryReanimationsdauer => 'Reanimationsdauer (gesamt)';
+
+  @override
+  String wallTimeValue(String time) {
+    return '$time Uhr';
+  }
 
   @override
   String get summaryStartzeit => 'Startzeit';
+
+  @override
+  String get summaryUebernahme => 'Übernahme';
 
   @override
   String get summaryEndzeit => 'Endzeit';
@@ -496,13 +440,12 @@ class AppLocalizationsDe extends AppLocalizations {
   String get summaryShocks => 'Schocks';
 
   @override
+  String summaryVorbehandlungDavon(int anzahl) {
+    return '(davon $anzahl vor Übernahme)';
+  }
+
+  @override
   String get summaryEvents => 'Ereignisse';
-
-  @override
-  String get summaryNotes => 'Notizen';
-
-  @override
-  String get summaryNoNotes => 'Keine Notizen';
 
   @override
   String get eventCaseStart => 'Reanimationsfall gestartet';
@@ -536,6 +479,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get eventRhythmusanalyseSkipped => 'Rhythmusanalyse übersprungen';
 
   @override
+  String get eventAnalysephaseStarted => 'Analyse begonnen';
+
+  @override
   String get eventDruckphaseRestarted => 'Druckphase neu gestartet';
 
   @override
@@ -563,7 +509,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get activeCaseDescription =>
-      'Der Reanimationsfall läuft bereits. Setze ihn fort, um weiterzutimen.';
+      'Der Reanimationsfall läuft noch und kann fortgesetzt werden.';
 
   @override
   String get resumeCaseButton => 'Fortsetzen';
@@ -582,10 +528,26 @@ class AppLocalizationsDe extends AppLocalizations {
   String get discardCaseConfirm => 'Verwerfen';
 
   @override
+  String get leaveCaseTitle => 'Reanimationsfall verlassen?';
+
+  @override
+  String get leaveCaseDescription =>
+      'Der Fall läuft weiter und kann auf der Startseite fortgesetzt werden.';
+
+  @override
+  String get leaveCaseButton => 'Verlassen';
+
+  @override
   String get einsatzlogTitle => 'Einsatzlog';
 
   @override
   String get einsatzlogEmpty => 'Noch keine abgeschlossenen Reanimationsfälle';
+
+  @override
+  String get einsatzlogToday => 'Heute';
+
+  @override
+  String get einsatzlogYesterday => 'Gestern';
 
   @override
   String einsatzlogEntryTitle(String time) {
@@ -615,9 +577,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get messwerteEmpty => 'Noch keine Messwerte';
-
-  @override
-  String get messwerteOpenButton => 'Messwerte öffnen';
 
   @override
   String get messwertErfassenTitle => 'Messwert erfassen';
@@ -710,5 +669,94 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String versionWithBuild(String version, String build) {
     return '$version (Build $build)';
+  }
+
+  @override
+  String get vorbehandlungTitle => 'Vorbehandlung';
+
+  @override
+  String get vorbehandlungErfassen => 'Vorbehandlung erfassen';
+
+  @override
+  String get vorbehandlungLaufzeitLabel => 'Lief bei Übernahme seit';
+
+  @override
+  String vorbehandlungLaufzeitChip(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get vorbehandlungLaufzeitMinuten => 'Eigener Wert (Minuten)';
+
+  @override
+  String get vorbehandlungLaufzeitInvalid =>
+      'Bitte eine ganze Zahl an Minuten eingeben.';
+
+  @override
+  String get vorbehandlungStartzeitWaehlen => 'Startzeit wählen';
+
+  @override
+  String vorbehandlungStartzeitValue(String time) {
+    return 'Startzeit: $time Uhr';
+  }
+
+  @override
+  String get vorbehandlungUebernahmeLabel => 'Übernahme';
+
+  @override
+  String vorbehandlungUebernahmeZuSpaet(String time) {
+    return 'Die Übernahme darf nicht nach $time Uhr liegen (erstes Ereignis oder jetzt).';
+  }
+
+  @override
+  String get vorbehandlungStartzeitNachUebernahme =>
+      'Die Startzeit darf nicht nach der Übernahme liegen.';
+
+  @override
+  String get vorbehandlungSavedSnackbar => 'Vorbehandlung gespeichert';
+
+  @override
+  String get eventUebernahme => 'Übernahme';
+
+  @override
+  String get eventVorbehandlung => 'Vorbehandlung';
+
+  @override
+  String get vorbehandlungCountsLabel => 'Vor der Übernahme gegeben';
+
+  @override
+  String get vorbehandlungSchocksLabel => 'Schocks';
+
+  @override
+  String get vorbehandlungAdrenalinLabel => 'Adrenalin';
+
+  @override
+  String get vorbehandlungAmiodaronLabel => 'Amiodaron';
+
+  @override
+  String vorbehandlungAnzahlMehr(String label) {
+    return '$label erhöhen';
+  }
+
+  @override
+  String vorbehandlungAnzahlWeniger(String label) {
+    return '$label verringern';
+  }
+
+  @override
+  String get vorbehandlungNotizLabel => 'Notiz (optional)';
+
+  @override
+  String protokollVorbehandlungDetail(
+    int schocks,
+    int adrenalin,
+    int amiodaron,
+  ) {
+    return 'Schocks: $schocks · Adrenalin: $adrenalin · Amiodaron: $amiodaron';
+  }
+
+  @override
+  String adrenalinVorbehandlung(int count) {
+    return '$count × vor Übernahme';
   }
 }

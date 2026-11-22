@@ -10,12 +10,13 @@ import 'package:hp_cpr/features/reanimationsfall/domain/schock.dart';
 Map<String, dynamic> reanimationsfallStateToJson(ReanimationsfallState state) {
   return {
     'id': state.id,
-    'startzeit': state.startzeit.toIso8601String(),
-    'startzeitUtc': state.startzeitUtc.toUtc().toIso8601String(),
+    'erfassteUebernahme': state.erfassteUebernahme.toIso8601String(),
+    'erfassteUebernahmeUtc': state.erfassteUebernahmeUtc
+        .toUtc()
+        .toIso8601String(),
     'utcOffsetMinutes': state.utcOffsetMinutes,
     'leitlinienprofil': state.leitlinienprofil.name,
     'vibrationEnabled': state.vibrationEnabled,
-    'soundEnabled': state.soundEnabled,
     'demoMode': state.demoMode,
     'demoOffset': _millis(state.demoOffset),
     'zustand': state.zustand.name,
@@ -60,6 +61,10 @@ Map<String, dynamic> reanimationsfallStateToJson(ReanimationsfallState state) {
           'zeitpunkt': _millis(entry.zeitpunkt),
           'ergebnis': entry.ergebnis.name,
         },
+    ],
+    'analysephaseBeginne': [
+      for (final entry in state.analysephaseBeginne)
+        {'id': entry.id, 'zeitpunkt': _millis(entry.zeitpunkt)},
     ],
     'druckphaseNeustarts': [
       for (final entry in state.druckphaseNeustarts)
@@ -110,14 +115,19 @@ ReanimationsfallState reanimationsfallStateFromJson(Map<String, dynamic> json) {
 
   return ReanimationsfallState(
     id: json['id'] as String,
-    startzeit: DateTime.parse(json['startzeit'] as String),
-    startzeitUtc: DateTime.parse(json['startzeitUtc'] as String).toUtc(),
+    // Cases stored before the Übernahme was recorded fall back to their
+    // Startzeit, which then also counts as the Übernahme.
+    erfassteUebernahme: DateTime.parse(
+      (json['erfassteUebernahme'] ?? json['startzeit']) as String,
+    ),
+    erfassteUebernahmeUtc: DateTime.parse(
+      (json['erfassteUebernahmeUtc'] ?? json['startzeitUtc']) as String,
+    ).toUtc(),
     utcOffsetMinutes: json['utcOffsetMinutes'] as int,
     leitlinienprofil: Leitlinienprofil.values.byName(
       json['leitlinienprofil'] as String,
     ),
     vibrationEnabled: json['vibrationEnabled'] as bool,
-    soundEnabled: json['soundEnabled'] as bool,
     demoMode: json['demoMode'] as bool? ?? false,
     demoOffset: _duration(json['demoOffset']),
     zustand: ReanimationsfallZustand.values.byName(json['zustand'] as String),
@@ -172,6 +182,13 @@ ReanimationsfallState reanimationsfallStateFromJson(Map<String, dynamic> json) {
           ergebnis: RhythmusanalyseErgebnis.values.byName(
             map(item)['ergebnis'] as String,
           ),
+        ),
+    ],
+    analysephaseBeginne: [
+      for (final (index, item) in list(json['analysephaseBeginne']).indexed)
+        AnalysephaseBeginn(
+          id: _id(map(item), 'legacy-analysephase-beginn-$index'),
+          zeitpunkt: _duration(map(item)['zeitpunkt']),
         ),
     ],
     druckphaseNeustarts: [
@@ -355,6 +372,24 @@ Map<String, dynamic> _korrekturToJson(ProtokollKorrektur korrektur) {
       'typ': 'rosc',
       'zeitpunkt': _millis(zeitpunkt),
     },
+    VorbehandlungKorrigiert(
+      :final uebernahme,
+      :final laufzeitBeiUebernahme,
+      :final schocks,
+      :final adrenalin,
+      :final amiodaron,
+      :final notiz,
+    ) =>
+      {
+        ...base,
+        'typ': 'vorbehandlung',
+        'uebernahme': _millis(uebernahme),
+        'laufzeitBeiUebernahme': _millis(laufzeitBeiUebernahme),
+        'schocks': schocks,
+        'adrenalin': adrenalin,
+        'amiodaron': amiodaron,
+        'notiz': notiz,
+      },
   };
 }
 
@@ -408,6 +443,14 @@ ProtokollKorrektur _korrekturFromJson(Map<String, dynamic> json) {
     'rosc' => RoscKorrigiert(
       ziel: ziel,
       zeitpunkt: _duration(json['zeitpunkt']),
+    ),
+    'vorbehandlung' => VorbehandlungKorrigiert(
+      uebernahme: _duration(json['uebernahme']),
+      laufzeitBeiUebernahme: _duration(json['laufzeitBeiUebernahme']),
+      schocks: json['schocks'] as int? ?? 0,
+      adrenalin: json['adrenalin'] as int? ?? 0,
+      amiodaron: json['amiodaron'] as int? ?? 0,
+      notiz: json['notiz'] as String?,
     ),
     final String typ => throw FormatException('unknown correction type: $typ'),
   };

@@ -2,113 +2,76 @@ import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/features/reanimationsfall/domain/amiodaron.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
-import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/medikament_card.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
+import 'package:hp_cpr/ui/theme/panel_tone.dart';
 
-/// The contextual Amiodaron hint and the last recorded dose.
+/// The Amiodaron recommendation status and the last recorded dose.
+///
+/// The card is always visible and its button always stays in place; it is
+/// disabled while no dose is recommended or the case is interrupted by ROSC.
 class AmiodaronPanel extends StatelessWidget {
   const AmiodaronPanel({
     super.key,
     required this.snapshot,
     required this.layout,
-    required this.isHintVisible,
     required this.onRecordAmiodaron,
-    required this.onDismiss,
+    this.isRecordingEnabled = true,
   });
 
   final ReanimationsfallSnapshot snapshot;
   final PageLayout layout;
-
-  /// Whether the hint is shown; a dismissed hint keeps the last dose visible.
-  final bool isHintVisible;
-
   final VoidCallback onRecordAmiodaron;
-  final VoidCallback onDismiss;
+
+  /// Recording is disabled while the case is interrupted by ROSC.
+  final bool isRecordingEnabled;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final hint = snapshot.amiodaronHinweis;
-    final showHint = isHintVisible && hint != AmiodaronHinweis.keine;
+    final isRecommended = hint != AmiodaronHinweis.keine;
     final lastDose = snapshot.letzteAmiodaronGabe;
 
-    return Container(
-      padding: layout.medicationPanelPadding,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(layout.cardRadius),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.vaccines_outlined,
-            size: PageLayout.iconSmall,
-            color: theme.colorScheme.primary,
-          ),
-          const SizedBox(width: PageLayout.space6),
-          Expanded(
-            child: showHint
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          l10n.amiodaronHint(hint.dosisMg!),
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      if (lastDose != null)
-                        Text(
-                          l10n.amiodaronLastDose(
-                            formatReanimationsdauer(lastDose.zeitpunkt),
-                          ),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                    ],
-                  )
-                : lastDose == null
-                ? const SizedBox.shrink()
-                : FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      '${l10n.amiodaronLabel} · '
-                      '${l10n.amiodaronLastDose(formatReanimationsdauer(lastDose.zeitpunkt))}',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+    final stateLabel = isRecommended
+        ? l10n.amiodaronStateConsider
+        : l10n.amiodaronStateNotRecommended;
+    final tone = isRecommended && isRecordingEnabled
+        ? PanelTone.due
+        : PanelTone.neutral;
+    final stateColor = tone.colors(context).accent;
+
+    return MedikamentCard(
+      layout: layout,
+      icon: Icons.vaccines_outlined,
+      label: l10n.amiodaronLabel,
+      stateLabel: stateLabel,
+      tone: tone,
+      onRecord: isRecommended && isRecordingEnabled ? onRecordAmiodaron : null,
+      details: !isRecommended && lastDose == null
+          ? null
+          : (allowWrap) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isRecommended)
+                  Text(
+                    l10n.amiodaronDose(hint.dosisMg!),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-          ),
-          if (showHint) ...[
-            const SizedBox(width: PageLayout.space8),
-            TextButton(
-              onPressed: onDismiss,
-              style: TextButton.styleFrom(
-                minimumSize: Size(PageLayout.space0, layout.actionHeight),
-              ),
-              child: Text(l10n.amiodaronDismissButton),
+                if (lastDose != null)
+                  MedikamentLetzteGabeText(
+                    snapshot: snapshot,
+                    zeitpunkt: lastDose.zeitpunkt,
+                    color: stateColor,
+                    allowWrap: allowWrap,
+                  ),
+              ],
             ),
-            const SizedBox(width: PageLayout.space8),
-            FilledButton.tonal(
-              onPressed: onRecordAmiodaron,
-              style: FilledButton.styleFrom(
-                minimumSize: Size(PageLayout.space0, layout.actionHeight),
-              ),
-              child: Text(l10n.amiodaronGiveButton),
-            ),
-          ],
-        ],
-      ),
     );
   }
 }

@@ -32,35 +32,6 @@
   "@startNowButton": {
     "description": "Schaltfläche zum sofortigen Start"
   },
-  "runningCaseTitle": "Laufende Reanimation",
-  "@runningCaseTitle": {
-    "description": "Überschrift der Karte für eine bereits laufende Reanimation"
-  },
-  "backdateMinutesLabel": "Minuten seit Beginn",
-  "@backdateMinutesLabel": {
-    "description": "Beschriftung der Minuten-Auswahl für eine zurückdatierte Startzeit"
-  },
-  "backdateChip": "{minutes} min",
-  "@backdateChip": {
-    "description": "Voreinstellung für eine zurückdatierte Startzeit",
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      }
-    }
-  },
-  "customStartzeitButton": "Eigene Startzeit",
-  "@customStartzeitButton": {
-    "description": "Schaltfläche zum Eingeben einer eigenen Startzeit"
-  },
-  "customStartzeitTitle": "Eigene Startzeit",
-  "@customStartzeitTitle": {
-    "description": "Titel des Dialogs für eine eigene Startzeit"
-  },
-  "customStartzeitDescription": "Wie lange läuft die Reanimation bereits?",
-  "@customStartzeitDescription": {
-    "description": "Erklärung im Dialog für eine eigene Startzeit"
-  },
   "minutesLabel": "Minuten",
   "@minutesLabel": {
     "description": "Beschriftung des Minutenfelds"
@@ -73,14 +44,6 @@
   "@cancelButton": {
     "description": "Schaltfläche zum Abbrechen eines Dialogs"
   },
-  "startCaseButton": "Starten",
-  "@startCaseButton": {
-    "description": "Schaltfläche zum Starten eines Falls aus einem Dialog"
-  },
-  "invalidBackdateMessage": "Bitte eine Dauer größer als 0 eingeben.",
-  "@invalidBackdateMessage": {
-    "description": "Fehlermeldung bei einer leeren oder nullwertigen Startzeit"
-  },
   "invalidSecondsMessage": "Sekunden müssen zwischen 0 und 59 liegen.",
   "@invalidSecondsMessage": {
     "description": "Fehlermeldung bei einem ungültigen Sekundenwert"
@@ -89,7 +52,7 @@
   "@elapsedTimeLabel": {
     "description": "Beschriftung der Anzeige der Fall-Dauer"
   },
-  "startzeitValue": "Startzeit {time}",
+  "startzeitValue": "Startzeit {time} Uhr",
   "@startzeitValue": {
     "description": "Anzeige der Startzeit mit Uhrzeit",
     "placeholders": {
@@ -122,10 +85,6 @@
   "@demoModusAdvanceTooltip": {
     "description": "Tooltip der Demo-Modus-Vorspulschaltfläche"
   },
-  "phaseDruckphase": "Druckphase",
-  "@phaseDruckphase": {
-    "description": "Name der aktiven Phase mit Thoraxkompressionen"
-  },
   "nextAnalysisLabel": "Nächste Analyse",
   "@nextAnalysisLabel": {
     "description": "Beschriftung des Kompressionstimers vor Ablauf"
@@ -142,10 +101,6 @@
         "type": "String"
       }
     }
-  },
-  "phaseAnalysephase": "Analysephase",
-  "@phaseAnalysephase": {
-    "description": "Name der aktiven Phase mit pausierter Kompression"
   },
   "analyseButton": "Analyse starten",
   "@analyseButton": {
@@ -166,22 +121,6 @@
   "phaseStripRosc": "ROSC · Reanimation pausiert",
   "@phaseStripRosc": {
     "description": "Statuszeile im ROSC-Zustand"
-  },
-  "phaseStripDruckphaseCompact": "Druckphase · Komprimieren",
-  "@phaseStripDruckphaseCompact": {
-    "description": "Kompakte Aufgabe in der Druckphase"
-  },
-  "phaseStripDruckphaseDueCompact": "Druckphase · Analyse starten",
-  "@phaseStripDruckphaseDueCompact": {
-    "description": "Kompakte Aufgabe, wenn die Rhythmusanalyse fällig ist"
-  },
-  "phaseStripAnalysephaseCompact": "Analysephase · Rhythmus prüfen",
-  "@phaseStripAnalysephaseCompact": {
-    "description": "Kompakte Aufgabe in der Analysephase"
-  },
-  "phaseStripRoscCompact": "ROSC · Pausiert",
-  "@phaseStripRoscCompact": {
-    "description": "Kompakte Statuszeile im ROSC-Zustand"
   },
   "schockCountChip": "Schocks: {count}",
   "@schockCountChip": {
@@ -216,6 +155,14 @@
   "@actionsProtokoll": {
     "description": "Aktion zum Öffnen des laufenden Protokolls"
   },
+  "actionsSectionRecord": "Erfassen",
+  "@actionsSectionRecord": {
+    "description": "Abschnittsüberschrift im Aktionen-Sheet für Erfassungsaktionen"
+  },
+  "actionsSectionView": "Ansehen",
+  "@actionsSectionView": {
+    "description": "Abschnittsüberschrift im Aktionen-Sheet für Ansichten"
+  },
   "protokollTitle": "Protokoll",
   "@protokollTitle": {
     "description": "Titel des Protokolls und seiner Zusammenfassungssektion"
@@ -223,10 +170,6 @@
   "protokollAuditToggle": "Änderungsverlauf",
   "@protokollAuditToggle": {
     "description": "Schalter zum Anzeigen korrigierter und entfernter Einträge"
-  },
-  "protokollLiveEditHint": "Im laufenden Fall sind nur Schocks, Medikamente, Messwerte und Notizen korrigierbar.",
-  "@protokollLiveEditHint": {
-    "description": "Hinweis auf die gesperrten Strukturereignisse im laufenden Fall"
   },
   "protokollEdit": "Bearbeiten",
   "@protokollEdit": {
@@ -252,11 +195,11 @@
   "@protokollTimeTitle": {
     "description": "Titel des Dialogs für den korrigierten Zeitpunkt"
   },
-  "protokollCaseTime": "Fallzeit",
+  "protokollCaseTime": "Zeitpunkt (seit Start)",
   "@protokollCaseTime": {
     "description": "Beschriftung der fallrelativen Zeit"
   },
-  "protokollWallTime": "Uhrzeit {time}",
+  "protokollWallTime": "{time} Uhr",
   "@protokollWallTime": {
     "description": "Vorschau der Wanduhrzeit eines korrigierten Zeitpunkts",
     "placeholders": {
@@ -297,10 +240,6 @@
   "@protokollRestoredSnackbar": {
     "description": "Bestätigung nach dem Wiederherstellen eines Protokolleintrags"
   },
-  "protokollLockedTooltip": "Strukturereignis – während des Falls gesperrt",
-  "@protokollLockedTooltip": {
-    "description": "Tooltip für ein gesperrtes Strukturereignis"
-  },
   "protokollTimeInvalid": "Bitte einen Zeitpunkt innerhalb des Falls eingeben.",
   "@protokollTimeInvalid": {
     "description": "Fehlermeldung bei einem Zeitpunkt außerhalb des Falls"
@@ -338,7 +277,7 @@
   "@pauseLabel": {
     "description": "Beschriftung des Pausenzählers in der Analysephase"
   },
-  "pauseOverdueAha": "Pulscheck über {seconds} s – CPR fortsetzen",
+  "pauseOverdueAha": "Pulskontrolle über {seconds} s – CPR fortsetzen",
   "@pauseOverdueAha": {
     "description": "Überfälligkeitshinweis in der Analysephase für AHA 2025",
     "placeholders": {
@@ -376,10 +315,6 @@
   "@rhythmusanalyseUnklar": {
     "description": "Ergebnis: Rhythmus unklar"
   },
-  "rhythmusanalyseStepKategorie": "Rhythmusart",
-  "@rhythmusanalyseStepKategorie": {
-    "description": "Erster Schritt der geführten Rhythmusanalyse"
-  },
   "rhythmusanalyseStepRhythmus": "Rhythmus",
   "@rhythmusanalyseStepRhythmus": {
     "description": "Zweiter Schritt der geführten Rhythmusanalyse"
@@ -408,10 +343,6 @@
   "@roscConfirmButton": {
     "description": "Bestätigungsschaltfläche für ROSC"
   },
-  "rhythmusanalyseSkippedSnackbar": "Analyse übersprungen",
-  "@rhythmusanalyseSkippedSnackbar": {
-    "description": "Kurze Bestätigung nach dem Überspringen der Rhythmusanalyse"
-  },
   "rhythmusanalyseKammerflimmern": "Kammerflimmern (VF)",
   "@rhythmusanalyseKammerflimmern": {
     "description": "Schockbarer Rhythmus: Kammerflimmern"
@@ -432,17 +363,13 @@
   "@rhythmusanalyseUnbekanntAed": {
     "description": "Rhythmus unbekannt, Ergebnis stammt aus einer AED-Empfehlung"
   },
-  "skipAnalysisButton": "Überspringen",
-  "@skipAnalysisButton": {
-    "description": "Schaltfläche zum Überspringen der Rhythmusanalyse"
-  },
   "adrenalinLabel": "Adrenalin",
   "@adrenalinLabel": {
     "description": "Beschriftung des Adrenalin-Zeitfensters"
   },
-  "adrenalinRecordButton": "Gabe",
-  "@adrenalinRecordButton": {
-    "description": "Schaltfläche zum Erfassen einer Adrenalin-Gabe"
+  "medikamentGabeButton": "Gabe erfassen",
+  "@medikamentGabeButton": {
+    "description": "Schaltfläche zum Erfassen einer Medikamenten-Gabe (Adrenalin, Amiodaron)"
   },
   "adrenalinFirstDoseDue": "Erste Gabe fällig",
   "@adrenalinFirstDoseDue": {
@@ -464,9 +391,9 @@
   "@adrenalinStateOverdue": {
     "description": "Zustand des Adrenalin-Zeitfensters nach 5 Minuten"
   },
-  "adrenalinLastDoseAt": "Letzte Gabe: {time} Uhr, vor {since}",
-  "@adrenalinLastDoseAt": {
-    "description": "Uhrzeit und verstrichene Zeit seit der letzten Adrenalin-Gabe",
+  "medikamentLetzteGabe": "Letzte Gabe: {time} Uhr, vor {since}",
+  "@medikamentLetzteGabe": {
+    "description": "Uhrzeit und verstrichene Zeit seit der letzten Medikamenten-Gabe",
     "placeholders": {
       "time": {
         "type": "String"
@@ -512,17 +439,9 @@
   "@settingsVibrationDescription": {
     "description": "Erklärung der Vibrationseinstellung"
   },
-  "settingsSound": "Ton",
-  "@settingsSound": {
-    "description": "Einstellung für Tonsignale"
-  },
-  "settingsSoundDescription": "Ton bei fälligen Aktionen",
-  "@settingsSoundDescription": {
-    "description": "Erklärung der Toneinstellung"
-  },
-  "menuTitle": "Menü",
-  "@menuTitle": {
-    "description": "Überschrift im App-Menü"
+  "settingsVibrationSystemHapticsOff": "Das haptische Feedback ist in den Systemeinstellungen des Geräts ausgeschaltet. Solange es aus ist, vibriert die App nicht.",
+  "@settingsVibrationSystemHapticsOff": {
+    "description": "Hinweis, wenn die Vibration in der App an, das haptische Feedback des Geräts aber aus ist"
   },
   "menuOpenTooltip": "Menü öffnen",
   "@menuOpenTooltip": {
@@ -573,29 +492,20 @@
   "@amiodaronLabel": {
     "description": "Beschriftung des Amiodaron-Hinweises"
   },
-  "amiodaronHint": "Amiodaron erwägen – {dosis} mg",
-  "@amiodaronHint": {
-    "description": "Hinweis auf eine mögliche Amiodaron-Gabe",
+  "amiodaronStateConsider": "erwägen",
+  "@amiodaronStateConsider": {
+    "description": "Status des Amiodaron-Hinweises, wenn eine Gabe erwogen werden sollte"
+  },
+  "amiodaronStateNotRecommended": "nicht empfohlen",
+  "@amiodaronStateNotRecommended": {
+    "description": "Status des Amiodaron-Hinweises, wenn keine Gabe empfohlen ist"
+  },
+  "amiodaronDose": "{dosis} mg",
+  "@amiodaronDose": {
+    "description": "Vorgeschlagene Amiodaron-Dosis",
     "placeholders": {
       "dosis": {
         "type": "int"
-      }
-    }
-  },
-  "amiodaronGiveButton": "Gegeben",
-  "@amiodaronGiveButton": {
-    "description": "Schaltfläche zum Erfassen einer Amiodaron-Gabe"
-  },
-  "amiodaronDismissButton": "Nicht jetzt",
-  "@amiodaronDismissButton": {
-    "description": "Schaltfläche zum Ausblenden des Amiodaron-Hinweises"
-  },
-  "amiodaronLastDose": "Letzte Gabe {time}",
-  "@amiodaronLastDose": {
-    "description": "Zeitpunkt der letzten Amiodaron-Gabe",
-    "placeholders": {
-      "time": {
-        "type": "String"
       }
     }
   },
@@ -603,7 +513,7 @@
   "@roscDescription": {
     "description": "Erklärung des ROSC-Zustands auf dem laufenden Fall"
   },
-  "resumeResuscitationButton": "Reanimationswiederbeginn",
+  "resumeResuscitationButton": "Reanimation wieder aufnehmen",
   "@resumeResuscitationButton": {
     "description": "Schaltfläche zum Start eines neuen Reanimationsabschnitts nach ROSC"
   },
@@ -639,13 +549,30 @@
   "@summaryCaseEnded": {
     "description": "Überschrift der Zusammenfassung"
   },
-  "summaryCprDuration": "CPR-Dauer",
+  "summaryCprDuration": "CPR-Dauer (ohne ROSC)",
   "@summaryCprDuration": {
     "description": "Beschriftung der gesamten CPR-Dauer"
+  },
+  "summaryReanimationsdauer": "Reanimationsdauer (gesamt)",
+  "@summaryReanimationsdauer": {
+    "description": "Beschriftung der Gesamtdauer von Startzeit bis Ende"
+  },
+  "wallTimeValue": "{time} Uhr",
+  "@wallTimeValue": {
+    "description": "Uhrzeit mit Einheit, z. B. 12:03:45 Uhr",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
   },
   "summaryStartzeit": "Startzeit",
   "@summaryStartzeit": {
     "description": "Beschriftung der Startzeit in der Zusammenfassung"
+  },
+  "summaryUebernahme": "Übernahme",
+  "@summaryUebernahme": {
+    "description": "Beschriftung der Übernahme in der Zusammenfassung"
   },
   "summaryEndzeit": "Endzeit",
   "@summaryEndzeit": {
@@ -659,17 +586,18 @@
   "@summaryShocks": {
     "description": "Beschriftung der Schockanzahl in der Zusammenfassung"
   },
+  "summaryVorbehandlungDavon": "(davon {anzahl} vor Übernahme)",
+  "@summaryVorbehandlungDavon": {
+    "description": "Anteil der Vorbehandlung hinter einer Gesamtanzahl in der Zusammenfassung",
+    "placeholders": {
+      "anzahl": {
+        "type": "int"
+      }
+    }
+  },
   "summaryEvents": "Ereignisse",
   "@summaryEvents": {
     "description": "Überschrift der Ereignisliste in der Zusammenfassung"
-  },
-  "summaryNotes": "Notizen",
-  "@summaryNotes": {
-    "description": "Überschrift der Notizen in der Zusammenfassung"
-  },
-  "summaryNoNotes": "Keine Notizen",
-  "@summaryNoNotes": {
-    "description": "Hinweis, dass keine Notizen erfasst wurden"
   },
   "eventCaseStart": "Reanimationsfall gestartet",
   "@eventCaseStart": {
@@ -727,6 +655,10 @@
   "@eventRhythmusanalyseSkipped": {
     "description": "Ereignis: Rhythmusanalyse übersprungen"
   },
+  "eventAnalysephaseStarted": "Analyse begonnen",
+  "@eventAnalysephaseStarted": {
+    "description": "Ereignis: Beginn der Analysephase"
+  },
   "eventDruckphaseRestarted": "Druckphase neu gestartet",
   "@eventDruckphaseRestarted": {
     "description": "Ereignis: Manueller Neustart der Druckphase"
@@ -764,7 +696,7 @@
   "@activeCaseTitle": {
     "description": "Überschrift der Karte für einen gespeicherten aktiven Fall"
   },
-  "activeCaseDescription": "Der Reanimationsfall läuft bereits. Setze ihn fort, um weiterzutimen.",
+  "activeCaseDescription": "Der Reanimationsfall läuft noch und kann fortgesetzt werden.",
   "@activeCaseDescription": {
     "description": "Erklärung der Fortsetzen-Karte"
   },
@@ -788,6 +720,18 @@
   "@discardCaseConfirm": {
     "description": "Bestätigung des Verwerfens"
   },
+  "leaveCaseTitle": "Reanimationsfall verlassen?",
+  "@leaveCaseTitle": {
+    "description": "Titel der Rückfrage beim Verlassen eines laufenden Falls"
+  },
+  "leaveCaseDescription": "Der Fall läuft weiter und kann auf der Startseite fortgesetzt werden.",
+  "@leaveCaseDescription": {
+    "description": "Erklärung der Rückfrage beim Verlassen eines laufenden Falls"
+  },
+  "leaveCaseButton": "Verlassen",
+  "@leaveCaseButton": {
+    "description": "Schaltfläche zum Verlassen des laufenden Falls ohne Beenden"
+  },
   "einsatzlogTitle": "Einsatzlog",
   "@einsatzlogTitle": {
     "description": "Titel des Einsatzlogs"
@@ -796,9 +740,17 @@
   "@einsatzlogEmpty": {
     "description": "Leerer Zustand des Einsatzlogs"
   },
+  "einsatzlogToday": "Heute",
+  "@einsatzlogToday": {
+    "description": "Gruppenüberschrift der Einsatzlog-Einträge von heute"
+  },
+  "einsatzlogYesterday": "Gestern",
+  "@einsatzlogYesterday": {
+    "description": "Gruppenüberschrift der Einsatzlog-Einträge von gestern"
+  },
   "einsatzlogEntryTitle": "Reanimationsfall {time}",
   "@einsatzlogEntryTitle": {
-    "description": "Titel eines Einsatzlog-Eintrags",
+    "description": "Titel eines Einsatzlog-Eintrags; {time} ist Datum und Uhrzeit des Fallbeginns (dd.MM.yyyy, HH:mm)",
     "placeholders": {
       "time": {
         "type": "String"
@@ -840,10 +792,6 @@
   "messwerteEmpty": "Noch keine Messwerte",
   "@messwerteEmpty": {
     "description": "Leerer Zustand der Messwerte"
-  },
-  "messwerteOpenButton": "Messwerte öffnen",
-  "@messwerteOpenButton": {
-    "description": "Schaltfläche zum Öffnen der Messwerte aus der Zusammenfassung"
   },
   "messwertErfassenTitle": "Messwert erfassen",
   "@messwertErfassenTitle": {
@@ -990,6 +938,139 @@
       },
       "build": {
         "type": "String"
+      }
+    }
+  },
+  "vorbehandlungTitle": "Vorbehandlung",
+  "@vorbehandlungTitle": {
+    "description": "Titel des Vorbehandlung-Formulars"
+  },
+  "vorbehandlungErfassen": "Vorbehandlung erfassen",
+  "@vorbehandlungErfassen": {
+    "description": "Schaltfläche in der Aktionsleiste und Eintrag in Weitere Aktionen zum Öffnen des Vorbehandlung-Formulars"
+  },
+  "vorbehandlungLaufzeitLabel": "Lief bei Übernahme seit",
+  "@vorbehandlungLaufzeitLabel": {
+    "description": "Beschriftung der Auswahl, wie lange die Reanimation bei der Übernahme bereits lief"
+  },
+  "vorbehandlungLaufzeitChip": "{minutes} min",
+  "@vorbehandlungLaufzeitChip": {
+    "description": "Voreinstellung für die Laufzeit bei Übernahme in Minuten",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "vorbehandlungLaufzeitMinuten": "Eigener Wert (Minuten)",
+  "@vorbehandlungLaufzeitMinuten": {
+    "description": "Beschriftung des Felds für eine eigene Laufzeit bei Übernahme in Minuten"
+  },
+  "vorbehandlungLaufzeitInvalid": "Bitte eine ganze Zahl an Minuten eingeben.",
+  "@vorbehandlungLaufzeitInvalid": {
+    "description": "Fehlermeldung bei einer ungültigen eigenen Laufzeit"
+  },
+  "vorbehandlungStartzeitWaehlen": "Startzeit wählen",
+  "@vorbehandlungStartzeitWaehlen": {
+    "description": "Schaltfläche zum Wählen der Startzeit als Uhrzeit"
+  },
+  "vorbehandlungStartzeitValue": "Startzeit: {time} Uhr",
+  "@vorbehandlungStartzeitValue": {
+    "description": "Anzeige der Startzeit, die sich aus Übernahme und Laufzeit ergibt",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "vorbehandlungUebernahmeLabel": "Übernahme",
+  "@vorbehandlungUebernahmeLabel": {
+    "description": "Beschriftung der Uhrzeit der Übernahme"
+  },
+  "vorbehandlungUebernahmeZuSpaet": "Die Übernahme darf nicht nach {time} Uhr liegen (erstes Ereignis oder jetzt).",
+  "@vorbehandlungUebernahmeZuSpaet": {
+    "description": "Fehlermeldung, wenn die Übernahme nach dem ersten erfassten Ereignis oder in der Zukunft liegt",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "vorbehandlungStartzeitNachUebernahme": "Die Startzeit darf nicht nach der Übernahme liegen.",
+  "@vorbehandlungStartzeitNachUebernahme": {
+    "description": "Fehlermeldung, wenn die gewählte Startzeit nach der Übernahme liegt"
+  },
+  "vorbehandlungSavedSnackbar": "Vorbehandlung gespeichert",
+  "@vorbehandlungSavedSnackbar": {
+    "description": "Bestätigung nach dem Speichern der Vorbehandlung"
+  },
+  "eventUebernahme": "Übernahme",
+  "@eventUebernahme": {
+    "description": "Ereignis: Übernahme der Zeitnahme durch das Team"
+  },
+  "eventVorbehandlung": "Vorbehandlung",
+  "@eventVorbehandlung": {
+    "description": "Protokolleintrag der Vorbehandlung vor der Übernahme"
+  },
+  "vorbehandlungCountsLabel": "Vor der Übernahme gegeben",
+  "@vorbehandlungCountsLabel": {
+    "description": "Überschrift der Anzahlen im Vorbehandlung-Formular"
+  },
+  "vorbehandlungSchocksLabel": "Schocks",
+  "@vorbehandlungSchocksLabel": {
+    "description": "Beschriftung der Schock-Anzahl im Vorbehandlung-Formular"
+  },
+  "vorbehandlungAdrenalinLabel": "Adrenalin",
+  "@vorbehandlungAdrenalinLabel": {
+    "description": "Beschriftung der Adrenalin-Anzahl im Vorbehandlung-Formular"
+  },
+  "vorbehandlungAmiodaronLabel": "Amiodaron",
+  "@vorbehandlungAmiodaronLabel": {
+    "description": "Beschriftung der Amiodaron-Anzahl im Vorbehandlung-Formular"
+  },
+  "vorbehandlungAnzahlMehr": "{label} erhöhen",
+  "@vorbehandlungAnzahlMehr": {
+    "description": "Tooltip der Plus-Schaltfläche einer Anzahl",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "vorbehandlungAnzahlWeniger": "{label} verringern",
+  "@vorbehandlungAnzahlWeniger": {
+    "description": "Tooltip der Minus-Schaltfläche einer Anzahl",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "vorbehandlungNotizLabel": "Notiz (optional)",
+  "@vorbehandlungNotizLabel": {
+    "description": "Beschriftung des Notizfelds im Vorbehandlung-Formular"
+  },
+  "protokollVorbehandlungDetail": "Schocks: {schocks} · Adrenalin: {adrenalin} · Amiodaron: {amiodaron}",
+  "@protokollVorbehandlungDetail": {
+    "description": "Anzahlen der Vorbehandlung im Protokoll",
+    "placeholders": {
+      "schocks": {
+        "type": "int"
+      },
+      "adrenalin": {
+        "type": "int"
+      },
+      "amiodaron": {
+        "type": "int"
+      }
+    }
+  },
+  "adrenalinVorbehandlung": "{count} × vor Übernahme",
+  "@adrenalinVorbehandlung": {
+    "description": "Adrenalin-Karte: Anzahl der Gaben vor der Übernahme, solange noch keine Gabe in der App erfasst wurde",
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   }

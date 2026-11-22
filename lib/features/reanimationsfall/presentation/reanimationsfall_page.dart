@@ -2,28 +2,33 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:hp_cpr/core/vibrator.dart';
 import 'package:hp_cpr/core/wake_lock.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
-import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_chip.dart';
 import 'package:hp_cpr/features/messwerte/presentation/messwerte_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
-import 'package:hp_cpr/features/reanimationsfall/domain/amiodaron.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
+import 'package:hp_cpr/features/reanimationsfall/domain/signal_detector.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/actions_sheet.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/adrenalin_panel.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/amiodaron_panel.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/end_reanimationsfall_dialog.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/leave_reanimationsfall_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/phase_action_bar.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/phase_strip.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_corrections_mixin.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/reanimationsfall_summary_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_dialog.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/schock_count_chip.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
-import 'package:hp_cpr/ui/demo_modus_chip.dart';
+import 'package:hp_cpr/ui/dialogs/destructive_confirm_dialog.dart';
 import 'package:hp_cpr/ui/dialogs/notiz_erfassen_dialog.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
+import 'package:hp_cpr/ui/theme/due_colors.dart';
+import 'package:hp_cpr/ui/theme/panel_tone.dart';
 import 'package:hp_cpr/ui/layout/page_scaffold.dart';
 import 'package:hp_cpr/ui/navigation/app_drawer.dart';
 import 'package:hp_cpr/ui/navigation/app_routes.dart';
@@ -34,12 +39,14 @@ class ReanimationsfallPage extends StatefulWidget {
     super.key,
     required this.reanimationsfall,
     required this.wakeLock,
+    required this.vibrator,
     required this.routes,
     required this.session,
   });
 
   final Reanimationsfall reanimationsfall;
   final WakeLock wakeLock;
+  final Vibrator vibrator;
   final AppRoutes routes;
   final ReanimationsfallSession session;
 
@@ -48,17 +55,29 @@ class ReanimationsfallPage extends StatefulWidget {
 }
 
 class _ReanimationsfallPageState extends State<ReanimationsfallPage>
-    with WidgetsBindingObserver {
+    with
+        WidgetsBindingObserver,
+        ProtokollCorrectionsMixin<ReanimationsfallPage> {
   Timer? _ticker;
-  AmiodaronHinweis? _ausgeblendeterAmiodaronHinweis;
+  final _signalDetector = SignalDetector();
+
+  @override
+  Reanimationsfall get protokollFall => widget.reanimationsfall;
+
+  @override
+  ReanimationsfallSession get protokollSession => widget.session;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     unawaited(widget.wakeLock.enable());
+    // Seeds the detector so a case that is already due does not signal.
+    _signalDetector.update(widget.reanimationsfall.snapshot());
     _ticker = Timer.periodic(const Duration(milliseconds: 200), (_) {
-      if (mounted) setState(() {});
+      if (!mounted) return;
+      setState(() {});
+      _signalDueActions();
     });
   }
 
@@ -75,11 +94,19 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     if (state == AppLifecycleState.resumed && mounted) {
       widget.reanimationsfall.reconcileWithWallClock();
       setState(() {});
+      _signalDueActions();
     }
+  }
+
+  /// Vibrates once for every action that became due since the last check.
+  void _signalDueActions() {
+    final anlaesse = _signalDetector.update(widget.reanimationsfall.snapshot());
+    if (anlaesse.isNotEmpty) unawaited(widget.vibrator.vibrate());
   }
 
   void _mutate(VoidCallback action) {
     setState(action);
+    _signalDueActions();
     unawaited(widget.session.persist(widget.reanimationsfall));
   }
 
@@ -88,10 +115,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
   }
 
   void _recordSchock() {
-    _mutate(() {
-      widget.reanimationsfall.recordSchock();
-      _ausgeblendeterAmiodaronHinweis = null;
-    });
+    _mutate(widget.reanimationsfall.recordSchock);
   }
 
   void _recordAdrenalin() {
@@ -99,18 +123,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
   }
 
   void _recordAmiodaron() {
-    _mutate(() {
-      widget.reanimationsfall.recordAmiodaron();
-      _ausgeblendeterAmiodaronHinweis = null;
-    });
-  }
-
-  void _dismissAmiodaronHinweis() {
-    setState(() {
-      _ausgeblendeterAmiodaronHinweis = widget.reanimationsfall
-          .snapshot()
-          .amiodaronHinweis;
-    });
+    _mutate(widget.reanimationsfall.recordAmiodaron);
   }
 
   void _resumeResuscitation() {
@@ -124,6 +137,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
       onOpenMesswerte: _openMesswerte,
       onOpenProtokoll: _openProtokoll,
       onRecordNotiz: _recordNotiz,
+      onRecordVorbehandlung: openVorbehandlung,
       onEndCase: _endReanimationsfall,
       onRecordSchock: snapshot.istLaufend ? _recordSchock : null,
       onRestartDruckphase: snapshot.kannDruckphaseNeuStarten
@@ -154,7 +168,6 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => MesswertePage(
-          snapshot: widget.reanimationsfall.snapshot(),
           routes: widget.routes,
           reanimationsfall: widget.reanimationsfall,
           session: widget.session,
@@ -204,30 +217,30 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     }
   }
 
+  /// Asks before a running (or ROSC) case is left via back.
+  Future<void> _requestLeave() async {
+    final choice = await showLeaveReanimationsfallDialog(context);
+    if (choice == null || !mounted) return;
+
+    switch (choice) {
+      case LeaveReanimationsfallChoice.stay:
+        return;
+      case LeaveReanimationsfallChoice.endCase:
+        await _endReanimationsfall();
+      case LeaveReanimationsfallChoice.leave:
+        Navigator.of(context).pop();
+    }
+  }
+
   Future<void> _discardReanimationsfall() async {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.discardCaseTitle),
-        content: Text(l10n.discardCaseDescription),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.cancelButton),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: TextButton.styleFrom(
-              foregroundColor: theme.colorScheme.error,
-            ),
-            child: Text(l10n.discardCaseConfirm),
-          ),
-        ],
-      ),
+    final confirmed = await showDestructiveConfirmDialog(
+      context,
+      title: l10n.discardCaseTitle,
+      description: l10n.discardCaseDescription,
+      confirmLabel: l10n.discardCaseConfirm,
     );
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
 
     setState(widget.reanimationsfall.discardReanimationsfall);
     await widget.session.persist(widget.reanimationsfall);
@@ -249,9 +262,6 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
         abschluss.ergebnis,
         schockAbgegeben: abschluss.schockAbgegeben,
       );
-      if (abschluss.schockAbgegeben) {
-        _ausgeblendeterAmiodaronHinweis = null;
-      }
     });
   }
 
@@ -274,28 +284,30 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     );
   }
 
-  void _skipRhythmusanalyse() {
-    _mutate(widget.reanimationsfall.skipRhythmusanalyse);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          AppLocalizations.of(context).rhythmusanalyseSkippedSnackbar,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final snapshot = widget.reanimationsfall.snapshot();
 
+    final isRunning = snapshot.istLaufend || snapshot.istRosc;
+
+    return PopScope(
+      canPop: !isRunning,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        unawaited(_requestLeave());
+      },
+      child: _buildScaffold(snapshot),
+    );
+  }
+
+  Widget _buildScaffold(ReanimationsfallSnapshot snapshot) {
     return PageScaffold(
       maxWidth: PageLayout.maxContentWidth,
-      drawer: AppDrawer(routes: widget.routes),
+      endDrawer: AppDrawer(routes: widget.routes),
       header: (context, layout) => _ReanimationsfallHeader(
         snapshot: snapshot,
         layout: layout,
-        onEndCase: _endReanimationsfall,
+        onBack: _requestLeave,
       ),
       content: (context, layout) {
         final reanimationsdauerPanel = _ReanimationsdauerPanel(
@@ -309,8 +321,52 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
           onRecordRhythmusanalyse: _recordRhythmusanalyse,
           onRecordRosc: _recordRosc,
           onRecordUnklar: _recordUnklar,
-          onSkipRhythmusanalyse: _skipRhythmusanalyse,
         );
+
+        final adrenalinPanel = AdrenalinPanel(
+          snapshot: snapshot,
+          layout: layout,
+          onRecordAdrenalin: _recordAdrenalin,
+          isRecordingEnabled: snapshot.istLaufend,
+        );
+        final amiodaronPanel = AmiodaronPanel(
+          snapshot: snapshot,
+          layout: layout,
+          onRecordAmiodaron: _recordAmiodaron,
+          isRecordingEnabled: snapshot.istLaufend,
+        );
+
+        if (layout.placesMedicationBeside) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                flex: PageLayout.phaseColumnFlex,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    reanimationsdauerPanel,
+                    SizedBox(height: layout.contentGap),
+                    Expanded(child: timer),
+                  ],
+                ),
+              ),
+              SizedBox(width: layout.panelGap),
+              Expanded(
+                flex: PageLayout.medicationColumnFlex,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    adrenalinPanel,
+                    SizedBox(height: layout.panelGap),
+                    amiodaronPanel,
+                  ],
+                ),
+              ),
+            ],
+          );
+        }
 
         final main = layout.isLandscape
             ? Row(
@@ -332,55 +388,37 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
                 ],
               );
 
-        final istAmiodaronHinweisAusgeblendet =
-            snapshot.amiodaronHinweis == _ausgeblendeterAmiodaronHinweis;
-        final showAmiodaron =
-            snapshot.amiodaronGaben.isNotEmpty ||
-            (snapshot.amiodaronHinweis != AmiodaronHinweis.keine &&
-                !istAmiodaronHinweisAusgeblendet);
-
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(child: main),
             SizedBox(height: layout.contentGap),
-            AdrenalinPanel(
-              snapshot: snapshot,
-              layout: layout,
-              onRecordAdrenalin: _recordAdrenalin,
-              isRecordingEnabled: snapshot.istLaufend,
-            ),
-            if (showAmiodaron) ...[
-              SizedBox(height: layout.contentGap),
-              AmiodaronPanel(
-                snapshot: snapshot,
-                layout: layout,
-                isHintVisible: !istAmiodaronHinweisAusgeblendet,
-                onRecordAmiodaron: _recordAmiodaron,
-                onDismiss: _dismissAmiodaronHinweis,
-              ),
-            ],
+            adrenalinPanel,
+            SizedBox(height: layout.contentGap),
+            amiodaronPanel,
           ],
         );
       },
-      footer: (context, layout) => snapshot.istRosc
-          ? _RoscActionBar(
-              layout: layout,
-              onResumeResuscitation: _resumeResuscitation,
-              onEndCase: _endReanimationsfall,
-              onOpenActions: _openActions,
-              onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
-            )
-          : PhaseActionBar(
-              layout: layout,
-              onOpenActions: _openActions,
-              onSkipRhythmusanalyse:
-                  layout.isCompact &&
-                      snapshot.phase == Reanimationsphase.analysephase
-                  ? _skipRhythmusanalyse
-                  : null,
-              onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
-            ),
+      footer: (context, layout) {
+        final recordVorbehandlung = snapshot.zeigeVorbehandlungErfassen
+            ? () => unawaited(openVorbehandlung())
+            : null;
+        return snapshot.istRosc
+            ? _RoscActionBar(
+                layout: layout,
+                onResumeResuscitation: _resumeResuscitation,
+                onEndCase: _endReanimationsfall,
+                onOpenActions: _openActions,
+                onRecordVorbehandlung: recordVorbehandlung,
+                onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
+              )
+            : PhaseActionBar(
+                layout: layout,
+                onOpenActions: _openActions,
+                onRecordVorbehandlung: recordVorbehandlung,
+                onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
+              );
+      },
     );
   }
 }
@@ -389,63 +427,21 @@ class _ReanimationsfallHeader extends StatelessWidget {
   const _ReanimationsfallHeader({
     required this.snapshot,
     required this.layout,
-    required this.onEndCase,
+    required this.onBack,
   });
 
   final ReanimationsfallSnapshot snapshot;
   final PageLayout layout;
-  final VoidCallback onEndCase;
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-
-    final phaseLabel = switch (snapshot.zustand) {
-      ReanimationsfallZustand.laufend => switch (snapshot.phase) {
-        Reanimationsphase.druckphase => l10n.phaseDruckphase,
-        Reanimationsphase.analysephase => l10n.phaseAnalysephase,
-      },
-      ReanimationsfallZustand.rosc => l10n.rhythmusanalyseRosc,
-      ReanimationsfallZustand.beendet => l10n.summaryCaseEnded,
-      ReanimationsfallZustand.verworfen => l10n.verworfenLabel,
-    };
-
     return Row(
       children: [
-        const BackButton(),
-        const SizedBox(width: PageLayout.space8),
-        Expanded(
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                phaseLabel,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ),
-        ),
+        BackButton(onPressed: onBack),
+        const Spacer(),
         const SizedBox(width: PageLayout.space12),
-        LeitlinienprofilChip(
-          leitlinienprofil: snapshot.leitlinienprofil,
-          compact: layout.isCompact,
-        ),
-        const SizedBox(width: PageLayout.space8),
-        IconButton(
-          onPressed: onEndCase,
-          tooltip: l10n.endCaseButton,
-          icon: const Icon(Icons.stop_circle_outlined),
-          constraints: const BoxConstraints.tightFor(
-            width: PageLayout.touchTargetSize,
-            height: PageLayout.touchTargetSize,
-          ),
-          padding: EdgeInsets.zero,
-        ),
+        SchockCountChip(count: snapshot.schockAnzahl, layout: layout),
         const SizedBox(width: PageLayout.space8),
         const AppMenuButton(),
       ],
@@ -464,6 +460,40 @@ class _ReanimationsdauerPanel extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
+    // Beside the medication column, one line leaves the height to the phase.
+    if (layout.placesMedicationBeside) {
+      return FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Text(
+              l10n.elapsedTimeLabel,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(width: PageLayout.space8),
+            Text(
+              formatReanimationsdauer(snapshot.reanimationsdauer),
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+            const SizedBox(width: PageLayout.space12),
+            Text(
+              l10n.startzeitValue(formatWallTime(snapshot.startzeit)),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Center(
       child: FittedBox(
         fit: BoxFit.scaleDown,
@@ -479,6 +509,7 @@ class _ReanimationsdauerPanel extends StatelessWidget {
             Text(
               formatReanimationsdauer(snapshot.reanimationsdauer),
               style: theme.textTheme.displayMedium?.copyWith(
+                fontSize: layout.elapsedTimerFontSize,
                 fontWeight: FontWeight.w700,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
@@ -490,10 +521,6 @@ class _ReanimationsdauerPanel extends StatelessWidget {
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
-            if (snapshot.demoMode) ...[
-              const SizedBox(height: PageLayout.space4),
-              DemoModusChip(compact: layout.isCompact),
-            ],
           ],
         ),
       ),
@@ -509,7 +536,6 @@ class _PhaseTimerPanel extends StatelessWidget {
     required this.onRecordRhythmusanalyse,
     required this.onRecordRosc,
     required this.onRecordUnklar,
-    required this.onSkipRhythmusanalyse,
   });
 
   final ReanimationsfallSnapshot snapshot;
@@ -518,7 +544,6 @@ class _PhaseTimerPanel extends StatelessWidget {
   final ValueChanged<RhythmusanalyseKategorie> onRecordRhythmusanalyse;
   final VoidCallback onRecordRosc;
   final VoidCallback onRecordUnklar;
-  final VoidCallback onSkipRhythmusanalyse;
 
   @override
   Widget build(BuildContext context) {
@@ -538,7 +563,6 @@ class _PhaseTimerPanel extends StatelessWidget {
         onRecordRhythmusanalyse: onRecordRhythmusanalyse,
         onRecordRosc: onRecordRosc,
         onRecordUnklar: onRecordUnklar,
-        onSkipRhythmusanalyse: onSkipRhythmusanalyse,
       ),
     };
   }
@@ -556,7 +580,7 @@ class _RoscPanel extends StatelessWidget {
     final theme = Theme.of(context);
 
     return _PhasePanel(
-      isAlert: false,
+      tone: PanelTone.neutral,
       layout: layout,
       snapshot: snapshot,
       child: Column(
@@ -568,7 +592,7 @@ class _RoscPanel extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  Icons.monitor_heart_outlined,
+                  Icons.favorite,
                   size: PageLayout.iconLarge,
                   color: theme.colorScheme.primary,
                 ),
@@ -609,6 +633,7 @@ class _RoscActionBar extends StatelessWidget {
     required this.onResumeResuscitation,
     required this.onEndCase,
     required this.onOpenActions,
+    this.onRecordVorbehandlung,
     this.onAdvanceDemoTime,
   });
 
@@ -616,6 +641,7 @@ class _RoscActionBar extends StatelessWidget {
   final VoidCallback onResumeResuscitation;
   final VoidCallback onEndCase;
   final VoidCallback onOpenActions;
+  final VoidCallback? onRecordVorbehandlung;
   final VoidCallback? onAdvanceDemoTime;
 
   @override
@@ -635,6 +661,7 @@ class _RoscActionBar extends StatelessWidget {
       emphasis: PhaseActionEmphasis.outlined,
     );
     final advanceDemoTime = onAdvanceDemoTime;
+    final recordVorbehandlung = onRecordVorbehandlung;
 
     return PhaseActionRow(
       layout: layout,
@@ -643,47 +670,48 @@ class _RoscActionBar extends StatelessWidget {
         end,
         if (advanceDemoTime != null)
           DemoAdvanceButton(layout: layout, onPressed: advanceDemoTime),
+        if (recordVorbehandlung != null)
+          VorbehandlungButton(layout: layout, onPressed: recordVorbehandlung),
       ],
       actionsButton: ActionsButton(layout: layout, onPressed: onOpenActions),
     );
   }
 }
 
+/// How strongly a phase panel signals: neutral, due now, or overdue.
 class _PhasePanel extends StatelessWidget {
   const _PhasePanel({
-    required this.isAlert,
+    required this.tone,
     required this.snapshot,
     required this.layout,
     required this.child,
   });
 
-  final bool isAlert;
+  final PanelTone tone;
   final ReanimationsfallSnapshot snapshot;
   final PageLayout layout;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colors = tone.colors(context);
 
     return Container(
       padding: layout.phasePanelPadding,
       decoration: BoxDecoration(
-        color: isAlert
-            ? theme.colorScheme.errorContainer
-            : theme.colorScheme.surfaceContainerHighest,
+        color: colors.background,
         borderRadius: BorderRadius.circular(layout.phasePanelRadius),
         border: Border.all(
-          color: isAlert
-              ? theme.colorScheme.error
-              : theme.colorScheme.outlineVariant,
-          width: isAlert ? layout.alertBorderWidth : layout.panelBorderWidth,
+          color: colors.border,
+          width: tone.isEmphasized
+              ? layout.alertBorderWidth
+              : layout.panelBorderWidth,
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          PhaseStrip(snapshot: snapshot, layout: layout),
+          PhaseStrip(snapshot: snapshot),
           SizedBox(height: layout.phaseStripGap),
           Expanded(child: child),
         ],
@@ -709,7 +737,7 @@ class _DruckphaseTimerPanel extends StatelessWidget {
     final theme = Theme.of(context);
     final isDue = snapshot.isRhythmusanalyseDue;
     final foreground = isDue
-        ? theme.colorScheme.onErrorContainer
+        ? DueColors.of(context).onDueContainer
         : theme.colorScheme.onSurface;
     final label = isDue ? l10n.analysisDue : l10n.nextAnalysisLabel;
     final timerText = isDue
@@ -727,7 +755,7 @@ class _DruckphaseTimerPanel extends StatelessWidget {
 
     if (layout.isCompact) {
       return _PhasePanel(
-        isAlert: isDue,
+        tone: isDue ? PanelTone.due : PanelTone.neutral,
         layout: layout,
         snapshot: snapshot,
         child: Row(
@@ -765,7 +793,7 @@ class _DruckphaseTimerPanel extends StatelessWidget {
                       child: Text(
                         timerText,
                         style: TextStyle(
-                          fontSize: PageLayout.druckphaseTimerFontSize,
+                          fontSize: layout.druckphaseTimerFontSize,
                           height: PageLayout.timerLineHeight,
                           fontWeight: FontWeight.w800,
                           fontFeatures: const [FontFeature.tabularFigures()],
@@ -785,7 +813,7 @@ class _DruckphaseTimerPanel extends StatelessWidget {
     }
 
     return _PhasePanel(
-      isAlert: isDue,
+      tone: isDue ? PanelTone.due : PanelTone.neutral,
       layout: layout,
       snapshot: snapshot,
       child: Column(
@@ -817,7 +845,7 @@ class _DruckphaseTimerPanel extends StatelessWidget {
               child: Text(
                 timerText,
                 style: TextStyle(
-                  fontSize: PageLayout.druckphaseTimerFontSize,
+                  fontSize: layout.druckphaseTimerFontSize,
                   height: PageLayout.timerLineHeight,
                   fontWeight: FontWeight.w800,
                   fontFeatures: const [FontFeature.tabularFigures()],
@@ -841,7 +869,6 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
     required this.onRecordRhythmusanalyse,
     required this.onRecordRosc,
     required this.onRecordUnklar,
-    required this.onSkipRhythmusanalyse,
   });
 
   final ReanimationsfallSnapshot snapshot;
@@ -849,7 +876,6 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
   final ValueChanged<RhythmusanalyseKategorie> onRecordRhythmusanalyse;
   final VoidCallback onRecordRosc;
   final VoidCallback onRecordUnklar;
-  final VoidCallback onSkipRhythmusanalyse;
 
   @override
   Widget build(BuildContext context) {
@@ -876,7 +902,7 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
       ),
       _RhythmusanalyseChoiceButton(
         layout: layout,
-        icon: Icons.monitor_heart_outlined,
+        icon: Icons.favorite,
         label: l10n.rhythmusanalyseRosc,
         onPressed: onRecordRosc,
         emphasis: PhaseActionEmphasis.outlined,
@@ -891,7 +917,7 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
     ];
 
     return _PhasePanel(
-      isAlert: isOverdue,
+      tone: isOverdue ? PanelTone.overdue : PanelTone.neutral,
       layout: layout,
       snapshot: snapshot,
       child: layout.isCompact
@@ -940,13 +966,8 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
           const SizedBox(height: PageLayout.space8),
           _overdueHint(l10n, theme, foreground),
         ],
-        const SizedBox(height: PageLayout.space8),
+        const SizedBox(height: PageLayout.space6),
         _choiceGrid(choices),
-        const SizedBox(height: PageLayout.space4),
-        TextButton(
-          onPressed: onSkipRhythmusanalyse,
-          child: Text(l10n.skipAnalysisButton),
-        ),
       ],
     );
   }
@@ -1035,7 +1056,7 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
     return Text(
       formatElapsed(snapshot.pauseDuration),
       style: TextStyle(
-        fontSize: PageLayout.analysephaseTimerFontSize,
+        fontSize: layout.analysephaseTimerFontSize,
         height: PageLayout.timerLineHeight,
         fontWeight: isOverdue ? FontWeight.w700 : FontWeight.w500,
         fontFeatures: const [FontFeature.tabularFigures()],
@@ -1094,7 +1115,7 @@ class _RhythmusanalyseChoiceButton extends StatelessWidget {
         : theme.textTheme.titleSmall;
 
     return switch (emphasis) {
-      PhaseActionEmphasis.filled => FilledButton.tonal(
+      PhaseActionEmphasis.filled => FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
           minimumSize: minimumSize,

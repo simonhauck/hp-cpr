@@ -11,20 +11,13 @@ class AppSettings extends ChangeNotifier {
   AppSettings({
     Leitlinienprofil leitlinienprofil = Leitlinienprofil.erc2025,
     bool vibrationEnabled = true,
-    bool soundEnabled = false,
     bool demoMode = false,
-  }) : this._(leitlinienprofil, vibrationEnabled, soundEnabled, demoMode);
+  }) : this._(leitlinienprofil, vibrationEnabled, demoMode);
 
-  AppSettings._(
-    this._leitlinienprofil,
-    this._vibrationEnabled,
-    this._soundEnabled,
-    this._demoMode,
-  );
+  AppSettings._(this._leitlinienprofil, this._vibrationEnabled, this._demoMode);
 
   Leitlinienprofil _leitlinienprofil;
   bool _vibrationEnabled;
-  bool _soundEnabled;
   bool _demoMode;
 
   Leitlinienprofil get leitlinienprofil => _leitlinienprofil;
@@ -40,14 +33,6 @@ class AppSettings extends ChangeNotifier {
   set vibrationEnabled(bool value) {
     if (_vibrationEnabled == value) return;
     _vibrationEnabled = value;
-    notifyListeners();
-  }
-
-  bool get soundEnabled => _soundEnabled;
-
-  set soundEnabled(bool value) {
-    if (_soundEnabled == value) return;
-    _soundEnabled = value;
     notifyListeners();
   }
 
