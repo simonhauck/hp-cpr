@@ -589,7 +589,6 @@ void main() {
     expect(find.text('Leitlinienprofil'), findsOneWidget);
     expect(find.text('AHA 2025'), findsOneWidget);
     expect(find.text('Vibration'), findsOneWidget);
-    expect(find.text('Ton'), findsOneWidget);
 
     await tester.tap(find.text('AHA 2025'));
     await tester.pump();
@@ -602,14 +601,6 @@ void main() {
     await tester.tap(find.text('Vibration'));
     await tester.pump();
     expect(settings.vibrationEnabled, isFalse);
-
-    final soundSwitch = tester.widget<SwitchListTile>(
-      find.widgetWithText(SwitchListTile, 'Ton'),
-    );
-    expect(soundSwitch.value, isFalse);
-    await tester.tap(find.text('Ton'));
-    await tester.pump();
-    expect(settings.soundEnabled, isTrue);
 
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();

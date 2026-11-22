@@ -17,7 +17,6 @@ void main() {
       clock: clock,
       leitlinienprofil: Leitlinienprofil.aha2025,
       vibrationEnabled: false,
-      soundEnabled: true,
     );
 
     clock.advance(const Duration(seconds: 10));
@@ -59,9 +58,12 @@ void main() {
       'schockRueckgaengigkeiten',
       'schockKorrekturen',
       'rhythmusanalyseNotizKorrekturen',
+      'soundEnabled',
     ]) {
       expect(encoded.containsKey(removed), isFalse, reason: removed);
     }
+    // Cases stored before the sound option was removed still carry the key.
+    encoded['soundEnabled'] = true;
     expect(
       ((encoded['uebersprungeneRhythmusanalysen'] as List<dynamic>).first
               as Map<String, dynamic>)
@@ -86,7 +88,6 @@ void main() {
     expect(decoded.utcOffsetMinutes, state.utcOffsetMinutes);
     expect(decoded.leitlinienprofil, Leitlinienprofil.aha2025);
     expect(decoded.vibrationEnabled, isFalse);
-    expect(decoded.soundEnabled, isTrue);
     expect(decoded.zustand, ReanimationsfallZustand.beendet);
     expect(decoded.ende!.grund, Beendigungsgrund.uebergabe);
     expect(decoded.schocks, hasLength(4));

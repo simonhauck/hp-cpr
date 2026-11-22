@@ -136,13 +136,6 @@ class _SettingsPageState extends State<SettingsPage>
                   ),
                 ],
               ),
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.settingsSound),
-              subtitle: Text(l10n.settingsSoundDescription),
-              value: settings.soundEnabled,
-              onChanged: (value) => settings.soundEnabled = value,
-            ),
           ],
         ),
       ),

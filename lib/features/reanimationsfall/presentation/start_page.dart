@@ -81,7 +81,6 @@ class _StartPageState extends State<StartPage> {
       clock: widget.clock,
       leitlinienprofil: settings.leitlinienprofil,
       vibrationEnabled: settings.vibrationEnabled,
-      soundEnabled: settings.soundEnabled,
       demoMode: settings.demoMode,
     );
 

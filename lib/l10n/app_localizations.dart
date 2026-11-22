@@ -694,18 +694,6 @@ abstract class AppLocalizations {
   /// **'Das haptische Feedback ist in den Systemeinstellungen des Geräts ausgeschaltet. Solange es aus ist, vibriert die App nicht.'**
   String get settingsVibrationSystemHapticsOff;
 
-  /// Einstellung für Tonsignale
-  ///
-  /// In de, this message translates to:
-  /// **'Ton'**
-  String get settingsSound;
-
-  /// Erklärung der Toneinstellung
-  ///
-  /// In de, this message translates to:
-  /// **'Ton bei fälligen Aktionen'**
-  String get settingsSoundDescription;
-
   /// Tooltip der Menü-Schaltfläche
   ///
   /// In de, this message translates to:
