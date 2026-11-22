@@ -1,3 +1,4 @@
+import 'package:hp_cpr/features/reanimationsfall/domain/ereignisse.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/messwert.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 
@@ -5,6 +6,7 @@ import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 enum ProtokollEintragTyp {
   startzeit,
   uebernahme,
+  vorbehandlung,
   schock,
   adrenalin,
   amiodaron,
@@ -31,7 +33,11 @@ enum ProtokollEintragTyp {
 
   /// Whether the entry belongs to the case lifecycle rather than clinical data.
   bool get istLebenszyklus => switch (this) {
-    startzeit || uebernahme || reanimationsfallEnde || verworfen => true,
+    startzeit ||
+    uebernahme ||
+    vorbehandlung ||
+    reanimationsfallEnde ||
+    verworfen => true,
     _ => false,
   };
 
@@ -156,7 +162,9 @@ final class RoscKorrigiert extends ProtokollKorrektur {
 }
 
 /// Replaces the Vorbehandlung: the Übernahme and how long the resuscitation
-/// had been running by then, which together define the Startzeit.
+/// had been running by then, which together define the Startzeit, plus the
+/// counts of Schocks, Adrenalin and Amiodaron given before the Übernahme and
+/// an optional Notiz.
 ///
 /// Each save of the Vorbehandlung form appends one of these and the latest one
 /// wins. Both times are clock-stable: they are relative to the Übernahme
@@ -166,6 +174,10 @@ final class VorbehandlungKorrigiert extends ProtokollKorrektur {
   const VorbehandlungKorrigiert({
     required this.uebernahme,
     required this.laufzeitBeiUebernahme,
+    this.schocks = 0,
+    this.adrenalin = 0,
+    this.amiodaron = 0,
+    this.notiz,
   }) : super(ziel: zielRef);
 
   /// The single target shared by every Vorbehandlung correction.
@@ -182,8 +194,28 @@ final class VorbehandlungKorrigiert extends ProtokollKorrektur {
   /// the distance from the Startzeit to the Übernahme.
   final Duration laufzeitBeiUebernahme;
 
+  /// The number of Schocks given before the Übernahme.
+  final int schocks;
+
+  /// The number of Adrenalin Gaben given before the Übernahme.
+  final int adrenalin;
+
+  /// The number of Amiodaron Gaben given before the Übernahme.
+  final int amiodaron;
+
+  /// An optional remark about anything else done before the Übernahme.
+  final String? notiz;
+
   /// The Startzeit relative to the Übernahme recorded at the start tap.
   Duration get startzeit => uebernahme - laufzeitBeiUebernahme;
+
+  /// The counts and the Notiz of this correction.
+  Vorbehandlung get vorbehandlung => Vorbehandlung(
+    schocks: schocks,
+    adrenalin: adrenalin,
+    amiodaron: amiodaron,
+    notiz: notiz,
+  );
 }
 
 /// The latest Vorbehandlung correction in [korrekturen], if any.

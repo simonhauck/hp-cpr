@@ -163,6 +163,10 @@ class Reanimationsfall {
   VorbehandlungKorrigiert? get _vorbehandlung =>
       letzteVorbehandlung(_korrekturen);
 
+  /// The counts and the Notiz of the latest Vorbehandlung correction.
+  Vorbehandlung get _vorbehandlungDaten =>
+      _vorbehandlung?.vorbehandlung ?? Vorbehandlung.keine;
+
   /// The Übernahme relative to the recorded Übernahme.
   Duration get _uebernahmeOffset => _vorbehandlung?.uebernahme ?? Duration.zero;
 
@@ -280,7 +284,8 @@ class Reanimationsfall {
   void recordAmiodaron() {
     _requireLaufend();
     final gaben = _effektiveAmiodaronGaben(_korrekturZustaende());
-    if (gaben.length >= 2) {
+    final bisherige = _vorbehandlungDaten.amiodaron + gaben.length;
+    if (bisherige >= 2) {
       throw StateError('at most two Amiodaron doses are supported');
     }
 
@@ -288,7 +293,7 @@ class Reanimationsfall {
       AmiodaronGabe(
         id: _newEreignisId(),
         zeitpunkt: _monotonicNow() - _monotonicStartOffset,
-        dosisMg: gaben.isEmpty
+        dosisMg: bisherige == 0
             ? AmiodaronHinweis.ersteGabe.dosisMg!
             : AmiodaronHinweis.zweiteGabe.dosisMg!,
       ),
@@ -381,7 +386,8 @@ class Reanimationsfall {
   void _updateAdrenalinGabeFaelligkeit() {
     final states = _korrekturZustaende();
     final gaben = _effektiveAdrenalinGaben(states);
-    if (gaben.isNotEmpty) {
+    // A Vorbehandlung Adrenalin has no time, so it only suppresses the hint.
+    if (gaben.isNotEmpty || _vorbehandlungDaten.adrenalin > 0) {
       _ersteAdrenalinGabeFaellig = false;
       return;
     }
@@ -390,7 +396,7 @@ class Reanimationsfall {
     _ersteAdrenalinGabeFaellig = switch (ergebnis?.kategorie) {
       RhythmusanalyseKategorie.nichtSchockbar => true,
       RhythmusanalyseKategorie.schockbar =>
-        _effektiveSchocks(states).length >=
+        _vorbehandlungDaten.schocks + _effektiveSchocks(states).length >=
             leitlinienprofil.adrenalinErsteGabeNachSchock,
       RhythmusanalyseKategorie.rosc ||
       RhythmusanalyseKategorie.unklar ||
@@ -590,9 +596,18 @@ class Reanimationsfall {
   /// future. Recorded events keep their wall-clock time and the running
   /// Druckphase, the Adrenalin Zeitfenster and the phase stay untouched; only
   /// the Reanimationsdauer changes. It works during and after the case.
+  ///
+  /// [schocks], [adrenalin] and [amiodaron] are the counts given before the
+  /// Übernahme and [notiz] an optional remark. They feed the Schock count, the
+  /// Amiodaron hint and limit and the first Adrenalin dose hint like events
+  /// recorded in the app, but have no time.
   void correctVorbehandlung({
     required DateTime uebernahme,
     required Duration laufzeitBeiUebernahme,
+    int schocks = 0,
+    int adrenalin = 0,
+    int amiodaron = 0,
+    String? notiz,
   }) {
     final offset = uebernahme.toUtc().difference(erfassteUebernahmeUtc);
     applyProtokollKorrektur(
@@ -601,6 +616,10 @@ class Reanimationsfall {
         laufzeitBeiUebernahme: Duration(
           milliseconds: laufzeitBeiUebernahme.inMilliseconds,
         ),
+        schocks: schocks,
+        adrenalin: adrenalin,
+        amiodaron: amiodaron,
+        notiz: notiz,
       ),
     );
   }
@@ -620,7 +639,27 @@ class Reanimationsfall {
         'must not be after the first recorded event or in the future',
       );
     }
-    _appendKorrektur(korrektur);
+    for (final (name, wert) in [
+      ('schocks', korrektur.schocks),
+      ('adrenalin', korrektur.adrenalin),
+      ('amiodaron', korrektur.amiodaron),
+    ]) {
+      if (wert < 0) {
+        throw ArgumentError.value(wert, name, 'must not be negative');
+      }
+    }
+    final notiz = korrektur.notiz?.trim();
+    _appendKorrektur(
+      VorbehandlungKorrigiert(
+        uebernahme: korrektur.uebernahme,
+        laufzeitBeiUebernahme: korrektur.laufzeitBeiUebernahme,
+        schocks: korrektur.schocks,
+        adrenalin: korrektur.adrenalin,
+        amiodaron: korrektur.amiodaron,
+        notiz: notiz == null || notiz.isEmpty ? null : notiz,
+      ),
+    );
+    _updateAdrenalinGabeFaelligkeit();
   }
 
   /// The latest allowed Übernahme relative to the recorded Übernahme: the
@@ -881,6 +920,7 @@ class Reanimationsfall {
       ),
       ProtokollEintragTyp.startzeit ||
       ProtokollEintragTyp.uebernahme ||
+      ProtokollEintragTyp.vorbehandlung ||
       ProtokollEintragTyp.reanimationsfallEnde ||
       ProtokollEintragTyp.verworfen => null,
     };
@@ -1473,8 +1513,12 @@ class Reanimationsfall {
       amiodaronGaben: List.unmodifiable(amiodaronGaben),
       letzteAmiodaronGabe: letzteAmiodaronGabe,
       amiodaronHinweis: isLaufend
-          ? _amiodaronHinweis(schocks, amiodaronGaben)
+          ? _amiodaronHinweis(
+              _vorbehandlungDaten.schocks + schocks.length,
+              _vorbehandlungDaten.amiodaron + amiodaronGaben.length,
+            )
           : AmiodaronHinweis.keine,
+      vorbehandlung: _vorbehandlungDaten,
       protokoll: _buildProtokoll(states),
     );
   }
@@ -1592,7 +1636,7 @@ class Reanimationsfall {
         istKorrigiert: versatz != Duration.zero,
         istBearbeitbar: true,
         istWiederherstellbar: false,
-        reihenfolge: -2,
+        reihenfolge: -3,
       ),
     );
     final laufzeitBeiUebernahme = _uebernahmeOffset + versatz;
@@ -1607,6 +1651,29 @@ class Reanimationsfall {
           originalDaten: Uebernahme(zeitpunkt: versatz),
           istEntfernt: false,
           istKorrigiert: _uebernahmeOffset != Duration.zero,
+          istBearbeitbar: true,
+          istWiederherstellbar: false,
+          reihenfolge: -2,
+        ),
+      );
+    }
+    // The Vorbehandlung is its own entry at the Übernahme, shown only when
+    // something was recorded. It is saved with the form, so it carries no
+    // Korrektur marker of its own.
+    if (!_vorbehandlungDaten.istLeer) {
+      eintraege.add(
+        ProtokollEintrag(
+          ref: const ProtokollEintragRef(
+            typ: ProtokollEintragTyp.vorbehandlung,
+            id: 'vorbehandlung',
+          ),
+          typ: ProtokollEintragTyp.vorbehandlung,
+          zeitpunkt: laufzeitBeiUebernahme,
+          originalZeitpunkt: versatz,
+          daten: _vorbehandlungDaten,
+          originalDaten: _vorbehandlungDaten,
+          istEntfernt: false,
+          istKorrigiert: false,
           istBearbeitbar: true,
           istWiederherstellbar: false,
           reihenfolge: -1,
@@ -1763,7 +1830,7 @@ class Reanimationsfall {
     final alle = List<ProtokollEintrag>.of(eintraege)..sort(_compareEintraege);
     final sichtbar = alle.where((e) => !e.istEntfernt).toList();
     final shockNummern = <ProtokollEintragRef, int>{};
-    var schockNummer = 0;
+    var schockNummer = _vorbehandlungDaten.schocks;
     for (final eintrag in sichtbar) {
       if (eintrag.typ == ProtokollEintragTyp.schock) {
         shockNummern[eintrag.ref] = ++schockNummer;
@@ -1809,14 +1876,12 @@ class Reanimationsfall {
   }
 
   /// The contextual Amiodaron hint for the current Schock count.
-  AmiodaronHinweis _amiodaronHinweis(
-    List<SchockEreignis> schocks,
-    List<AmiodaronGabe> gaben,
-  ) {
-    if (gaben.length >= 2) return AmiodaronHinweis.keine;
+  ///
+  /// Both counts include the Vorbehandlung.
+  AmiodaronHinweis _amiodaronHinweis(int schockAnzahl, int gabenAnzahl) {
+    if (gabenAnzahl >= 2) return AmiodaronHinweis.keine;
 
-    final schockAnzahl = schocks.length;
-    if (gaben.isEmpty) {
+    if (gabenAnzahl == 0) {
       return schockAnzahl >= leitlinienprofil.amiodaronErsteGabeNachSchock
           ? AmiodaronHinweis.ersteGabe
           : AmiodaronHinweis.keine;
@@ -1980,6 +2045,7 @@ class ReanimationsfallSnapshot {
     required this.amiodaronGaben,
     required this.letzteAmiodaronGabe,
     required this.amiodaronHinweis,
+    required this.vorbehandlung,
     required this.protokoll,
   });
 
@@ -2083,6 +2149,10 @@ class ReanimationsfallSnapshot {
   /// The contextual Amiodaron hint, or `keine` when no dose is suggested.
   final AmiodaronHinweis amiodaronHinweis;
 
+  /// The Schocks, Adrenalin and Amiodaron Gaben given before the Übernahme,
+  /// as counts, and the optional Notiz.
+  final Vorbehandlung vorbehandlung;
+
   /// The effective and audit views of the case's Protokoll.
   final Protokoll protokoll;
 
@@ -2108,8 +2178,24 @@ class ReanimationsfallSnapshot {
     return adrenalinGaben.last;
   }
 
-  /// The number of recorded Schocks.
-  int get schockAnzahl => schocks.length;
+  /// The total number of Schocks: the Vorbehandlung plus those recorded in
+  /// the app.
+  int get schockAnzahl => vorbehandlung.schocks + schocks.length;
+
+  /// The number of Schocks recorded in the app, without the Vorbehandlung.
+  int get schockAnzahlInApp => schocks.length;
+
+  /// The total number of Adrenalin Gaben, including the Vorbehandlung.
+  int get adrenalinAnzahl => vorbehandlung.adrenalin + adrenalinGaben.length;
+
+  /// The total number of Amiodaron Gaben, including the Vorbehandlung.
+  int get amiodaronAnzahl => vorbehandlung.amiodaron + amiodaronGaben.length;
+
+  /// Whether the Adrenalin card shows the Vorbehandlung count instead of a
+  /// Zeitfenster: Adrenalin was given before the Übernahme and none has been
+  /// recorded in the app yet.
+  bool get zeigeAdrenalinVorbehandlung =>
+      vorbehandlung.adrenalin > 0 && adrenalinGaben.isEmpty;
 
   /// The most recently skipped Rhythmusanalyse, if any.
   RhythmusanalyseUeberspringung? get letzteRhythmusanalyseUeberspringung {

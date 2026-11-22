@@ -366,12 +366,23 @@ Map<String, dynamic> _korrekturToJson(ProtokollKorrektur korrektur) {
       'typ': 'rosc',
       'zeitpunkt': _millis(zeitpunkt),
     },
-    VorbehandlungKorrigiert(:final uebernahme, :final laufzeitBeiUebernahme) =>
+    VorbehandlungKorrigiert(
+      :final uebernahme,
+      :final laufzeitBeiUebernahme,
+      :final schocks,
+      :final adrenalin,
+      :final amiodaron,
+      :final notiz,
+    ) =>
       {
         ...base,
         'typ': 'vorbehandlung',
         'uebernahme': _millis(uebernahme),
         'laufzeitBeiUebernahme': _millis(laufzeitBeiUebernahme),
+        'schocks': schocks,
+        'adrenalin': adrenalin,
+        'amiodaron': amiodaron,
+        'notiz': notiz,
       },
   };
 }
@@ -430,6 +441,10 @@ ProtokollKorrektur _korrekturFromJson(Map<String, dynamic> json) {
     'vorbehandlung' => VorbehandlungKorrigiert(
       uebernahme: _duration(json['uebernahme']),
       laufzeitBeiUebernahme: _duration(json['laufzeitBeiUebernahme']),
+      schocks: json['schocks'] as int? ?? 0,
+      adrenalin: json['adrenalin'] as int? ?? 0,
+      amiodaron: json['amiodaron'] as int? ?? 0,
+      notiz: json['notiz'] as String?,
     ),
     final String typ => throw FormatException('unknown correction type: $typ'),
   };

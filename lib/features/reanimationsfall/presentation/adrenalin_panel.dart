@@ -58,8 +58,15 @@ class AdrenalinPanel extends StatelessWidget {
 
     Widget details(bool allowWrap) {
       if (lastDose == null || sinceLastDose == null) {
+        // A Vorbehandlung Adrenalin has no time: show its count instead of a
+        // Zeitfenster until the first Gabe is recorded in the app.
+        final vorbehandlung = snapshot.vorbehandlung.adrenalin;
         return Text(
-          isFirstDoseDue ? l10n.adrenalinFirstDoseDue : l10n.adrenalinNotDue,
+          vorbehandlung > 0
+              ? l10n.adrenalinVorbehandlung(vorbehandlung)
+              : isFirstDoseDue
+              ? l10n.adrenalinFirstDoseDue
+              : l10n.adrenalinNotDue,
           style: theme.textTheme.bodySmall?.copyWith(
             color: stateColor,
             fontWeight: isFirstDoseDue ? FontWeight.w700 : null,

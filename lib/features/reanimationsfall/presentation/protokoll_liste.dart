@@ -207,7 +207,7 @@ class _ProtokollZeile extends StatelessWidget {
       color: textColor,
       decoration: zeile.istEntfernt ? TextDecoration.lineThrough : null,
     );
-    final detail = protokollDatenDetail(zeile.daten);
+    final detail = protokollDatenDetail(l10n, zeile.daten);
     final status = zeile.istOriginal
         ? l10n.protokollCorrected
         : zeile.istEntfernt

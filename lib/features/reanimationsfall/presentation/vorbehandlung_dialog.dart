@@ -8,12 +8,11 @@ import 'package:hp_cpr/ui/layout/page_layout.dart';
 
 /// The values of one save of the Vorbehandlung form.
 ///
-/// This slice holds the time fields only; the Vorbehandlung counts and the
-/// Notiz are added here and in [VorbehandlungKorrigiert] alongside them.
 class VorbehandlungEingabe {
   const VorbehandlungEingabe({
     required this.uebernahme,
     required this.laufzeitBeiUebernahme,
+    this.vorbehandlung = Vorbehandlung.keine,
   });
 
   /// The wall-clock time the team took over.
@@ -21,6 +20,9 @@ class VorbehandlungEingabe {
 
   /// How long the resuscitation had been running at the [uebernahme].
   final Duration laufzeitBeiUebernahme;
+
+  /// The counts given before the Übernahme and the optional Notiz.
+  final Vorbehandlung vorbehandlung;
 }
 
 /// Opens the Vorbehandlung form prefilled from [snapshot].
@@ -33,6 +35,7 @@ Future<VorbehandlungEingabe?> showVorbehandlungDialog(
     builder: (_) => VorbehandlungDialog(
       uebernahme: snapshot.uebernahme,
       laufzeitBeiUebernahme: snapshot.laufzeitBeiUebernahme,
+      vorbehandlung: snapshot.vorbehandlung,
       spaetesteUebernahme: snapshot.spaetesteUebernahme,
     ),
   );
@@ -51,16 +54,23 @@ class VorbehandlungDialog extends StatefulWidget {
     required this.uebernahme,
     required this.laufzeitBeiUebernahme,
     required this.spaetesteUebernahme,
+    this.vorbehandlung = Vorbehandlung.keine,
   });
 
   final DateTime uebernahme;
   final Duration laufzeitBeiUebernahme;
+
+  /// The counts and the Notiz the form starts with.
+  final Vorbehandlung vorbehandlung;
 
   /// The first event recorded in the app, now, or the end of the case.
   final DateTime spaetesteUebernahme;
 
   /// The "Lief bei Übernahme seit" presets in minutes.
   static const laufzeitPresets = [1, 2, 3, 5, 8, 10];
+
+  /// The most Amiodaron Gaben the two-dose limit allows.
+  static const amiodaronMaximum = 2;
 
   @override
   State<VorbehandlungDialog> createState() => _VorbehandlungDialogState();
@@ -73,10 +83,17 @@ class _VorbehandlungDialogState extends State<VorbehandlungDialog> {
     text: _isCustomMinutes(_laufzeit) ? '${_laufzeit.inMinutes}' : '',
   );
   bool _minutenUngueltig = false;
+  late int _schocks = widget.vorbehandlung.schocks;
+  late int _adrenalin = widget.vorbehandlung.adrenalin;
+  late int _amiodaron = widget.vorbehandlung.amiodaron;
+  late final TextEditingController _notizController = TextEditingController(
+    text: widget.vorbehandlung.notiz ?? '',
+  );
 
   @override
   void dispose() {
     _minutenController.dispose();
+    _notizController.dispose();
     super.dispose();
   }
 
@@ -159,10 +176,17 @@ class _VorbehandlungDialogState extends State<VorbehandlungDialog> {
   }
 
   void _save() {
+    final notiz = _notizController.text.trim();
     Navigator.of(context).pop(
       VorbehandlungEingabe(
         uebernahme: _uebernahme,
         laufzeitBeiUebernahme: _laufzeit,
+        vorbehandlung: Vorbehandlung(
+          schocks: _schocks,
+          adrenalin: _adrenalin,
+          amiodaron: _amiodaron,
+          notiz: notiz.isEmpty ? null : notiz,
+        ),
       ),
     );
   }
@@ -240,6 +264,38 @@ class _VorbehandlungDialogState extends State<VorbehandlungDialog> {
             icon: const Icon(Icons.schedule),
             label: Text(l10n.wallTimeValue(formatWallTime(_uebernahme))),
           ),
+          const SizedBox(height: PageLayout.space16),
+          Text(l10n.vorbehandlungCountsLabel, style: labelStyle),
+          _AnzahlZeile(
+            keyPrefix: 'vorbehandlung-schocks',
+            label: l10n.vorbehandlungSchocksLabel,
+            wert: _schocks,
+            onChanged: (wert) => setState(() => _schocks = wert),
+          ),
+          _AnzahlZeile(
+            keyPrefix: 'vorbehandlung-adrenalin',
+            label: l10n.vorbehandlungAdrenalinLabel,
+            wert: _adrenalin,
+            onChanged: (wert) => setState(() => _adrenalin = wert),
+          ),
+          _AnzahlZeile(
+            keyPrefix: 'vorbehandlung-amiodaron',
+            label: l10n.vorbehandlungAmiodaronLabel,
+            wert: _amiodaron,
+            maximum: VorbehandlungDialog.amiodaronMaximum,
+            onChanged: (wert) => setState(() => _amiodaron = wert),
+          ),
+          const SizedBox(height: PageLayout.space12),
+          TextField(
+            key: const ValueKey('vorbehandlung-notiz'),
+            controller: _notizController,
+            minLines: 1,
+            maxLines: 3,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              labelText: l10n.vorbehandlungNotizLabel,
+            ),
+          ),
           if (fehler != null) ...[
             const SizedBox(height: PageLayout.space12),
             Text(
@@ -259,6 +315,60 @@ class _VorbehandlungDialogState extends State<VorbehandlungDialog> {
         FilledButton(
           onPressed: canSave ? _save : null,
           child: Text(l10n.saveButton),
+        ),
+      ],
+    );
+  }
+}
+
+/// One count with a minus and a plus button.
+class _AnzahlZeile extends StatelessWidget {
+  const _AnzahlZeile({
+    required this.keyPrefix,
+    required this.label,
+    required this.wert,
+    required this.onChanged,
+    this.maximum,
+  });
+
+  final String keyPrefix;
+  final String label;
+  final int wert;
+  final int? maximum;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+
+    return Row(
+      children: [
+        Expanded(child: Text(label, style: theme.textTheme.bodyLarge)),
+        IconButton(
+          key: ValueKey('$keyPrefix-weniger'),
+          tooltip: l10n.vorbehandlungAnzahlWeniger(label),
+          icon: const Icon(Icons.remove),
+          onPressed: wert > 0 ? () => onChanged(wert - 1) : null,
+        ),
+        SizedBox(
+          width: PageLayout.touchTargetSize,
+          child: Text(
+            '$wert',
+            key: ValueKey('$keyPrefix-wert'),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        IconButton(
+          key: ValueKey('$keyPrefix-mehr'),
+          tooltip: l10n.vorbehandlungAnzahlMehr(label),
+          icon: const Icon(Icons.add),
+          onPressed: maximum == null || wert < maximum!
+              ? () => onChanged(wert + 1)
+              : null,
         ),
       ],
     );

@@ -874,6 +874,140 @@ void main() {
       expect(state.zustand, ReanimationsfallZustand.beendet);
       expect(state.startzeit, DateTime(2026, 10, 25, 7, 50));
     });
+
+    Future<void> tapCount(
+      WidgetTester tester,
+      String key, [
+      int times = 1,
+    ]) async {
+      final button = find.byKey(ValueKey(key));
+      await tester.ensureVisible(button);
+      await tester.pumpAndSettle();
+      for (var i = 0; i < times; i++) {
+        await tester.tap(button);
+        await tester.pump();
+      }
+    }
+
+    Future<void> saveForm(WidgetTester tester) async {
+      await tester.tap(find.text('Speichern'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    testWidgets('the form edits the counts and the Notiz, and the Schock chip '
+        'and the Adrenalin card use them', (tester) async {
+      await pumpApp(tester);
+      await startNow(tester);
+      await tester.tap(vorbehandlungPrompt());
+      await tester.pumpAndSettle();
+
+      expect(
+        tester
+            .widget<Text>(
+              find.byKey(const ValueKey('vorbehandlung-schocks-wert')),
+            )
+            .data,
+        '0',
+      );
+      await tapCount(tester, 'vorbehandlung-schocks-mehr', 3);
+      await tapCount(tester, 'vorbehandlung-adrenalin-mehr', 2);
+      await tapCount(tester, 'vorbehandlung-amiodaron-mehr', 3);
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('vorbehandlung-notiz')),
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('vorbehandlung-notiz')),
+        'Larynxtubus',
+      );
+      await tester.pump();
+      expect(
+        tester
+            .widget<Text>(
+              find.byKey(const ValueKey('vorbehandlung-schocks-wert')),
+            )
+            .data,
+        '3',
+      );
+      // The two-dose limit caps the Amiodaron count.
+      expect(
+        tester
+            .widget<Text>(
+              find.byKey(const ValueKey('vorbehandlung-amiodaron-wert')),
+            )
+            .data,
+        '2',
+      );
+      await tapCount(tester, 'vorbehandlung-schocks-weniger');
+      await tapCount(tester, 'vorbehandlung-schocks-mehr');
+      await saveForm(tester);
+
+      expect(find.text('Schocks: 3'), findsOneWidget);
+      expect(find.text('2 × vor Übernahme'), findsOneWidget);
+      expect(find.text('Noch nicht fällig'), findsNothing);
+      expect(find.text('Erste Gabe fällig'), findsNothing);
+      expect(adrenalinGabe, findsOneWidget);
+
+      // Let the confirmation snackbar disappear from the Aktionen button.
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      await recordSchock(tester);
+      expect(find.text('Schocks: 4'), findsOneWidget);
+
+      await tester.tap(adrenalinGabe);
+      await tester.pump();
+      expect(find.text('2 × vor Übernahme'), findsNothing);
+      expect(find.textContaining('Letzte Gabe'), findsOneWidget);
+
+      final state = (await store.load()).single;
+      final korrektur = state.korrekturen
+          .whereType<VorbehandlungKorrigiert>()
+          .last;
+      expect(korrektur.schocks, 3);
+      expect(korrektur.adrenalin, 2);
+      expect(korrektur.amiodaron, 2);
+      expect(korrektur.notiz, 'Larynxtubus');
+    });
+
+    testWidgets('lists the Vorbehandlung as its own Protokoll entry that '
+        'opens the form prefilled', (tester) async {
+      await pumpApp(tester);
+      await startNow(tester);
+      await tester.tap(vorbehandlungPrompt());
+      await tester.pumpAndSettle();
+      await tapCount(tester, 'vorbehandlung-schocks-mehr', 2);
+      await tapCount(tester, 'vorbehandlung-amiodaron-mehr');
+      await tester.ensureVisible(
+        find.byKey(const ValueKey('vorbehandlung-notiz')),
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('vorbehandlung-notiz')),
+        'Larynxtubus',
+      );
+      await saveForm(tester);
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+
+      await openActions(tester);
+      await tester.tap(find.text('Protokoll'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Schocks: 2 · Adrenalin: 0 · Amiodaron: 1\nLarynxtubus'),
+        findsOneWidget,
+      );
+      await tester.tap(find.text('Vorbehandlung'));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<Text>(
+              find.byKey(const ValueKey('vorbehandlung-schocks-wert')),
+            )
+            .data,
+        '2',
+      );
+      expect(find.text('Larynxtubus'), findsOneWidget);
+    });
   });
 
   testWidgets('snapshots the Leitlinienprofil per Reanimationsfall', (

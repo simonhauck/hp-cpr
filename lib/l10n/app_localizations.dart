@@ -1365,6 +1365,70 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Übernahme'**
   String get eventUebernahme;
+
+  /// Protokolleintrag der Vorbehandlung vor der Übernahme
+  ///
+  /// In de, this message translates to:
+  /// **'Vorbehandlung'**
+  String get eventVorbehandlung;
+
+  /// Überschrift der Anzahlen im Vorbehandlung-Formular
+  ///
+  /// In de, this message translates to:
+  /// **'Vor der Übernahme gegeben'**
+  String get vorbehandlungCountsLabel;
+
+  /// Beschriftung der Schock-Anzahl im Vorbehandlung-Formular
+  ///
+  /// In de, this message translates to:
+  /// **'Schocks'**
+  String get vorbehandlungSchocksLabel;
+
+  /// Beschriftung der Adrenalin-Anzahl im Vorbehandlung-Formular
+  ///
+  /// In de, this message translates to:
+  /// **'Adrenalin'**
+  String get vorbehandlungAdrenalinLabel;
+
+  /// Beschriftung der Amiodaron-Anzahl im Vorbehandlung-Formular
+  ///
+  /// In de, this message translates to:
+  /// **'Amiodaron'**
+  String get vorbehandlungAmiodaronLabel;
+
+  /// Tooltip der Plus-Schaltfläche einer Anzahl
+  ///
+  /// In de, this message translates to:
+  /// **'{label} erhöhen'**
+  String vorbehandlungAnzahlMehr(String label);
+
+  /// Tooltip der Minus-Schaltfläche einer Anzahl
+  ///
+  /// In de, this message translates to:
+  /// **'{label} verringern'**
+  String vorbehandlungAnzahlWeniger(String label);
+
+  /// Beschriftung des Notizfelds im Vorbehandlung-Formular
+  ///
+  /// In de, this message translates to:
+  /// **'Notiz (optional)'**
+  String get vorbehandlungNotizLabel;
+
+  /// Anzahlen der Vorbehandlung im Protokoll
+  ///
+  /// In de, this message translates to:
+  /// **'Schocks: {schocks} · Adrenalin: {adrenalin} · Amiodaron: {amiodaron}'**
+  String protokollVorbehandlungDetail(
+    int schocks,
+    int adrenalin,
+    int amiodaron,
+  );
+
+  /// Adrenalin-Karte: Anzahl der Gaben vor der Übernahme, solange noch keine Gabe in der App erfasst wurde
+  ///
+  /// In de, this message translates to:
+  /// **'{count} × vor Übernahme'**
+  String adrenalinVorbehandlung(int count);
 }
 
 class _AppLocalizationsDelegate

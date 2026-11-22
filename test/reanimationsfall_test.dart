@@ -1527,4 +1527,207 @@ void main() {
       expect(saved.snapshot().zeigeVorbehandlungHinweis, isFalse);
     });
   });
+
+  group('Vorbehandlung counts', () {
+    Reanimationsfall start(FakeClock clock) =>
+        Reanimationsfall.start(clock: clock);
+
+    void save(
+      Reanimationsfall fall, {
+      int schocks = 0,
+      int adrenalin = 0,
+      int amiodaron = 0,
+      String? notiz,
+    }) {
+      fall.correctVorbehandlung(
+        uebernahme: fall.erfassteUebernahme,
+        laufzeitBeiUebernahme: const Duration(minutes: 5),
+        schocks: schocks,
+        adrenalin: adrenalin,
+        amiodaron: amiodaron,
+        notiz: notiz,
+      );
+    }
+
+    test('default to zero and no Notiz', () {
+      final fall = start(FakeClock());
+
+      final snapshot = fall.snapshot();
+
+      expect(snapshot.vorbehandlung.istLeer, isTrue);
+      expect(snapshot.schockAnzahl, 0);
+      expect(snapshot.adrenalinAnzahl, 0);
+      expect(snapshot.amiodaronAnzahl, 0);
+    });
+
+    test('add the Vorbehandlung Schocks to the Schock count', () {
+      final fall = start(FakeClock());
+      save(fall, schocks: 3);
+
+      expect(fall.snapshot().schockAnzahl, 3);
+      expect(fall.snapshot().schockAnzahlInApp, 0);
+
+      fall.recordSchock();
+      final snapshot = fall.snapshot();
+
+      expect(snapshot.schockAnzahl, 4);
+      expect(snapshot.schockAnzahlInApp, 1);
+      expect(snapshot.vorbehandlung.schocks, 3);
+    });
+
+    test('number app Schocks after the Vorbehandlung Schocks', () {
+      final fall = start(FakeClock());
+      save(fall, schocks: 2);
+      fall.recordSchock();
+
+      final nummern = fall
+          .snapshot()
+          .protokoll
+          .eintraege
+          .where((e) => e.typ == ProtokollEintragTyp.schock)
+          .map((e) => e.nummer);
+
+      expect(nummern, [3]);
+    });
+
+    test('feed the Amiodaron hint', () {
+      final fall = start(FakeClock());
+      save(fall, schocks: 3);
+
+      expect(fall.snapshot().amiodaronHinweis, AmiodaronHinweis.ersteGabe);
+
+      fall.recordAmiodaron();
+      fall.recordSchock();
+      fall.recordSchock();
+      final snapshot = fall.snapshot();
+
+      expect(snapshot.amiodaronGaben.single.dosisMg, 300);
+      expect(snapshot.amiodaronHinweis, AmiodaronHinweis.zweiteGabe);
+    });
+
+    test('count toward the two-dose Amiodaron limit with one dose given', () {
+      final fall = start(FakeClock());
+      save(fall, schocks: 5, amiodaron: 1);
+
+      final snapshot = fall.snapshot();
+      expect(snapshot.amiodaronHinweis, AmiodaronHinweis.zweiteGabe);
+      expect(snapshot.amiodaronHinweis.dosisMg, 150);
+
+      fall.recordAmiodaron();
+      final after = fall.snapshot();
+
+      expect(after.amiodaronGaben.single.dosisMg, 150);
+      expect(after.amiodaronAnzahl, 2);
+      expect(after.amiodaronHinweis, AmiodaronHinweis.keine);
+      expect(fall.recordAmiodaron, throwsStateError);
+    });
+
+    test('block further Amiodaron with two doses given', () {
+      final fall = start(FakeClock());
+      save(fall, schocks: 6, amiodaron: 2);
+
+      expect(fall.snapshot().amiodaronHinweis, AmiodaronHinweis.keine);
+      expect(fall.recordAmiodaron, throwsStateError);
+      expect(fall.snapshot().amiodaronGaben, isEmpty);
+    });
+
+    test('feed the Adrenalin-after-n-th-Schock rule', () {
+      final fall = start(FakeClock());
+      final threshold = fall.leitlinienprofil.adrenalinErsteGabeNachSchock;
+      save(fall, schocks: threshold - 1);
+      fall.enterAnalysephase();
+      fall.completeRhythmusanalyse(RhythmusanalyseErgebnis.kammerflimmern);
+      expect(fall.snapshot().istErsteAdrenalinGabeFaellig, isFalse);
+
+      fall.recordSchock();
+
+      expect(fall.snapshot().istErsteAdrenalinGabeFaellig, isTrue);
+    });
+
+    test('suppress the first Adrenalin hint and start no Zeitfenster', () {
+      final fall = start(FakeClock());
+      fall.enterAnalysephase();
+      fall.completeRhythmusanalyse(RhythmusanalyseErgebnis.asystolie);
+      expect(fall.snapshot().istErsteAdrenalinGabeFaellig, isTrue);
+
+      save(fall, adrenalin: 2);
+      final snapshot = fall.snapshot();
+
+      expect(snapshot.istErsteAdrenalinGabeFaellig, isFalse);
+      expect(
+        snapshot.adrenalinZeitfensterZustand,
+        AdrenalinZeitfensterZustand.keine,
+      );
+      expect(snapshot.adrenalinSeitLetzterGabe, isNull);
+      expect(snapshot.zeigeAdrenalinVorbehandlung, isTrue);
+      expect(snapshot.adrenalinAnzahl, 2);
+    });
+
+    test('start the Adrenalin Zeitfenster with the first app Gabe', () {
+      final clock = FakeClock();
+      final fall = start(clock);
+      save(fall, adrenalin: 1);
+      clock.advance(const Duration(minutes: 1));
+
+      fall.recordAdrenalin();
+      clock.advance(const Duration(minutes: 4));
+      final snapshot = fall.snapshot();
+
+      expect(snapshot.zeigeAdrenalinVorbehandlung, isFalse);
+      expect(snapshot.adrenalinGaben, hasLength(1));
+      expect(snapshot.adrenalinAnzahl, 2);
+      expect(snapshot.adrenalinSeitLetzterGabe, const Duration(minutes: 4));
+      expect(
+        snapshot.adrenalinZeitfensterZustand,
+        AdrenalinZeitfensterZustand.faellig,
+      );
+    });
+
+    test('recompute the hints after a Korrektur of the counts', () {
+      final fall = start(FakeClock());
+      fall.enterAnalysephase();
+      fall.completeRhythmusanalyse(RhythmusanalyseErgebnis.asystolie);
+      save(fall, schocks: 3, adrenalin: 1, amiodaron: 1);
+      expect(fall.snapshot().istErsteAdrenalinGabeFaellig, isFalse);
+      expect(fall.snapshot().amiodaronHinweis, AmiodaronHinweis.keine);
+
+      save(fall, schocks: 5, notiz: 'Zugang i.o.');
+      final snapshot = fall.snapshot();
+
+      expect(snapshot.vorbehandlung.schocks, 5);
+      expect(snapshot.vorbehandlung.adrenalin, 0);
+      expect(snapshot.vorbehandlung.notiz, 'Zugang i.o.');
+      expect(snapshot.istErsteAdrenalinGabeFaellig, isTrue);
+      expect(snapshot.amiodaronHinweis, AmiodaronHinweis.ersteGabe);
+    });
+
+    test('reject negative counts', () {
+      final fall = start(FakeClock());
+
+      expect(() => save(fall, schocks: -1), throwsArgumentError);
+      expect(() => save(fall, adrenalin: -1), throwsArgumentError);
+      expect(() => save(fall, amiodaron: -1), throwsArgumentError);
+    });
+
+    test('show their own Protokoll entry only when something was recorded', () {
+      final fall = start(FakeClock());
+      bool hasEntry() => fall.snapshot().protokoll.eintraege.any(
+        (e) => e.typ == ProtokollEintragTyp.vorbehandlung,
+      );
+
+      save(fall);
+      expect(hasEntry(), isFalse);
+
+      save(fall, notiz: '  Larynxtubus  ');
+      expect(hasEntry(), isTrue);
+      final eintrag = fall.snapshot().protokoll.eintraege.singleWhere(
+        (e) => e.typ == ProtokollEintragTyp.vorbehandlung,
+      );
+      expect((eintrag.daten as Vorbehandlung).notiz, 'Larynxtubus');
+      expect(eintrag.istBearbeitbar, isTrue);
+
+      save(fall);
+      expect(hasEntry(), isFalse);
+    });
+  });
 }

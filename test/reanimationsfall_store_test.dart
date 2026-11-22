@@ -55,6 +55,32 @@ void main() {
     expect(restored.snapshot().reanimationsdauer, const Duration(minutes: 9));
   });
 
+  test('keeps the Vorbehandlung counts across a reload', () async {
+    final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+    final store = const SharedPreferencesReanimationsfallStore(key: 'test');
+    reanimationsfall.correctVorbehandlung(
+      uebernahme: DateTime(2026, 10, 25, 8),
+      laufzeitBeiUebernahme: const Duration(minutes: 2),
+      schocks: 3,
+      adrenalin: 2,
+      amiodaron: 1,
+      notiz: 'Zugang i.o.',
+    );
+
+    await store.save(reanimationsfall.exportState());
+    final restored = Reanimationsfall.restore(
+      clock: clock,
+      state: (await store.load()).single,
+    );
+
+    final vorbehandlung = restored.snapshot().vorbehandlung;
+    expect(vorbehandlung.schocks, 3);
+    expect(vorbehandlung.adrenalin, 2);
+    expect(vorbehandlung.amiodaron, 1);
+    expect(vorbehandlung.notiz, 'Zugang i.o.');
+  });
+
   test('ignores a damaged store', () async {
     SharedPreferences.setMockInitialValues({'test': 'not json'});
     final store = const SharedPreferencesReanimationsfallStore(key: 'test');
