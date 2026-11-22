@@ -1245,7 +1245,7 @@ void main() {
     await tester.tap(find.text('ROSC bestätigen'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Reanimationswiederbeginn'), findsOneWidget);
+    expect(find.text('Reanimation wieder aufnehmen'), findsOneWidget);
     expect(isButtonEnabled(tester, adrenalinGabe), isFalse);
     expect(isButtonEnabled(tester, amiodaronGabe), isFalse);
   });

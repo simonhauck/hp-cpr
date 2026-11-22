@@ -52,41 +52,60 @@ class MedikamentCard extends StatelessWidget {
     );
 
     Widget titleRow({Widget? trailing}) {
-      return Row(
-        children: [
-          Icon(
-            icon,
-            size: PageLayout.iconSmall,
-            color: theme.colorScheme.primary,
-          ),
-          const SizedBox(width: PageLayout.space6),
-          Text(
-            label,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
+      Widget row({Widget? trailing}) {
+        return Row(
+          children: [
+            Icon(
+              icon,
+              size: PageLayout.iconSmall,
+              color: theme.colorScheme.primary,
             ),
-          ),
-          const SizedBox(width: PageLayout.space8),
-          Expanded(
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  stateLabel,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: stateColor,
-                    fontWeight: FontWeight.w700,
+            const SizedBox(width: PageLayout.space6),
+            Text(
+              label,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(width: PageLayout.space8),
+            Expanded(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    stateLabel,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: stateColor,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          if (trailing != null) ...[
-            const SizedBox(width: PageLayout.space8),
-            trailing,
+            if (trailing != null) ...[
+              const SizedBox(width: PageLayout.space8),
+              trailing,
+            ],
           ],
-        ],
+        );
+      }
+
+      if (trailing == null) return row();
+
+      // Caps the button so a long label scales down instead of overflowing
+      // the row on narrow phones or with large text.
+      return LayoutBuilder(
+        builder: (context, constraints) => row(
+          trailing: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth:
+                  constraints.maxWidth *
+                  PageLayout.medicationActionMaxWidthFactor,
+            ),
+            child: trailing,
+          ),
+        ),
       );
     }
 
