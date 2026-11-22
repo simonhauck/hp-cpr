@@ -5,6 +5,7 @@ import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
+import 'package:hp_cpr/ui/theme/due_colors.dart';
 
 /// The Adrenalin Zeitfenster and the action to record a dose.
 class AdrenalinPanel extends StatelessWidget {
@@ -27,11 +28,12 @@ class AdrenalinPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final dueColors = DueColors.of(context);
     final state = snapshot.adrenalinZeitfensterZustand;
     final stateColor = switch (state) {
       AdrenalinZeitfensterZustand.keine ||
       AdrenalinZeitfensterZustand.wartet => theme.colorScheme.onSurfaceVariant,
-      AdrenalinZeitfensterZustand.faellig => theme.colorScheme.primary,
+      AdrenalinZeitfensterZustand.faellig => dueColors.due,
       AdrenalinZeitfensterZustand.ueberfaellig => theme.colorScheme.error,
     };
     final stateLabel = switch (state) {
@@ -105,7 +107,7 @@ class AdrenalinPanel extends StatelessWidget {
               : l10n.adrenalinNotDue,
           style: theme.textTheme.bodySmall?.copyWith(
             color: snapshot.istErsteAdrenalinGabeFaellig
-                ? theme.colorScheme.primary
+                ? dueColors.due
                 : theme.colorScheme.onSurfaceVariant,
             fontWeight: snapshot.istErsteAdrenalinGabeFaellig
                 ? FontWeight.w700

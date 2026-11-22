@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
+import 'package:hp_cpr/ui/theme/due_colors.dart';
 
 /// The current phase and the next action.
 class PhaseStrip extends StatelessWidget {
@@ -14,7 +15,8 @@ class PhaseStrip extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final isDue = snapshot.isRhythmusanalyseDue;
-    final isAlert = isDue || snapshot.isPauseOverdue;
+    final isOverdue = snapshot.isPauseOverdue;
+    final isAlert = isDue || isOverdue;
     final label = switch (snapshot.zustand) {
       ReanimationsfallZustand.laufend => switch (snapshot.phase) {
         Reanimationsphase.druckphase =>
@@ -25,8 +27,10 @@ class PhaseStrip extends StatelessWidget {
       ReanimationsfallZustand.beendet => l10n.summaryCaseEnded,
       ReanimationsfallZustand.verworfen => l10n.verworfenLabel,
     };
-    final color = isAlert
+    final color = isOverdue
         ? theme.colorScheme.onErrorContainer
+        : isDue
+        ? DueColors.of(context).onDueContainer
         : theme.colorScheme.onSurfaceVariant;
 
     return Text(

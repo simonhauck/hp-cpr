@@ -10,6 +10,7 @@ import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_store.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
+import 'package:hp_cpr/ui/theme/due_colors.dart';
 
 import 'support/fake_clock.dart';
 import 'support/fake_wake_lock.dart';
@@ -271,7 +272,34 @@ void main() {
     expect(find.text('02:05'), findsOneWidget);
   });
 
-  testWidgets('keeps the manual Analyse starten action available before it is '
+  testWidgets('uses the due color for due states and error only for overdue', (
+    tester,
+  ) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    Color? colorOf(String text) =>
+        tester.widget<Text>(find.text(text)).style?.color;
+
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(colorOf('Analyse fällig'), DueColors.light.onDueContainer);
+
+    await tester.tap(find.text('Gabe'));
+    await tester.pump();
+    clock.advance(const Duration(minutes: 3));
+    await tester.pump(const Duration(milliseconds: 250));
+    expect(colorOf('fällig'), DueColors.light.due);
+
+    clock.advance(const Duration(minutes: 2, seconds: 1));
+    await tester.pump(const Duration(milliseconds: 250));
+    final scheme = Theme.of(tester.element(find.text('überfällig')))
+        .colorScheme;
+    expect(colorOf('überfällig'), scheme.error);
+    expect(scheme.primary, isNot(scheme.error));
+  });
+
+  testWidgets('keeps the manual Analyse starten action available before it is'
       'due', (tester) async {
     await pumpApp(tester);
     await startNow(tester);

@@ -24,6 +24,7 @@ import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/dialogs/destructive_confirm_dialog.dart';
 import 'package:hp_cpr/ui/dialogs/notiz_erfassen_dialog.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
+import 'package:hp_cpr/ui/theme/due_colors.dart';
 import 'package:hp_cpr/ui/layout/page_scaffold.dart';
 import 'package:hp_cpr/ui/navigation/app_drawer.dart';
 import 'package:hp_cpr/ui/navigation/app_routes.dart';
@@ -485,7 +486,7 @@ class _RoscPanel extends StatelessWidget {
     final theme = Theme.of(context);
 
     return _PhasePanel(
-      isAlert: false,
+      tone: _PanelTone.neutral,
       layout: layout,
       snapshot: snapshot,
       child: Column(
@@ -578,15 +579,18 @@ class _RoscActionBar extends StatelessWidget {
   }
 }
 
+/// How strongly a phase panel signals: neutral, due now, or overdue.
+enum _PanelTone { neutral, due, overdue }
+
 class _PhasePanel extends StatelessWidget {
   const _PhasePanel({
-    required this.isAlert,
+    required this.tone,
     required this.snapshot,
     required this.layout,
     required this.child,
   });
 
-  final bool isAlert;
+  final _PanelTone tone;
   final ReanimationsfallSnapshot snapshot;
   final PageLayout layout;
   final Widget child;
@@ -594,19 +598,29 @@ class _PhasePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final dueColors = DueColors.of(context);
+    final (background, border) = switch (tone) {
+      _PanelTone.neutral => (
+        theme.colorScheme.surfaceContainerHighest,
+        theme.colorScheme.outlineVariant,
+      ),
+      _PanelTone.due => (dueColors.dueContainer, dueColors.due),
+      _PanelTone.overdue => (
+        theme.colorScheme.errorContainer,
+        theme.colorScheme.error,
+      ),
+    };
 
     return Container(
       padding: layout.phasePanelPadding,
       decoration: BoxDecoration(
-        color: isAlert
-            ? theme.colorScheme.errorContainer
-            : theme.colorScheme.surfaceContainerHighest,
+        color: background,
         borderRadius: BorderRadius.circular(layout.phasePanelRadius),
         border: Border.all(
-          color: isAlert
-              ? theme.colorScheme.error
-              : theme.colorScheme.outlineVariant,
-          width: isAlert ? layout.alertBorderWidth : layout.panelBorderWidth,
+          color: border,
+          width: tone == _PanelTone.neutral
+              ? layout.panelBorderWidth
+              : layout.alertBorderWidth,
         ),
       ),
       child: Column(
@@ -638,7 +652,7 @@ class _DruckphaseTimerPanel extends StatelessWidget {
     final theme = Theme.of(context);
     final isDue = snapshot.isRhythmusanalyseDue;
     final foreground = isDue
-        ? theme.colorScheme.onErrorContainer
+        ? DueColors.of(context).onDueContainer
         : theme.colorScheme.onSurface;
     final label = isDue ? l10n.analysisDue : l10n.nextAnalysisLabel;
     final timerText = isDue
@@ -656,7 +670,7 @@ class _DruckphaseTimerPanel extends StatelessWidget {
 
     if (layout.isCompact) {
       return _PhasePanel(
-        isAlert: isDue,
+        tone: isDue ? _PanelTone.due : _PanelTone.neutral,
         layout: layout,
         snapshot: snapshot,
         child: Row(
@@ -714,7 +728,7 @@ class _DruckphaseTimerPanel extends StatelessWidget {
     }
 
     return _PhasePanel(
-      isAlert: isDue,
+      tone: isDue ? _PanelTone.due : _PanelTone.neutral,
       layout: layout,
       snapshot: snapshot,
       child: Column(
@@ -818,7 +832,7 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
     ];
 
     return _PhasePanel(
-      isAlert: isOverdue,
+      tone: isOverdue ? _PanelTone.overdue : _PanelTone.neutral,
       layout: layout,
       snapshot: snapshot,
       child: layout.isCompact
@@ -1016,7 +1030,7 @@ class _RhythmusanalyseChoiceButton extends StatelessWidget {
         : theme.textTheme.titleSmall;
 
     return switch (emphasis) {
-      PhaseActionEmphasis.filled => FilledButton.tonal(
+      PhaseActionEmphasis.filled => FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
           minimumSize: minimumSize,

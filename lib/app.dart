@@ -8,6 +8,7 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/start_page.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/navigation/app_routes.dart';
+import 'package:hp_cpr/ui/theme/due_colors.dart';
 
 class HpCprApp extends StatefulWidget {
   const HpCprApp({
@@ -60,16 +61,19 @@ class _HpCprAppState extends State<HpCprApp> {
 
   @override
   Widget build(BuildContext context) {
-    const seedColor = Color(0xFFB3261E);
     const inputDecorationTheme = InputDecorationTheme(
       border: OutlineInputBorder(),
     );
+    // A calm blue keeps primary emphasis apart from the error red, which is
+    // reserved for overdue states. "Due" uses [DueColors] (amber).
+    const seedColor = Color(0xFF1565C0);
 
     return MaterialApp(
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: seedColor),
+        extensions: const [DueColors.light],
         useMaterial3: true,
         inputDecorationTheme: inputDecorationTheme,
       ),
@@ -78,6 +82,7 @@ class _HpCprAppState extends State<HpCprApp> {
           seedColor: seedColor,
           brightness: Brightness.dark,
         ),
+        extensions: const [DueColors.dark],
         useMaterial3: true,
         inputDecorationTheme: inputDecorationTheme,
       ),

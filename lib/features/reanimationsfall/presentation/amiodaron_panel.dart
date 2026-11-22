@@ -5,6 +5,7 @@ import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
+import 'package:hp_cpr/ui/theme/due_colors.dart';
 
 /// The Amiodaron recommendation status and the last recorded dose.
 ///
@@ -37,7 +38,7 @@ class AmiodaronPanel extends StatelessWidget {
         ? l10n.amiodaronStateConsider
         : l10n.amiodaronStateNotRecommended;
     final stateColor = isRecommended
-        ? theme.colorScheme.primary
+        ? DueColors.of(context).due
         : theme.colorScheme.onSurfaceVariant;
 
     final detail = isRecommended
