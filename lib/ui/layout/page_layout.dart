@@ -144,6 +144,10 @@ class PageLayout {
 
   bool get isPhone => isSmallPhone || isLargePhone;
 
+  /// Whether phase action buttons use the dense, icon-less style that lets
+  /// several of them share one row: on phones and height-limited layouts.
+  bool get usesDensePhaseActions => isCompact || isPhone;
+
   bool get isTablet => windowSize == WindowSizeClass.tablet;
 
   bool get isDesktop => windowSize == WindowSizeClass.desktop;
@@ -251,9 +255,14 @@ class PageLayout {
   /// The minimum width of a phase action button.
   double get phaseActionMinWidth => isCompact ? 0 : 180;
 
+  /// The horizontal padding of a dense phase action button.
+  static const EdgeInsets densePhaseActionPadding = EdgeInsets.symmetric(
+    horizontal: space14,
+  );
+
   /// The horizontal padding of a compact phase action button.
   EdgeInsets? get phaseActionPadding =>
-      isCompact ? const EdgeInsets.symmetric(horizontal: space14) : null;
+      isCompact ? densePhaseActionPadding : null;
 
   /// The horizontal padding of the secondary actions button.
   EdgeInsets get actionsButtonPadding =>

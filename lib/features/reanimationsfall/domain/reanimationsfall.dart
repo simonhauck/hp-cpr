@@ -96,7 +96,6 @@ class Reanimationsfall {
     _zustand = state.zustand;
     _phase = state.phase;
     _demoOffset = state.demoOffset;
-    _vorbehandlungHinweisAusgeblendet = state.vorbehandlungHinweisAusgeblendet;
     _nextEreignisId = state.nextEreignisId;
     _compressionCycleStartOffset =
         _monotonicStartOffset + state.compressionCycleStartOffset;
@@ -152,8 +151,6 @@ class Reanimationsfall {
 
   /// The device's UTC offset when the Reanimationsfall started.
   final int utcOffsetMinutes;
-
-  bool _vorbehandlungHinweisAusgeblendet = false;
 
   /// The latest Vorbehandlung correction, if the form was ever saved.
   VorbehandlungKorrigiert? get _vorbehandlung =>
@@ -584,11 +581,6 @@ class Reanimationsfall {
     _phase = Reanimationsphase.druckphase;
     _analysephaseStartOffset = null;
     _ersteAdrenalinGabeFaellig = false;
-  }
-
-  /// Hides the `Vorbehandlung erfassen` prompt for this case.
-  void dismissVorbehandlungHinweis() {
-    _vorbehandlungHinweisAusgeblendet = true;
   }
 
   /// Saves the Vorbehandlung form as an append-only correction.
@@ -1651,10 +1643,7 @@ class Reanimationsfall {
       uebernahme: uebernahme,
       laufzeitBeiUebernahme: _uebernahmeOffset + versatz,
       spaetesteUebernahme: erfassteUebernahme.add(_spaetesteUebernahmeOffset),
-      zeigeVorbehandlungHinweis:
-          _istOffen &&
-          !_vorbehandlungHinweisAusgeblendet &&
-          _vorbehandlung == null,
+      zeigeVorbehandlungErfassen: _istOffen && _vorbehandlung == null,
       reanimationsdauer: elapsed,
       cprDauer: cprDauer,
       abschnitte: List.unmodifiable(abschnitte),
@@ -2107,7 +2096,6 @@ class Reanimationsfall {
       id: id,
       erfassteUebernahme: erfassteUebernahme,
       erfassteUebernahmeUtc: erfassteUebernahmeUtc,
-      vorbehandlungHinweisAusgeblendet: _vorbehandlungHinweisAusgeblendet,
       utcOffsetMinutes: utcOffsetMinutes,
       leitlinienprofil: leitlinienprofil,
       vibrationEnabled: vibrationEnabled,
@@ -2212,7 +2200,7 @@ class ReanimationsfallSnapshot {
     required this.uebernahme,
     required this.laufzeitBeiUebernahme,
     required this.spaetesteUebernahme,
-    required this.zeigeVorbehandlungHinweis,
+    required this.zeigeVorbehandlungErfassen,
     required this.reanimationsdauer,
     required this.cprDauer,
     required this.abschnitte,
@@ -2267,9 +2255,9 @@ class ReanimationsfallSnapshot {
   /// recorded in the app, now, or the end of the case, whichever is first.
   final DateTime spaetesteUebernahme;
 
-  /// Whether the `Vorbehandlung erfassen` prompt is shown: on an open case
-  /// until the Vorbehandlung is saved or the prompt is dismissed.
-  final bool zeigeVorbehandlungHinweis;
+  /// Whether the `Vorbehandlung erfassen` action-bar button is shown: on an
+  /// open case until the Vorbehandlung form was saved once.
+  final bool zeigeVorbehandlungErfassen;
 
   /// The time since the Startzeit, including ROSC pauses.
   final Duration reanimationsdauer;
@@ -2410,7 +2398,6 @@ class ReanimationsfallState {
     required this.id,
     required this.erfassteUebernahme,
     required this.erfassteUebernahmeUtc,
-    this.vorbehandlungHinweisAusgeblendet = false,
     required this.utcOffsetMinutes,
     required this.leitlinienprofil,
     required this.vibrationEnabled,
@@ -2444,9 +2431,6 @@ class ReanimationsfallState {
   /// The Übernahme recorded at the start tap, the origin of every stored time.
   final DateTime erfassteUebernahme;
   final DateTime erfassteUebernahmeUtc;
-
-  /// Whether the `Vorbehandlung erfassen` prompt was dismissed.
-  final bool vorbehandlungHinweisAusgeblendet;
 
   final int utcOffsetMinutes;
 
