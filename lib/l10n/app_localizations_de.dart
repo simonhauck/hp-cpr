@@ -299,9 +299,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get roscConfirmButton => 'ROSC bestätigen';
 
   @override
-  String get rhythmusanalyseSkippedSnackbar => 'Analyse übersprungen';
-
-  @override
   String get rhythmusanalyseKammerflimmern => 'Kammerflimmern (VF)';
 
   @override
@@ -315,9 +312,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get rhythmusanalyseUnbekanntAed => 'Unbekannt (AED)';
-
-  @override
-  String get skipAnalysisButton => 'Überspringen';
 
   @override
   String get adrenalinLabel => 'Adrenalin';

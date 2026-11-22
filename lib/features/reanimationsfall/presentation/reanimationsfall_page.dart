@@ -256,17 +256,6 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     );
   }
 
-  void _skipRhythmusanalyse() {
-    _mutate(widget.reanimationsfall.skipRhythmusanalyse);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          AppLocalizations.of(context).rhythmusanalyseSkippedSnackbar,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final snapshot = widget.reanimationsfall.snapshot();
@@ -352,10 +341,6 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
             : PhaseActionBar(
                 layout: layout,
                 onOpenActions: _openActions,
-                onSkipRhythmusanalyse:
-                    snapshot.phase == Reanimationsphase.analysephase
-                    ? _skipRhythmusanalyse
-                    : null,
                 onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
               ),
       ),

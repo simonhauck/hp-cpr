@@ -388,10 +388,6 @@
   "@roscConfirmButton": {
     "description": "Bestätigungsschaltfläche für ROSC"
   },
-  "rhythmusanalyseSkippedSnackbar": "Analyse übersprungen",
-  "@rhythmusanalyseSkippedSnackbar": {
-    "description": "Kurze Bestätigung nach dem Überspringen der Rhythmusanalyse"
-  },
   "rhythmusanalyseKammerflimmern": "Kammerflimmern (VF)",
   "@rhythmusanalyseKammerflimmern": {
     "description": "Schockbarer Rhythmus: Kammerflimmern"
@@ -411,10 +407,6 @@
   "rhythmusanalyseUnbekanntAed": "Unbekannt (AED)",
   "@rhythmusanalyseUnbekanntAed": {
     "description": "Rhythmus unbekannt, Ergebnis stammt aus einer AED-Empfehlung"
-  },
-  "skipAnalysisButton": "Überspringen",
-  "@skipAnalysisButton": {
-    "description": "Schaltfläche zum Überspringen der Rhythmusanalyse"
   },
   "adrenalinLabel": "Adrenalin",
   "@adrenalinLabel": {

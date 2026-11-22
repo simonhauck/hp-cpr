@@ -616,12 +616,6 @@ abstract class AppLocalizations {
   /// **'ROSC bestätigen'**
   String get roscConfirmButton;
 
-  /// Kurze Bestätigung nach dem Überspringen der Rhythmusanalyse
-  ///
-  /// In de, this message translates to:
-  /// **'Analyse übersprungen'**
-  String get rhythmusanalyseSkippedSnackbar;
-
   /// Schockbarer Rhythmus: Kammerflimmern
   ///
   /// In de, this message translates to:
@@ -651,12 +645,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Unbekannt (AED)'**
   String get rhythmusanalyseUnbekanntAed;
-
-  /// Schaltfläche zum Überspringen der Rhythmusanalyse
-  ///
-  /// In de, this message translates to:
-  /// **'Überspringen'**
-  String get skipAnalysisButton;
 
   /// Beschriftung des Adrenalin-Zeitfensters
   ///

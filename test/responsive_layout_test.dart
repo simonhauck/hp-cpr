@@ -112,67 +112,6 @@ void main() {
     expectInsideViewport(tester, amiodaronLastDose);
     expect(tester.takeException(), isNull);
   }, skip: kIsWeb);
-
-  testWidgets('keeps Überspringen in the action bar on every layout', (
-    tester,
-  ) async {
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    tester.view.devicePixelRatio = 1;
-    PackageInfo.setMockInitialValues(
-      appName: 'HP-CPR',
-      packageName: 'de.simonhauck.hp_cpr',
-      version: '0.1.0',
-      buildNumber: '1',
-      buildSignature: '',
-    );
-
-    for (final size in [
-      const Size(360, 640),
-      const Size(412, 915),
-      const Size(800, 360),
-      const Size(568, 320),
-      const Size(768, 1024),
-      const Size(1024, 768),
-    ]) {
-      tester.view.physicalSize = size;
-      final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
-      await tester.pumpWidget(
-        HpCprApp(
-          key: UniqueKey(),
-          clock: clock,
-          wakeLock: FakeWakeLock(),
-          store: InMemoryReanimationsfallStore(),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      final startButton = find.text('Jetzt starten');
-      await tester.ensureVisible(startButton);
-      await tester.pumpAndSettle();
-      await tester.tap(startButton);
-      await tester.pump();
-      clock.advance(const Duration(minutes: 2));
-      await tester.pump(const Duration(milliseconds: 250));
-      await tester.tap(find.text('Analyse starten'));
-      await tester.pump();
-
-      expect(find.text('Überspringen'), findsOneWidget, reason: 'size $size');
-      expectInsideViewport(tester, find.text('Überspringen'));
-      expectInsideViewport(tester, find.text('Schockbar'));
-      expectInsideViewport(tester, find.text('Unklar'));
-      expect(tester.takeException(), isNull, reason: 'size $size');
-
-      await tester.tap(find.text('Überspringen'));
-      await tester.pumpAndSettle();
-      expect(
-        find.textContaining('Druckphase ·'),
-        findsOneWidget,
-        reason: 'size $size',
-      );
-      expect(find.text('Überspringen'), findsNothing, reason: 'size $size');
-    }
-  }, skip: kIsWeb);
 }
 
 Future<void> recordSchock(WidgetTester tester) async {
