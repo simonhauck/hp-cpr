@@ -184,7 +184,7 @@ void main() {
     expect(find.text('Nicht schockbar'), findsOneWidget);
     expect(find.text('ROSC'), findsOneWidget);
     expect(find.text('Unklar'), findsOneWidget);
-    expect(find.text('Überspringen'), findsOneWidget);
+    expect(find.text('Überspringen'), findsNothing);
     expect(find.byIcon(Icons.bolt), findsNWidgets(2));
     expect(find.byIcon(Icons.flash_off), findsOneWidget);
     expect(find.byIcon(Icons.favorite), findsOneWidget);
@@ -622,27 +622,6 @@ void main() {
 
     await tester.scrollUntilVisible(find.text('Rhythmusanalyse: Unklar'), 200);
     expect(find.text('Rhythmusanalyse: Unklar'), findsOneWidget);
-  });
-
-  testWidgets('skips the Rhythmusanalyse in one tap and starts a fresh cycle', (
-    tester,
-  ) async {
-    await pumpApp(tester);
-    await startNow(tester);
-
-    clock.advance(const Duration(minutes: 2));
-    await tester.pump(const Duration(milliseconds: 250));
-    await tester.tap(find.text('Analyse starten'));
-    await tester.pump();
-
-    await tester.tap(find.text('Überspringen'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Grund (optional)'), findsNothing);
-    expect(find.text('Analyse übersprungen'), findsOneWidget);
-    expect(find.textContaining('Druckphase ·'), findsOneWidget);
-    expect(find.text('Nächste Analyse'), findsOneWidget);
-    expect(find.text('02:00'), findsNWidgets(2));
   });
 
   testWidgets('records a non-shockable rhythm and ROSC from the guided '
@@ -1165,13 +1144,12 @@ void main() {
       expect(find.text('Nicht schockbar'), findsOneWidget);
       expect(find.text('ROSC'), findsOneWidget);
       expect(find.text('Unklar'), findsOneWidget);
-      expect(find.text('Überspringen'), findsOneWidget);
+      expect(find.text('Überspringen'), findsNothing);
       expect(find.text('Schocks: 0'), findsOneWidget);
       expectInsideViewport(tester, find.text('Schockbar'));
       expectInsideViewport(tester, find.text('Nicht schockbar'));
       expectInsideViewport(tester, find.text('ROSC'));
       expectInsideViewport(tester, find.text('Unklar'));
-      expectInsideViewport(tester, find.text('Überspringen'));
       expectInsideViewport(tester, find.text('Schocks: 0'));
       expect(tester.takeException(), isNull, reason: 'size $size');
 
