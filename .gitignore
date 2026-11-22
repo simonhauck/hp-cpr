@@ -52,3 +52,6 @@ app.*.map.json
 .result*
 result
 result-*
+
+# Claude Code
+.claude/
