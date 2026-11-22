@@ -586,6 +586,10 @@
   "@summaryStartzeit": {
     "description": "Beschriftung der Startzeit in der Zusammenfassung"
   },
+  "summaryUebernahme": "Übernahme",
+  "@summaryUebernahme": {
+    "description": "Beschriftung der Übernahme in der Zusammenfassung"
+  },
   "summaryEndzeit": "Endzeit",
   "@summaryEndzeit": {
     "description": "Beschriftung der Endzeit in der Zusammenfassung"
@@ -597,6 +601,15 @@
   "summaryShocks": "Schocks",
   "@summaryShocks": {
     "description": "Beschriftung der Schockanzahl in der Zusammenfassung"
+  },
+  "summaryVorbehandlungDavon": "(davon {anzahl} vor Übernahme)",
+  "@summaryVorbehandlungDavon": {
+    "description": "Anteil der Vorbehandlung hinter einer Gesamtanzahl in der Zusammenfassung",
+    "placeholders": {
+      "anzahl": {
+        "type": "int"
+      }
+    }
   },
   "summaryEvents": "Ereignisse",
   "@summaryEvents": {

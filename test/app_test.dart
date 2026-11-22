@@ -708,6 +708,176 @@ void main() {
     expect(find.text('Zusammenfassung'), findsNothing);
   });
 
+  group('Zusammenfassung Vorbehandlung', () {
+    Finder vorbehandlungPrompt() {
+      final strip = find.byType(PhaseStrip);
+      final text = find.descendant(
+        of: strip,
+        matching: find.text('Vorbehandlung erfassen'),
+      );
+      return text.evaluate().isNotEmpty
+          ? text
+          : find.descendant(
+              of: strip,
+              matching: find.byTooltip('Vorbehandlung erfassen'),
+            );
+    }
+
+    Finder summaryCard() => find.byType(Card).first;
+
+    String summaryValue(WidgetTester tester, String label) {
+      final row = find
+          .ancestor(
+            of: find.descendant(of: summaryCard(), matching: find.text(label)),
+            matching: find.byType(Row),
+          )
+          .first;
+      final texts = find.descendant(of: row, matching: find.byType(Text));
+      return tester.widget<Text>(texts.last).data!;
+    }
+
+    Future<void> tapCount(
+      WidgetTester tester,
+      String key, [
+      int times = 1,
+    ]) async {
+      final button = find.byKey(ValueKey(key));
+      await tester.ensureVisible(button);
+      await tester.pumpAndSettle();
+      for (var i = 0; i < times; i++) {
+        await tester.tap(button);
+        await tester.pump();
+      }
+    }
+
+    Future<void> saveForm(WidgetTester tester) async {
+      await tester.tap(find.text('Speichern'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    Future<void> enterVorbehandlung(
+      WidgetTester tester, {
+      int schocks = 0,
+      int adrenalin = 0,
+      int amiodaron = 0,
+    }) async {
+      await tester.tap(vorbehandlungPrompt());
+      await tester.pumpAndSettle();
+      await tapCount(tester, 'vorbehandlung-schocks-mehr', schocks);
+      await tapCount(tester, 'vorbehandlung-adrenalin-mehr', adrenalin);
+      await tapCount(tester, 'vorbehandlung-amiodaron-mehr', amiodaron);
+      await saveForm(tester);
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> endCaseWithUebergabe(WidgetTester tester) async {
+      await openEndCaseDialog(tester);
+      await tester.tap(find.text('Übergabe'));
+      await tester.pumpAndSettle();
+      expect(find.text('Zusammenfassung'), findsOneWidget);
+    }
+
+    testWidgets('shows the totals without a davon part when there is no '
+        'Vorbehandlung', (tester) async {
+      await pumpApp(tester);
+      await startNow(tester);
+      await recordSchock(tester);
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+
+      await endCaseWithUebergabe(tester);
+
+      expect(summaryValue(tester, 'Schocks'), '1');
+      expect(summaryValue(tester, 'Adrenalin'), '0');
+      expect(summaryValue(tester, 'Amiodaron'), '0');
+      expect(find.textContaining('davon'), findsNothing);
+    });
+
+    testWidgets('breaks out the Vorbehandlung share of Schock, Adrenalin and '
+        'Amiodaron totals', (tester) async {
+      await pumpApp(tester);
+      await startNow(tester);
+      await enterVorbehandlung(tester, schocks: 3, adrenalin: 1, amiodaron: 2);
+      await recordSchock(tester);
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      await recordSchock(tester);
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+
+      await endCaseWithUebergabe(tester);
+
+      expect(summaryValue(tester, 'Schocks'), '5 (davon 3 vor Übernahme)');
+      expect(summaryValue(tester, 'Adrenalin'), '1 (davon 1 vor Übernahme)');
+      expect(summaryValue(tester, 'Amiodaron'), '2 (davon 2 vor Übernahme)');
+    });
+
+    testWidgets('hides the Übernahme when it equals the Startzeit', (
+      tester,
+    ) async {
+      await pumpApp(tester);
+      await startNow(tester);
+      await endCaseWithUebergabe(tester);
+
+      expect(summaryValue(tester, 'Startzeit'), '08:00:00 Uhr');
+      expect(
+        find.descendant(of: summaryCard(), matching: find.text('Übernahme')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('shows the Übernahme next to the Startzeit when they differ', (
+      tester,
+    ) async {
+      await pumpApp(tester);
+      await startNow(tester);
+      clock.advance(const Duration(seconds: 30));
+      await tester.pump(const Duration(milliseconds: 250));
+      await tester.tap(vorbehandlungPrompt());
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ChoiceChip, '5 min'));
+      await tester.pumpAndSettle();
+      await saveForm(tester);
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+
+      await endCaseWithUebergabe(tester);
+
+      expect(summaryValue(tester, 'Startzeit'), '07:55:00 Uhr');
+      expect(summaryValue(tester, 'Übernahme'), '08:00:00 Uhr');
+    });
+
+    testWidgets('updates the totals after a Vorbehandlung Korrektur on a '
+        'completed case', (tester) async {
+      await pumpApp(tester);
+      await startNow(tester);
+      await enterVorbehandlung(tester, schocks: 2);
+      await endCaseWithUebergabe(tester);
+
+      expect(summaryValue(tester, 'Schocks'), '2 (davon 2 vor Übernahme)');
+
+      final vorbehandlungEntry = find.text('Vorbehandlung');
+      await tester.scrollUntilVisible(vorbehandlungEntry, 200);
+      await tester.pumpAndSettle();
+      await tester.tap(vorbehandlungEntry);
+      await tester.pumpAndSettle();
+      await tapCount(tester, 'vorbehandlung-schocks-mehr');
+      await tapCount(tester, 'vorbehandlung-amiodaron-mehr');
+      await saveForm(tester);
+      await tester.pumpAndSettle();
+
+      expect(summaryValue(tester, 'Schocks'), '3 (davon 3 vor Übernahme)');
+      expect(summaryValue(tester, 'Amiodaron'), '1 (davon 1 vor Übernahme)');
+      final state = (await store.load()).single;
+      expect(
+        state.korrekturen.whereType<VorbehandlungKorrigiert>().last.schocks,
+        3,
+      );
+    });
+  });
+
   group('Vorbehandlung', () {
     // The prompt shows its text when it fits beside the phase label and an
     // icon with the same tooltip otherwise.

@@ -886,6 +886,12 @@ abstract class AppLocalizations {
   /// **'Startzeit'**
   String get summaryStartzeit;
 
+  /// Beschriftung der Übernahme in der Zusammenfassung
+  ///
+  /// In de, this message translates to:
+  /// **'Übernahme'**
+  String get summaryUebernahme;
+
   /// Beschriftung der Endzeit in der Zusammenfassung
   ///
   /// In de, this message translates to:
@@ -903,6 +909,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Schocks'**
   String get summaryShocks;
+
+  /// Anteil der Vorbehandlung hinter einer Gesamtanzahl in der Zusammenfassung
+  ///
+  /// In de, this message translates to:
+  /// **'(davon {anzahl} vor Übernahme)'**
+  String summaryVorbehandlungDavon(int anzahl);
 
   /// Überschrift der Ereignisliste in der Zusammenfassung
   ///
