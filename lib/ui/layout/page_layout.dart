@@ -274,7 +274,7 @@ class PageLayout {
   /// The padding inside the medication panels.
   EdgeInsets get medicationPanelPadding => EdgeInsets.symmetric(
     horizontal: isCompact ? space10 : space14,
-    vertical: isCompact ? space0 : space2,
+    vertical: isCompact ? space0 : space6,
   );
 
   /// The padding inside the rhythm-analysis result summary.
