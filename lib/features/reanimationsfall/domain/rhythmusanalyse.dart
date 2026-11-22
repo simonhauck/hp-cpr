@@ -56,3 +56,15 @@ class RhythmusanalyseUeberspringung implements ProtokollEreignis {
   @override
   final Duration zeitpunkt;
 }
+
+/// The start of an Analysephase, when the compression timer was paused.
+class AnalysephaseBeginn implements ProtokollEreignis {
+  const AnalysephaseBeginn({required this.id, required this.zeitpunkt});
+
+  @override
+  final String id;
+
+  /// The elapsed time since the Startzeit when the Analysephase started.
+  @override
+  final Duration zeitpunkt;
+}

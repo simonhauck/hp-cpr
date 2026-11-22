@@ -288,6 +288,50 @@ void main() {
     );
   });
 
+  test('round-trips a corrected Analysephasenbeginn', () {
+    final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+    clock.advance(const Duration(minutes: 2));
+    reanimationsfall.enterAnalysephase();
+
+    final beginn = reanimationsfall.snapshot().protokoll.eintraege.singleWhere(
+      (e) => e.typ == ProtokollEintragTyp.analysephaseBeginn,
+    );
+    reanimationsfall.applyProtokollKorrektur(
+      ZeitpunktKorrigiert(
+        ziel: beginn.ref,
+        zeitpunkt: const Duration(minutes: 1, seconds: 50),
+      ),
+    );
+
+    final decoded = reanimationsfallStateFromJson(
+      jsonDecode(
+        jsonEncode(reanimationsfallStateToJson(reanimationsfall.exportState())),
+      ) as Map<String, dynamic>,
+    );
+    expect(decoded.analysephaseBeginne, hasLength(1));
+
+    final restored = Reanimationsfall.restore(
+      clock: FakeClock(wallTime: clock.now()),
+      state: decoded,
+    );
+    final restoredSnapshot = restored.snapshot();
+    expect(restoredSnapshot.analysephaseBeginne, hasLength(1));
+    final restoredBeginn = restoredSnapshot.protokoll.eintraege.singleWhere(
+      (e) => e.typ == ProtokollEintragTyp.analysephaseBeginn,
+    );
+    expect(restoredBeginn.zeitpunkt, const Duration(minutes: 1, seconds: 50));
+  });
+
+  test('decodes a missing analysephaseBeginne key to an empty list', () {
+    final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
+    final encoded = reanimationsfallStateToJson(
+      Reanimationsfall.start(clock: clock).exportState(),
+    )..remove('analysephaseBeginne');
+
+    expect(reanimationsfallStateFromJson(encoded).analysephaseBeginne, isEmpty);
+  });
+
   test('defaults missing Demo-Modus fields for older states', () {
     final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
     final state = Reanimationsfall.start(clock: clock).exportState();

@@ -36,6 +36,10 @@ T verschobenesEreignis<T extends Object>(T ereignis, Duration versatz) {
         zeitpunkt: zeitpunkt + versatz,
         ergebnis: ergebnis,
       ),
+    AnalysephaseBeginn(:final id, :final zeitpunkt) => AnalysephaseBeginn(
+      id: id,
+      zeitpunkt: zeitpunkt + versatz,
+    ),
     RhythmusanalyseUeberspringung(:final id, :final zeitpunkt) =>
       RhythmusanalyseUeberspringung(id: id, zeitpunkt: zeitpunkt + versatz),
     DruckphaseNeustart(:final id, :final zeitpunkt) => DruckphaseNeustart(

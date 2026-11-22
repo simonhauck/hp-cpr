@@ -141,7 +141,6 @@ class _ReanimationsfallSummaryPageState
         ProtokollListe(
           protokoll: snapshot.protokoll,
           startzeit: snapshot.startzeit,
-          isLive: false,
           onOpenEintrag: openProtokollEintrag,
         ),
       ],

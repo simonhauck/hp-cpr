@@ -10,6 +10,7 @@ enum ProtokollEintragTyp {
   schock,
   adrenalin,
   amiodaron,
+  analysephaseBeginn,
   rhythmusanalyse,
   ueberspringung,
   druckphaseNeustart,
@@ -20,9 +21,10 @@ enum ProtokollEintragTyp {
   reanimationsfallEnde,
   verworfen;
 
-  /// Whether the entry changes the running case state and is therefore locked
-  /// while the case is open.
+  /// Whether the entry drives the live case state; correcting it recalculates
+  /// the phase, the timers, and the ROSC state.
   bool get istStrukturell => switch (this) {
+    analysephaseBeginn ||
     rhythmusanalyse ||
     ueberspringung ||
     druckphaseNeustart ||
@@ -267,13 +269,6 @@ class ProtokollEintrag {
   final int? nummer;
 
   bool get istLebenszyklus => typ.istLebenszyklus;
-
-  /// Whether the entry is a structural event locked by the running case.
-  bool get istGesperrt =>
-      typ.istStrukturell &&
-      !istBearbeitbar &&
-      !istWiederherstellbar &&
-      !istEntfernt;
 
   ProtokollEintrag withNummer(int? nummer) {
     return ProtokollEintrag(

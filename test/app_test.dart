@@ -1886,7 +1886,8 @@ void main() {
     expect(find.text('Übergabe'), findsOneWidget);
     expect(find.text('08:00:00'), findsOneWidget);
     expect(find.text('08:00:00 Uhr'), findsOneWidget);
-    expect(find.text('08:02:00'), findsOneWidget);
+    // Analyse begonnen and ROSC share the same time.
+    expect(find.text('08:02:00'), findsNWidgets(2));
     expect(find.text('08:02:30'), findsOneWidget);
     expect(find.text('08:02:40'), findsOneWidget);
     expect(find.text('08:02:40 Uhr'), findsOneWidget);
@@ -2907,7 +2908,7 @@ void main() {
       find.text(
         'Im laufenden Fall sind nur Startzeit, Übernahme, Schocks, Medikamente, Messwerte und Notizen korrigierbar.',
       ),
-      findsOneWidget,
+      findsNothing,
     );
     expect(find.text('Messwert erfassen'), findsNothing);
 
@@ -2966,37 +2967,36 @@ void main() {
     expect(find.text('Schocks: 1'), findsOneWidget);
   });
 
-  testWidgets('locks structural entries in the live Protokoll', (tester) async {
-    await pumpApp(tester);
-    await startNow(tester);
-    clock.advance(const Duration(minutes: 2));
-    await tester.pump(const Duration(milliseconds: 250));
-    await tester.tap(find.text('Analyse starten'));
-    await tester.pump();
-    await tester.tap(find.text('Schockbar'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Kammerflimmern (VF)'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Nein'));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'offers edit and remove for structural entries in the live Protokoll',
+    (tester) async {
+      await pumpApp(tester);
+      await startNow(tester);
+      clock.advance(const Duration(minutes: 2));
+      await tester.pump(const Duration(milliseconds: 250));
+      await tester.tap(find.text('Analyse starten'));
+      await tester.pump();
+      await tester.tap(find.text('Schockbar'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Kammerflimmern (VF)'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Nein'));
+      await tester.pumpAndSettle();
 
-    await openActions(tester);
-    await tester.tap(find.text('Protokoll'));
-    await tester.pumpAndSettle();
+      await openActions(tester);
+      await tester.tap(find.text('Protokoll'));
+      await tester.pumpAndSettle();
 
-    final rhythmusanalyse = find.text(
-      'Rhythmusanalyse: Schockbar – Kammerflimmern (VF)',
-    );
-    expect(rhythmusanalyse, findsOneWidget);
-    expect(
-      find.byTooltip('Strukturereignis – während des Falls gesperrt'),
-      findsOneWidget,
-    );
-
-    await tester.tap(rhythmusanalyse);
-    await tester.pumpAndSettle();
-    expect(find.text('Bearbeiten'), findsNothing);
-  });
+      final rhythmusanalyse = find.text(
+        'Rhythmusanalyse: Schockbar – Kammerflimmern (VF)',
+      );
+      expect(rhythmusanalyse, findsOneWidget);
+      await tester.tap(rhythmusanalyse);
+      await tester.pumpAndSettle();
+      expect(find.text('Bearbeiten'), findsOneWidget);
+      expect(find.text('Entfernen'), findsOneWidget);
+    },
+  );
 
   testWidgets('edits and restores a completed Protokoll entry', (tester) async {
     addTearDown(tester.view.reset);
@@ -3260,7 +3260,7 @@ void main() {
       find.text(
         'Im laufenden Fall sind nur Startzeit, Übernahme, Schocks, Medikamente, Messwerte und Notizen korrigierbar.',
       ),
-      findsOneWidget,
+      findsNothing,
     );
     expect(find.text('Schock 1'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -3288,7 +3288,7 @@ void main() {
       find.text(
         'Im laufenden Fall sind nur Startzeit, Übernahme, Schocks, Medikamente, Messwerte und Notizen korrigierbar.',
       ),
-      findsOneWidget,
+      findsNothing,
     );
   });
 
@@ -3423,7 +3423,7 @@ void main() {
       find.text(
         'Im laufenden Fall sind nur Startzeit, Übernahme, Schocks, Medikamente, Messwerte und Notizen korrigierbar.',
       ),
-      findsOneWidget,
+      findsNothing,
     );
     expect(tester.takeException(), isNull);
   });
