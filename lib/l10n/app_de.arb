@@ -1010,5 +1010,71 @@
   "eventUebernahme": "Übernahme",
   "@eventUebernahme": {
     "description": "Ereignis: Übernahme der Zeitnahme durch das Team"
+  },
+  "eventVorbehandlung": "Vorbehandlung",
+  "@eventVorbehandlung": {
+    "description": "Protokolleintrag der Vorbehandlung vor der Übernahme"
+  },
+  "vorbehandlungCountsLabel": "Vor der Übernahme gegeben",
+  "@vorbehandlungCountsLabel": {
+    "description": "Überschrift der Anzahlen im Vorbehandlung-Formular"
+  },
+  "vorbehandlungSchocksLabel": "Schocks",
+  "@vorbehandlungSchocksLabel": {
+    "description": "Beschriftung der Schock-Anzahl im Vorbehandlung-Formular"
+  },
+  "vorbehandlungAdrenalinLabel": "Adrenalin",
+  "@vorbehandlungAdrenalinLabel": {
+    "description": "Beschriftung der Adrenalin-Anzahl im Vorbehandlung-Formular"
+  },
+  "vorbehandlungAmiodaronLabel": "Amiodaron",
+  "@vorbehandlungAmiodaronLabel": {
+    "description": "Beschriftung der Amiodaron-Anzahl im Vorbehandlung-Formular"
+  },
+  "vorbehandlungAnzahlMehr": "{label} erhöhen",
+  "@vorbehandlungAnzahlMehr": {
+    "description": "Tooltip der Plus-Schaltfläche einer Anzahl",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "vorbehandlungAnzahlWeniger": "{label} verringern",
+  "@vorbehandlungAnzahlWeniger": {
+    "description": "Tooltip der Minus-Schaltfläche einer Anzahl",
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "vorbehandlungNotizLabel": "Notiz (optional)",
+  "@vorbehandlungNotizLabel": {
+    "description": "Beschriftung des Notizfelds im Vorbehandlung-Formular"
+  },
+  "protokollVorbehandlungDetail": "Schocks: {schocks} · Adrenalin: {adrenalin} · Amiodaron: {amiodaron}",
+  "@protokollVorbehandlungDetail": {
+    "description": "Anzahlen der Vorbehandlung im Protokoll",
+    "placeholders": {
+      "schocks": {
+        "type": "int"
+      },
+      "adrenalin": {
+        "type": "int"
+      },
+      "amiodaron": {
+        "type": "int"
+      }
+    }
+  },
+  "adrenalinVorbehandlung": "{count} × vor Übernahme",
+  "@adrenalinVorbehandlung": {
+    "description": "Adrenalin-Karte: Anzahl der Gaben vor der Übernahme, solange noch keine Gabe in der App erfasst wurde",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

@@ -723,4 +723,46 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get eventUebernahme => 'Übernahme';
+
+  @override
+  String get eventVorbehandlung => 'Vorbehandlung';
+
+  @override
+  String get vorbehandlungCountsLabel => 'Vor der Übernahme gegeben';
+
+  @override
+  String get vorbehandlungSchocksLabel => 'Schocks';
+
+  @override
+  String get vorbehandlungAdrenalinLabel => 'Adrenalin';
+
+  @override
+  String get vorbehandlungAmiodaronLabel => 'Amiodaron';
+
+  @override
+  String vorbehandlungAnzahlMehr(String label) {
+    return '$label erhöhen';
+  }
+
+  @override
+  String vorbehandlungAnzahlWeniger(String label) {
+    return '$label verringern';
+  }
+
+  @override
+  String get vorbehandlungNotizLabel => 'Notiz (optional)';
+
+  @override
+  String protokollVorbehandlungDetail(
+    int schocks,
+    int adrenalin,
+    int amiodaron,
+  ) {
+    return 'Schocks: $schocks · Adrenalin: $adrenalin · Amiodaron: $amiodaron';
+  }
+
+  @override
+  String adrenalinVorbehandlung(int count) {
+    return '$count × vor Übernahme';
+  }
 }

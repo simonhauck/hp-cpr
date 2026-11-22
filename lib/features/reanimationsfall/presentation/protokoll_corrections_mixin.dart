@@ -20,7 +20,8 @@ mixin ProtokollCorrectionsMixin<T extends StatefulWidget> on State<T> {
 
   Future<void> openProtokollEintrag(ProtokollEintrag eintrag) async {
     if (eintrag.typ == ProtokollEintragTyp.startzeit ||
-        eintrag.typ == ProtokollEintragTyp.uebernahme) {
+        eintrag.typ == ProtokollEintragTyp.uebernahme ||
+        eintrag.typ == ProtokollEintragTyp.vorbehandlung) {
       await openVorbehandlung();
       return;
     }
@@ -52,6 +53,10 @@ mixin ProtokollCorrectionsMixin<T extends StatefulWidget> on State<T> {
       () => protokollFall.correctVorbehandlung(
         uebernahme: eingabe.uebernahme,
         laufzeitBeiUebernahme: eingabe.laufzeitBeiUebernahme,
+        schocks: eingabe.vorbehandlung.schocks,
+        adrenalin: eingabe.vorbehandlung.adrenalin,
+        amiodaron: eingabe.vorbehandlung.amiodaron,
+        notiz: eingabe.vorbehandlung.notiz,
       ),
     );
     if (applied && mounted) {

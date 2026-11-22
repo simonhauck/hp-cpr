@@ -62,3 +62,38 @@ class Uebernahme {
   /// The elapsed time since the Startzeit at the Übernahme.
   final Duration zeitpunkt;
 }
+
+/// The Vorbehandlung: what was given before the Übernahme, as counts only.
+class Vorbehandlung {
+  const Vorbehandlung({
+    this.schocks = 0,
+    this.adrenalin = 0,
+    this.amiodaron = 0,
+    this.notiz,
+  });
+
+  /// No Vorbehandlung recorded.
+  static const keine = Vorbehandlung();
+
+  final int schocks;
+  final int adrenalin;
+  final int amiodaron;
+
+  /// A free-text remark about anything else, or null.
+  final String? notiz;
+
+  /// Whether nothing was recorded: no count and no Notiz.
+  bool get istLeer =>
+      schocks == 0 && adrenalin == 0 && amiodaron == 0 && notiz == null;
+
+  @override
+  bool operator ==(Object other) =>
+      other is Vorbehandlung &&
+      other.schocks == schocks &&
+      other.adrenalin == adrenalin &&
+      other.amiodaron == amiodaron &&
+      other.notiz == notiz;
+
+  @override
+  int get hashCode => Object.hash(schocks, adrenalin, amiodaron, notiz);
+}

@@ -342,6 +342,57 @@ void main() {
     );
   });
 
+  test('round-trips the Vorbehandlung counts and Notiz', () {
+    final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+    reanimationsfall.correctVorbehandlung(
+      uebernahme: DateTime(2026, 10, 25, 8),
+      laufzeitBeiUebernahme: const Duration(minutes: 3),
+      schocks: 3,
+      adrenalin: 2,
+      amiodaron: 1,
+      notiz: 'Larynxtubus',
+    );
+
+    final encoded = reanimationsfallStateToJson(reanimationsfall.exportState());
+    final decoded = reanimationsfallStateFromJson(
+      jsonDecode(jsonEncode(encoded)) as Map<String, dynamic>,
+    );
+    final restored = Reanimationsfall.restore(clock: clock, state: decoded);
+
+    final korrektur = decoded.korrekturen.single as VorbehandlungKorrigiert;
+    expect(korrektur.schocks, 3);
+    expect(korrektur.adrenalin, 2);
+    expect(korrektur.amiodaron, 1);
+    expect(korrektur.notiz, 'Larynxtubus');
+    final snapshot = restored.snapshot();
+    expect(snapshot.schockAnzahl, 3);
+    expect(snapshot.vorbehandlung.adrenalin, 2);
+    expect(snapshot.amiodaronAnzahl, 1);
+  });
+
+  test('decodes a Vorbehandlung without counts to zero and no Notiz', () {
+    final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
+    final reanimationsfall = Reanimationsfall.start(clock: clock);
+    reanimationsfall.correctVorbehandlung(
+      uebernahme: DateTime(2026, 10, 25, 8),
+      laufzeitBeiUebernahme: const Duration(minutes: 3),
+      schocks: 2,
+    );
+    final encoded = reanimationsfallStateToJson(reanimationsfall.exportState());
+    final korrektur =
+        (encoded['korrekturen'] as List).single as Map<String, dynamic>;
+    for (final key in ['schocks', 'adrenalin', 'amiodaron', 'notiz']) {
+      korrektur.remove(key);
+    }
+
+    final decoded = reanimationsfallStateFromJson(encoded);
+
+    final vorbehandlung = decoded.korrekturen.single as VorbehandlungKorrigiert;
+    expect(vorbehandlung.vorbehandlung.istLeer, isTrue);
+    expect(vorbehandlung.laufzeitBeiUebernahme, const Duration(minutes: 3));
+  });
+
   test('falls back to the Startzeit for states without an Übernahme', () {
     final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
     final state = Reanimationsfall.start(clock: clock).exportState();
