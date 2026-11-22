@@ -191,6 +191,11 @@ void main() {
     expect(find.text('Messwerte'), findsOneWidget);
     expect(find.text('Notiz'), findsOneWidget);
     expect(find.text('Schock erfassen'), findsOneWidget);
+    final erfassenTop = tester.getTopLeft(find.text('Erfassen')).dy;
+    final messwerteTop = tester.getTopLeft(find.text('Messwerte')).dy;
+    final ansehenTop = tester.getTopLeft(find.text('Ansehen')).dy;
+    expect(messwerteTop, greaterThan(erfassenTop));
+    expect(messwerteTop, lessThan(ansehenTop));
     expect(find.text('Druckphase neu starten'), findsNothing);
     expect(find.text('Letzten Schock korrigieren'), findsNothing);
     expect(find.text('Letzten Schock rückgängig'), findsNothing);
