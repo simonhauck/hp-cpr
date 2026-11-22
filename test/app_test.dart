@@ -13,9 +13,13 @@ import 'package:hp_cpr/features/settings/domain/app_settings.dart';
 import 'package:hp_cpr/ui/theme/due_colors.dart';
 
 import 'support/fake_clock.dart';
+import 'support/medikament_finders.dart';
+import 'support/roboto_font.dart';
 import 'support/fake_wake_lock.dart';
 
 void main() {
+  setUpAll(loadRobotoFont);
+
   late FakeClock clock;
   late FakeWakeLock wakeLock;
   late InMemoryReanimationsfallStore store;
@@ -209,7 +213,7 @@ void main() {
     await pumpApp(tester);
     await startNow(tester);
 
-    await tester.tap(find.text('Gabe'));
+    await tester.tap(adrenalinGabe);
     await tester.pump();
     clock.advance(const Duration(minutes: 1));
     await tester.pump(const Duration(milliseconds: 250));
@@ -285,7 +289,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 250));
     expect(colorOf('Analyse fällig'), DueColors.light.onDueContainer);
 
-    await tester.tap(find.text('Gabe'));
+    await tester.tap(adrenalinGabe);
     await tester.pump();
     clock.advance(const Duration(minutes: 3));
     await tester.pump(const Duration(milliseconds: 250));
@@ -824,7 +828,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Erste Gabe fällig'), findsOneWidget);
-    expect(find.text('Gabe'), findsOneWidget);
+    expect(adrenalinGabe, findsOneWidget);
     expect(find.textContaining('Letzte Gabe'), findsNothing);
   });
 
@@ -889,7 +893,7 @@ void main() {
     await pumpApp(tester);
     await startNow(tester);
 
-    await tester.tap(find.text('Gabe'));
+    await tester.tap(adrenalinGabe);
     await tester.pump();
 
     expect(find.text('Letzte Gabe: 08:00 Uhr, vor 00:00'), findsOneWidget);
@@ -917,7 +921,7 @@ void main() {
     expect(find.text('überfällig'), findsOneWidget);
     expect(find.text('Letzte Gabe: 08:00 Uhr, vor 05:01'), findsOneWidget);
 
-    await tester.tap(find.text('Gabe'));
+    await tester.tap(adrenalinGabe);
     await tester.pump();
 
     expect(find.text('Letzte Gabe: 08:05 Uhr, vor 00:00'), findsOneWidget);
@@ -930,7 +934,7 @@ void main() {
     await pumpApp(tester);
     await startNow(tester);
 
-    await tester.tap(find.text('Gabe'));
+    await tester.tap(adrenalinGabe);
     await tester.pump();
     clock.advance(const Duration(minutes: 1));
     await tester.pump(const Duration(milliseconds: 250));
@@ -955,7 +959,7 @@ void main() {
     await pumpApp(tester);
     await startNow(tester);
 
-    await tester.tap(find.text('Gabe'));
+    await tester.tap(adrenalinGabe);
     await tester.pump();
     clock.advance(const Duration(minutes: 4));
     await tester.pump(const Duration(milliseconds: 250));
@@ -976,7 +980,7 @@ void main() {
     expect(find.text('Amiodaron'), findsOneWidget);
     expect(find.text('nicht empfohlen'), findsOneWidget);
     expect(find.text('erwägen'), findsNothing);
-    expect(find.text('Gegeben'), findsNothing);
+    expect(isButtonEnabled(tester, amiodaronGabe), isFalse);
 
     for (var count = 0; count < 2; count++) {
       await recordSchock(tester);
@@ -991,7 +995,7 @@ void main() {
     expect(find.text('nicht empfohlen'), findsNothing);
     expect(find.text('erwägen'), findsOneWidget);
     expect(find.text('300 mg'), findsOneWidget);
-    expect(find.text('Gegeben'), findsOneWidget);
+    expect(isButtonEnabled(tester, amiodaronGabe), isTrue);
     expect(find.textContaining('Letzte Gabe'), findsNothing);
   });
 
@@ -1008,12 +1012,12 @@ void main() {
     expect(find.text('300 mg'), findsOneWidget);
     expect(find.textContaining('Letzte Gabe'), findsNothing);
 
-    await tester.tap(find.text('Gegeben'));
+    await tester.tap(amiodaronGabe);
     await tester.pump();
 
     expect(find.text('erwägen'), findsNothing);
     expect(find.text('nicht empfohlen'), findsOneWidget);
-    expect(find.text('Letzte Gabe 00:00'), findsOneWidget);
+    expect(find.text('Letzte Gabe: 08:00 Uhr, vor 00:00'), findsOneWidget);
 
     await recordSchock(tester);
     expect(find.text('erwägen'), findsNothing);
@@ -1026,12 +1030,12 @@ void main() {
     expect(find.text('erwägen'), findsOneWidget);
     expect(find.textContaining('150 mg'), findsOneWidget);
 
-    await tester.tap(find.text('Gegeben'));
+    await tester.tap(amiodaronGabe);
     await tester.pump();
 
     expect(find.text('erwägen'), findsNothing);
     expect(find.text('nicht empfohlen'), findsOneWidget);
-    expect(find.text('Letzte Gabe 00:45'), findsOneWidget);
+    expect(find.text('Letzte Gabe: 08:00 Uhr, vor 00:00'), findsOneWidget);
   });
 
   testWidgets('uses the AHA second Amiodaron dose trigger after the fourth '
@@ -1045,7 +1049,7 @@ void main() {
     for (var count = 0; count < 3; count++) {
       await recordSchock(tester);
     }
-    await tester.tap(find.text('Gegeben'));
+    await tester.tap(amiodaronGabe);
     await tester.pump();
     expect(find.text('erwägen'), findsNothing);
     expect(find.text('nicht empfohlen'), findsOneWidget);
@@ -1069,7 +1073,7 @@ void main() {
 
     expect(find.text('nicht empfohlen'), findsOneWidget);
     expectInsideViewport(tester, find.text('nicht empfohlen'));
-    expect(find.text('Gegeben'), findsNothing);
+    expect(isButtonEnabled(tester, amiodaronGabe), isFalse);
 
     for (var count = 0; count < 3; count++) {
       await recordSchock(tester);
@@ -1078,7 +1082,7 @@ void main() {
     expect(find.text('erwägen'), findsOneWidget);
     expect(find.textContaining('300 mg'), findsOneWidget);
     expectInsideViewport(tester, find.text('erwägen'));
-    expectInsideViewport(tester, find.text('Gegeben'));
+    expectInsideViewport(tester, amiodaronGabe);
     expect(tester.takeException(), isNull);
   });
 
@@ -1127,12 +1131,12 @@ void main() {
       expect(find.textContaining('Druckphase ·'), findsOneWidget);
       expect(find.text('Schocks: 0'), findsOneWidget);
       expect(find.text('Adrenalin'), findsOneWidget);
-      expect(find.text('Gabe'), findsOneWidget);
+      expect(adrenalinGabe, findsOneWidget);
       expect(find.byType(Scrollable), findsNothing);
       expectInsideViewport(tester, find.text('02:00'));
       expectInsideViewport(tester, find.textContaining('Druckphase ·'));
       expectInsideViewport(tester, find.text('Schocks: 0'));
-      expectInsideViewport(tester, find.text('Gabe'));
+      expectInsideViewport(tester, adrenalinGabe);
       expectInsideViewport(tester, find.byTooltip('Menü öffnen'));
       expect(tester.takeException(), isNull);
 
@@ -1201,12 +1205,35 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('disables both medication buttons during ROSC', (tester) async {
+    await pumpApp(tester);
+    await startNow(tester);
+
+    for (var count = 0; count < 3; count++) {
+      await recordSchock(tester);
+    }
+    expect(find.text('erwägen'), findsOneWidget);
+    expect(isButtonEnabled(tester, adrenalinGabe), isTrue);
+    expect(isButtonEnabled(tester, amiodaronGabe), isTrue);
+
+    await tester.tap(find.text('Analyse starten'));
+    await tester.pump();
+    await tester.tap(find.text('ROSC'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ROSC bestätigen'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Reanimation wieder aufnehmen'), findsOneWidget);
+    expect(isButtonEnabled(tester, adrenalinGabe), isFalse);
+    expect(isButtonEnabled(tester, amiodaronGabe), isFalse);
+  });
+
   testWidgets('keeps the case open after ROSC and continues the medication '
       'timers', (tester) async {
     await pumpApp(tester);
     await startNow(tester);
 
-    await tester.tap(find.text('Gabe'));
+    await tester.tap(adrenalinGabe);
     await tester.pump();
 
     clock.advance(const Duration(minutes: 2));
@@ -1226,7 +1253,9 @@ void main() {
     expect(find.text('Letzte Gabe: 08:00 Uhr, vor 02:00'), findsOneWidget);
     expect(
       tester
-          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Gabe'))
+          .widget<FilledButton>(
+            find.widgetWithText(FilledButton, 'Gabe erfassen').first,
+          )
           .onPressed,
       isNull,
     );
@@ -1265,7 +1294,9 @@ void main() {
     expect(find.text('ROSC'), findsNothing);
     expect(
       tester
-          .widget<FilledButton>(find.widgetWithText(FilledButton, 'Gabe'))
+          .widget<FilledButton>(
+            find.widgetWithText(FilledButton, 'Gabe erfassen').first,
+          )
           .onPressed,
       isNotNull,
     );
@@ -2145,7 +2176,7 @@ void main() {
     await pumpApp(tester, settings: AppSettings(demoMode: true));
     await startNow(tester);
 
-    await tester.tap(find.text('Gabe'));
+    await tester.tap(adrenalinGabe);
     await tester.pump();
     expect(find.text('wartet'), findsOneWidget);
 
@@ -2510,7 +2541,7 @@ void main() {
   ) async {
     await pumpApp(tester);
     await startNow(tester);
-    await tester.tap(find.text('Gabe'));
+    await tester.tap(adrenalinGabe);
     await tester.pump();
     clock.advance(const Duration(minutes: 1));
     await tester.pump(const Duration(milliseconds: 250));

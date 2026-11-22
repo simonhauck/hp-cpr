@@ -317,7 +317,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get adrenalinLabel => 'Adrenalin';
 
   @override
-  String get adrenalinRecordButton => 'Gabe';
+  String get medikamentGabeButton => 'Gabe erfassen';
 
   @override
   String get adrenalinFirstDoseDue => 'Erste Gabe fällig';
@@ -335,7 +335,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get adrenalinStateOverdue => 'überfällig';
 
   @override
-  String adrenalinLastDoseAt(String time, String since) {
+  String medikamentLetzteGabe(String time, String since) {
     return 'Letzte Gabe: $time Uhr, vor $since';
   }
 
@@ -419,14 +419,6 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String amiodaronDose(int dosis) {
     return '$dosis mg';
-  }
-
-  @override
-  String get amiodaronGiveButton => 'Gegeben';
-
-  @override
-  String amiodaronLastDose(String time) {
-    return 'Letzte Gabe $time';
   }
 
   @override

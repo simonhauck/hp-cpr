@@ -8,6 +8,7 @@ import 'package:hp_cpr/app.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_store.dart';
 
 import 'support/fake_clock.dart';
+import 'support/medikament_finders.dart';
 import 'support/fake_wake_lock.dart';
 import 'support/roboto_font.dart';
 
@@ -55,13 +56,12 @@ void main() {
     expectNoScale(tester, find.textContaining('Druckphase ·'));
     expectNoScale(tester, find.text('02:00'));
     expectInsideViewport(tester, find.text('Schocks: 0'));
-    expectInsideViewport(tester, find.text('Gabe'));
+    expectInsideViewport(tester, adrenalinGabe);
 
     final amiodaronNotRecommended = find.text('nicht empfohlen');
     expect(amiodaronNotRecommended, findsOneWidget);
-    expectNoScale(tester, amiodaronNotRecommended);
     expectInsideViewport(tester, amiodaronNotRecommended);
-    expect(find.text('Gegeben'), findsNothing);
+    expect(isButtonEnabled(tester, amiodaronGabe), isFalse);
 
     final phaseLabel = find.text('Druckphase · Jetzt 2 Minuten komprimieren');
     expect(phaseLabel, findsOneWidget);
@@ -70,7 +70,7 @@ void main() {
       isFalse,
     );
 
-    await tester.tap(find.text('Gabe'));
+    await tester.tap(adrenalinGabe);
     await tester.pump();
     clock.advance(const Duration(minutes: 1));
     await tester.pump(const Duration(milliseconds: 250));
@@ -87,7 +87,7 @@ void main() {
     final amiodaronTitle = find.text('Amiodaron');
     final amiodaronState = find.text('erwägen');
     final amiodaronDose = find.text('300 mg');
-    final amiodaronGive = find.text('Gegeben');
+    final amiodaronGive = amiodaronGabe;
     expect(amiodaronTitle, findsOneWidget);
     expect(amiodaronState, findsOneWidget);
     expect(amiodaronDose, findsOneWidget);
@@ -106,7 +106,7 @@ void main() {
 
     expect(find.text('erwägen'), findsNothing);
     expect(find.text('nicht empfohlen'), findsOneWidget);
-    final amiodaronLastDose = find.text('Letzte Gabe 01:00');
+    final amiodaronLastDose = find.text('Letzte Gabe: 08:00 Uhr, vor 01:00');
     expect(amiodaronLastDose, findsOneWidget);
     expectNoScale(tester, amiodaronLastDose);
     expectInsideViewport(tester, amiodaronLastDose);
