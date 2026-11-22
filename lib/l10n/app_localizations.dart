@@ -142,42 +142,6 @@ abstract class AppLocalizations {
   /// **'Jetzt starten'**
   String get startNowButton;
 
-  /// Überschrift der Karte für eine bereits laufende Reanimation
-  ///
-  /// In de, this message translates to:
-  /// **'Laufende Reanimation'**
-  String get runningCaseTitle;
-
-  /// Beschriftung der Minuten-Auswahl für eine zurückdatierte Startzeit
-  ///
-  /// In de, this message translates to:
-  /// **'Minuten seit Beginn'**
-  String get backdateMinutesLabel;
-
-  /// Voreinstellung für eine zurückdatierte Startzeit
-  ///
-  /// In de, this message translates to:
-  /// **'{minutes} min'**
-  String backdateChip(int minutes);
-
-  /// Schaltfläche zum Eingeben einer eigenen Startzeit
-  ///
-  /// In de, this message translates to:
-  /// **'Eigene Startzeit'**
-  String get customStartzeitButton;
-
-  /// Titel des Dialogs für eine eigene Startzeit
-  ///
-  /// In de, this message translates to:
-  /// **'Eigene Startzeit'**
-  String get customStartzeitTitle;
-
-  /// Erklärung im Dialog für eine eigene Startzeit
-  ///
-  /// In de, this message translates to:
-  /// **'Wie lange läuft die Reanimation bereits?'**
-  String get customStartzeitDescription;
-
   /// Beschriftung des Minutenfelds
   ///
   /// In de, this message translates to:
@@ -195,18 +159,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Abbrechen'**
   String get cancelButton;
-
-  /// Schaltfläche zum Starten eines Falls aus einem Dialog
-  ///
-  /// In de, this message translates to:
-  /// **'Starten'**
-  String get startCaseButton;
-
-  /// Fehlermeldung bei einer leeren oder nullwertigen Startzeit
-  ///
-  /// In de, this message translates to:
-  /// **'Bitte eine Dauer größer als 0 eingeben.'**
-  String get invalidBackdateMessage;
 
   /// Fehlermeldung bei einem ungültigen Sekundenwert
   ///
@@ -379,7 +331,7 @@ abstract class AppLocalizations {
   /// Hinweis auf die gesperrten Strukturereignisse im laufenden Fall
   ///
   /// In de, this message translates to:
-  /// **'Im laufenden Fall sind nur Schocks, Medikamente, Messwerte und Notizen korrigierbar.'**
+  /// **'Im laufenden Fall sind nur Startzeit, Übernahme, Schocks, Medikamente, Messwerte und Notizen korrigierbar.'**
   String get protokollLiveEditHint;
 
   /// Aktion zum Bearbeiten eines Protokolleintrags
@@ -1329,6 +1281,90 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'{version} (Build {build})'**
   String versionWithBuild(String version, String build);
+
+  /// Titel des Vorbehandlung-Formulars
+  ///
+  /// In de, this message translates to:
+  /// **'Vorbehandlung'**
+  String get vorbehandlungTitle;
+
+  /// Hinweis im Phasenstreifen und Eintrag in Weitere Aktionen zum Öffnen des Vorbehandlung-Formulars
+  ///
+  /// In de, this message translates to:
+  /// **'Vorbehandlung erfassen'**
+  String get vorbehandlungErfassen;
+
+  /// Tooltip zum Ausblenden des Hinweises Vorbehandlung erfassen
+  ///
+  /// In de, this message translates to:
+  /// **'Hinweis ausblenden'**
+  String get vorbehandlungHinweisAusblenden;
+
+  /// Beschriftung der Auswahl, wie lange die Reanimation bei der Übernahme bereits lief
+  ///
+  /// In de, this message translates to:
+  /// **'Lief bei Übernahme seit'**
+  String get vorbehandlungLaufzeitLabel;
+
+  /// Voreinstellung für die Laufzeit bei Übernahme in Minuten
+  ///
+  /// In de, this message translates to:
+  /// **'{minutes} min'**
+  String vorbehandlungLaufzeitChip(int minutes);
+
+  /// Beschriftung des Felds für eine eigene Laufzeit bei Übernahme in Minuten
+  ///
+  /// In de, this message translates to:
+  /// **'Eigener Wert (Minuten)'**
+  String get vorbehandlungLaufzeitMinuten;
+
+  /// Fehlermeldung bei einer ungültigen eigenen Laufzeit
+  ///
+  /// In de, this message translates to:
+  /// **'Bitte eine ganze Zahl an Minuten eingeben.'**
+  String get vorbehandlungLaufzeitInvalid;
+
+  /// Schaltfläche zum Wählen der Startzeit als Uhrzeit
+  ///
+  /// In de, this message translates to:
+  /// **'Startzeit wählen'**
+  String get vorbehandlungStartzeitWaehlen;
+
+  /// Anzeige der Startzeit, die sich aus Übernahme und Laufzeit ergibt
+  ///
+  /// In de, this message translates to:
+  /// **'Startzeit: {time} Uhr'**
+  String vorbehandlungStartzeitValue(String time);
+
+  /// Beschriftung der Uhrzeit der Übernahme
+  ///
+  /// In de, this message translates to:
+  /// **'Übernahme'**
+  String get vorbehandlungUebernahmeLabel;
+
+  /// Fehlermeldung, wenn die Übernahme nach dem ersten erfassten Ereignis oder in der Zukunft liegt
+  ///
+  /// In de, this message translates to:
+  /// **'Die Übernahme darf nicht nach {time} Uhr liegen (erstes Ereignis oder jetzt).'**
+  String vorbehandlungUebernahmeZuSpaet(String time);
+
+  /// Fehlermeldung, wenn die gewählte Startzeit nach der Übernahme liegt
+  ///
+  /// In de, this message translates to:
+  /// **'Die Startzeit darf nicht nach der Übernahme liegen.'**
+  String get vorbehandlungStartzeitNachUebernahme;
+
+  /// Bestätigung nach dem Speichern der Vorbehandlung
+  ///
+  /// In de, this message translates to:
+  /// **'Vorbehandlung gespeichert'**
+  String get vorbehandlungSavedSnackbar;
+
+  /// Ereignis: Übernahme der Zeitnahme durch das Team
+  ///
+  /// In de, this message translates to:
+  /// **'Übernahme'**
+  String get eventUebernahme;
 }
 
 class _AppLocalizationsDelegate

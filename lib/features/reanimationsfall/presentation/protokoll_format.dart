@@ -25,6 +25,7 @@ IconData protokollEintragIcon(Object daten) {
     Messwert(:final typ) => messwertIcon(typ),
     ReanimationsfallNotiz() => Icons.notes,
     ReanimationsfallEnde() => Icons.stop_circle_outlined,
+    Uebernahme() => Icons.history,
     DateTime() => Icons.play_arrow,
     Duration() => Icons.block,
     _ => Icons.circle_outlined,
@@ -59,6 +60,7 @@ String protokollDatenText(AppLocalizations l10n, Object daten, {int? nummer}) {
     ReanimationsfallEnde(:final grund) => l10n.eventCaseEnded(
       beendigungsgrundLabel(l10n, grund),
     ),
+    Uebernahme() => l10n.eventUebernahme,
     DateTime() => l10n.eventCaseStart,
     Duration() => l10n.eventCaseDiscarded,
     _ => '',

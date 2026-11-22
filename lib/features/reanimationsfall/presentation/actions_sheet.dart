@@ -9,6 +9,7 @@ Future<void> showActionsSheet(
   required VoidCallback onOpenMesswerte,
   required VoidCallback onOpenProtokoll,
   required VoidCallback onRecordNotiz,
+  required VoidCallback onRecordVorbehandlung,
   required VoidCallback onEndCase,
   VoidCallback? onRecordSchock,
   VoidCallback? onRestartDruckphase,
@@ -21,6 +22,7 @@ Future<void> showActionsSheet(
       onOpenMesswerte: onOpenMesswerte,
       onOpenProtokoll: onOpenProtokoll,
       onRecordNotiz: onRecordNotiz,
+      onRecordVorbehandlung: onRecordVorbehandlung,
       onEndCase: onEndCase,
       onRecordSchock: onRecordSchock,
       onRestartDruckphase: onRestartDruckphase,
@@ -39,6 +41,7 @@ class ActionsSheet extends StatelessWidget {
     required this.onOpenMesswerte,
     required this.onOpenProtokoll,
     required this.onRecordNotiz,
+    required this.onRecordVorbehandlung,
     required this.onEndCase,
     this.onRecordSchock,
     this.onRestartDruckphase,
@@ -47,6 +50,7 @@ class ActionsSheet extends StatelessWidget {
   final VoidCallback onOpenMesswerte;
   final VoidCallback onOpenProtokoll;
   final VoidCallback onRecordNotiz;
+  final VoidCallback onRecordVorbehandlung;
   final VoidCallback onEndCase;
   final VoidCallback? onRecordSchock;
   final VoidCallback? onRestartDruckphase;
@@ -76,6 +80,11 @@ class ActionsSheet extends StatelessWidget {
           label: l10n.actionsRestartDruckphase,
           onPressed: restartDruckphase,
         ),
+      _SheetAction(
+        icon: Icons.history,
+        label: l10n.vorbehandlungErfassen,
+        onPressed: onRecordVorbehandlung,
+      ),
     ];
 
     final viewActions = <_SheetAction>[

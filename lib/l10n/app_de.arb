@@ -32,35 +32,6 @@
   "@startNowButton": {
     "description": "Schaltfläche zum sofortigen Start"
   },
-  "runningCaseTitle": "Laufende Reanimation",
-  "@runningCaseTitle": {
-    "description": "Überschrift der Karte für eine bereits laufende Reanimation"
-  },
-  "backdateMinutesLabel": "Minuten seit Beginn",
-  "@backdateMinutesLabel": {
-    "description": "Beschriftung der Minuten-Auswahl für eine zurückdatierte Startzeit"
-  },
-  "backdateChip": "{minutes} min",
-  "@backdateChip": {
-    "description": "Voreinstellung für eine zurückdatierte Startzeit",
-    "placeholders": {
-      "minutes": {
-        "type": "int"
-      }
-    }
-  },
-  "customStartzeitButton": "Eigene Startzeit",
-  "@customStartzeitButton": {
-    "description": "Schaltfläche zum Eingeben einer eigenen Startzeit"
-  },
-  "customStartzeitTitle": "Eigene Startzeit",
-  "@customStartzeitTitle": {
-    "description": "Titel des Dialogs für eine eigene Startzeit"
-  },
-  "customStartzeitDescription": "Wie lange läuft die Reanimation bereits?",
-  "@customStartzeitDescription": {
-    "description": "Erklärung im Dialog für eine eigene Startzeit"
-  },
   "minutesLabel": "Minuten",
   "@minutesLabel": {
     "description": "Beschriftung des Minutenfelds"
@@ -72,14 +43,6 @@
   "cancelButton": "Abbrechen",
   "@cancelButton": {
     "description": "Schaltfläche zum Abbrechen eines Dialogs"
-  },
-  "startCaseButton": "Starten",
-  "@startCaseButton": {
-    "description": "Schaltfläche zum Starten eines Falls aus einem Dialog"
-  },
-  "invalidBackdateMessage": "Bitte eine Dauer größer als 0 eingeben.",
-  "@invalidBackdateMessage": {
-    "description": "Fehlermeldung bei einer leeren oder nullwertigen Startzeit"
   },
   "invalidSecondsMessage": "Sekunden müssen zwischen 0 und 59 liegen.",
   "@invalidSecondsMessage": {
@@ -208,7 +171,7 @@
   "@protokollAuditToggle": {
     "description": "Schalter zum Anzeigen korrigierter und entfernter Einträge"
   },
-  "protokollLiveEditHint": "Im laufenden Fall sind nur Schocks, Medikamente, Messwerte und Notizen korrigierbar.",
+  "protokollLiveEditHint": "Im laufenden Fall sind nur Startzeit, Übernahme, Schocks, Medikamente, Messwerte und Notizen korrigierbar.",
   "@protokollLiveEditHint": {
     "description": "Hinweis auf die gesperrten Strukturereignisse im laufenden Fall"
   },
@@ -976,5 +939,76 @@
         "type": "String"
       }
     }
+  },
+  "vorbehandlungTitle": "Vorbehandlung",
+  "@vorbehandlungTitle": {
+    "description": "Titel des Vorbehandlung-Formulars"
+  },
+  "vorbehandlungErfassen": "Vorbehandlung erfassen",
+  "@vorbehandlungErfassen": {
+    "description": "Hinweis im Phasenstreifen und Eintrag in Weitere Aktionen zum Öffnen des Vorbehandlung-Formulars"
+  },
+  "vorbehandlungHinweisAusblenden": "Hinweis ausblenden",
+  "@vorbehandlungHinweisAusblenden": {
+    "description": "Tooltip zum Ausblenden des Hinweises Vorbehandlung erfassen"
+  },
+  "vorbehandlungLaufzeitLabel": "Lief bei Übernahme seit",
+  "@vorbehandlungLaufzeitLabel": {
+    "description": "Beschriftung der Auswahl, wie lange die Reanimation bei der Übernahme bereits lief"
+  },
+  "vorbehandlungLaufzeitChip": "{minutes} min",
+  "@vorbehandlungLaufzeitChip": {
+    "description": "Voreinstellung für die Laufzeit bei Übernahme in Minuten",
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "vorbehandlungLaufzeitMinuten": "Eigener Wert (Minuten)",
+  "@vorbehandlungLaufzeitMinuten": {
+    "description": "Beschriftung des Felds für eine eigene Laufzeit bei Übernahme in Minuten"
+  },
+  "vorbehandlungLaufzeitInvalid": "Bitte eine ganze Zahl an Minuten eingeben.",
+  "@vorbehandlungLaufzeitInvalid": {
+    "description": "Fehlermeldung bei einer ungültigen eigenen Laufzeit"
+  },
+  "vorbehandlungStartzeitWaehlen": "Startzeit wählen",
+  "@vorbehandlungStartzeitWaehlen": {
+    "description": "Schaltfläche zum Wählen der Startzeit als Uhrzeit"
+  },
+  "vorbehandlungStartzeitValue": "Startzeit: {time} Uhr",
+  "@vorbehandlungStartzeitValue": {
+    "description": "Anzeige der Startzeit, die sich aus Übernahme und Laufzeit ergibt",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "vorbehandlungUebernahmeLabel": "Übernahme",
+  "@vorbehandlungUebernahmeLabel": {
+    "description": "Beschriftung der Uhrzeit der Übernahme"
+  },
+  "vorbehandlungUebernahmeZuSpaet": "Die Übernahme darf nicht nach {time} Uhr liegen (erstes Ereignis oder jetzt).",
+  "@vorbehandlungUebernahmeZuSpaet": {
+    "description": "Fehlermeldung, wenn die Übernahme nach dem ersten erfassten Ereignis oder in der Zukunft liegt",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "vorbehandlungStartzeitNachUebernahme": "Die Startzeit darf nicht nach der Übernahme liegen.",
+  "@vorbehandlungStartzeitNachUebernahme": {
+    "description": "Fehlermeldung, wenn die gewählte Startzeit nach der Übernahme liegt"
+  },
+  "vorbehandlungSavedSnackbar": "Vorbehandlung gespeichert",
+  "@vorbehandlungSavedSnackbar": {
+    "description": "Bestätigung nach dem Speichern der Vorbehandlung"
+  },
+  "eventUebernahme": "Übernahme",
+  "@eventUebernahme": {
+    "description": "Ereignis: Übernahme der Zeitnahme durch das Team"
   }
 }

@@ -173,9 +173,6 @@ class PageLayout {
   /// Whether the start page header uses two rows on portrait phones.
   bool get stacksStartHeader => isPhone && !isLandscape;
 
-  /// Whether the two start choices are shown side by side.
-  bool get usesTwoColumnStartCards => !isPhone || isLandscape;
-
   /// Whether the header uses the compact Schock count chip.
   bool get usesCompactHeaderChip => isPhone;
 
@@ -199,10 +196,6 @@ class PageLayout {
 
   /// The density of the Demo-Modus toggle on the start screen.
   VisualDensity get demoModeToggleDensity =>
-      isCompact ? VisualDensity.compact : VisualDensity.standard;
-
-  /// The density of the backdate chips on the start screen.
-  VisualDensity get backdateChipDensity =>
       isCompact ? VisualDensity.compact : VisualDensity.standard;
 
   EdgeInsets get cardPadding => EdgeInsets.all(isCompact ? space6 : space16);

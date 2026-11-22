@@ -54,3 +54,11 @@ class ReanimationsfallEnde {
   final Duration zeitpunkt;
   final Beendigungsgrund grund;
 }
+
+/// The Übernahme as shown in the Protokoll when it differs from the Startzeit.
+class Uebernahme {
+  const Uebernahme({required this.zeitpunkt});
+
+  /// The elapsed time since the Startzeit at the Übernahme.
+  final Duration zeitpunkt;
+}

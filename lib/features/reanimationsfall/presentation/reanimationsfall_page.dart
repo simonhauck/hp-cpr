@@ -17,6 +17,7 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/end_reanimationsfa
 import 'package:hp_cpr/features/reanimationsfall/presentation/leave_reanimationsfall_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/phase_action_bar.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/phase_strip.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_corrections_mixin.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/reanimationsfall_summary_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_dialog.dart';
@@ -54,9 +55,17 @@ class ReanimationsfallPage extends StatefulWidget {
 }
 
 class _ReanimationsfallPageState extends State<ReanimationsfallPage>
-    with WidgetsBindingObserver {
+    with
+        WidgetsBindingObserver,
+        ProtokollCorrectionsMixin<ReanimationsfallPage> {
   Timer? _ticker;
   final _signalDetector = SignalDetector();
+
+  @override
+  Reanimationsfall get protokollFall => widget.reanimationsfall;
+
+  @override
+  ReanimationsfallSession get protokollSession => widget.session;
 
   @override
   void initState() {
@@ -128,12 +137,17 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
       onOpenMesswerte: _openMesswerte,
       onOpenProtokoll: _openProtokoll,
       onRecordNotiz: _recordNotiz,
+      onRecordVorbehandlung: openVorbehandlung,
       onEndCase: _endReanimationsfall,
       onRecordSchock: snapshot.istLaufend ? _recordSchock : null,
       onRestartDruckphase: snapshot.kannDruckphaseNeuStarten
           ? _restartDruckphase
           : null,
     );
+  }
+
+  void _dismissVorbehandlungHinweis() {
+    _mutate(widget.reanimationsfall.dismissVorbehandlungHinweis);
   }
 
   void _restartDruckphase() {
@@ -286,120 +300,149 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
         if (didPop) return;
         unawaited(_requestLeave());
       },
-      child: PageScaffold(
-        maxWidth: PageLayout.maxContentWidth,
-        endDrawer: AppDrawer(routes: widget.routes),
-        header: (context, layout) => _ReanimationsfallHeader(
-          snapshot: snapshot,
-          layout: layout,
-          onBack: _requestLeave,
-        ),
-        content: (context, layout) {
-          final reanimationsdauerPanel = _ReanimationsdauerPanel(
-            snapshot: snapshot,
-            layout: layout,
-          );
-          final timer = _PhaseTimerPanel(
-            snapshot: snapshot,
-            layout: layout,
-            onEnterAnalysephase: _enterAnalysephase,
-            onRecordRhythmusanalyse: _recordRhythmusanalyse,
-            onRecordRosc: _recordRosc,
-            onRecordUnklar: _recordUnklar,
-          );
-
-          final adrenalinPanel = AdrenalinPanel(
-            snapshot: snapshot,
-            layout: layout,
-            onRecordAdrenalin: _recordAdrenalin,
-            isRecordingEnabled: snapshot.istLaufend,
-          );
-          final amiodaronPanel = AmiodaronPanel(
-            snapshot: snapshot,
-            layout: layout,
-            onRecordAmiodaron: _recordAmiodaron,
-            isRecordingEnabled: snapshot.istLaufend,
-          );
-
-          if (layout.placesMedicationBeside) {
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  flex: PageLayout.phaseColumnFlex,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      reanimationsdauerPanel,
-                      SizedBox(height: layout.contentGap),
-                      Expanded(child: timer),
-                    ],
-                  ),
-                ),
-                SizedBox(width: layout.panelGap),
-                Expanded(
-                  flex: PageLayout.medicationColumnFlex,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      adrenalinPanel,
-                      SizedBox(height: layout.panelGap),
-                      amiodaronPanel,
-                    ],
-                  ),
-                ),
-              ],
-            );
-          }
-
-          final main = layout.isLandscape
-              ? Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      flex: PageLayout.elapsedPanelFlex,
-                      child: reanimationsdauerPanel,
-                    ),
-                    SizedBox(width: layout.panelGap),
-                    Expanded(flex: PageLayout.timerPanelFlex, child: timer),
-                  ],
-                )
-              : Column(
-                  children: [
-                    reanimationsdauerPanel,
-                    SizedBox(height: layout.panelGap),
-                    Expanded(child: timer),
-                  ],
-                );
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(child: main),
-              SizedBox(height: layout.contentGap),
-              adrenalinPanel,
-              SizedBox(height: layout.contentGap),
-              amiodaronPanel,
-            ],
-          );
-        },
-        footer: (context, layout) => snapshot.istRosc
-            ? _RoscActionBar(
-                layout: layout,
-                onResumeResuscitation: _resumeResuscitation,
-                onEndCase: _endReanimationsfall,
-                onOpenActions: _openActions,
-                onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
-              )
-            : PhaseActionBar(
-                layout: layout,
-                onOpenActions: _openActions,
-                onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
-              ),
+      child: _VorbehandlungHinweisScope(
+        onOpen: () => unawaited(openVorbehandlung()),
+        onDismiss: _dismissVorbehandlungHinweis,
+        child: _buildScaffold(snapshot),
       ),
     );
   }
+
+  Widget _buildScaffold(ReanimationsfallSnapshot snapshot) {
+    return PageScaffold(
+      maxWidth: PageLayout.maxContentWidth,
+      endDrawer: AppDrawer(routes: widget.routes),
+      header: (context, layout) => _ReanimationsfallHeader(
+        snapshot: snapshot,
+        layout: layout,
+        onBack: _requestLeave,
+      ),
+      content: (context, layout) {
+        final reanimationsdauerPanel = _ReanimationsdauerPanel(
+          snapshot: snapshot,
+          layout: layout,
+        );
+        final timer = _PhaseTimerPanel(
+          snapshot: snapshot,
+          layout: layout,
+          onEnterAnalysephase: _enterAnalysephase,
+          onRecordRhythmusanalyse: _recordRhythmusanalyse,
+          onRecordRosc: _recordRosc,
+          onRecordUnklar: _recordUnklar,
+        );
+
+        final adrenalinPanel = AdrenalinPanel(
+          snapshot: snapshot,
+          layout: layout,
+          onRecordAdrenalin: _recordAdrenalin,
+          isRecordingEnabled: snapshot.istLaufend,
+        );
+        final amiodaronPanel = AmiodaronPanel(
+          snapshot: snapshot,
+          layout: layout,
+          onRecordAmiodaron: _recordAmiodaron,
+          isRecordingEnabled: snapshot.istLaufend,
+        );
+
+        if (layout.placesMedicationBeside) {
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                flex: PageLayout.phaseColumnFlex,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    reanimationsdauerPanel,
+                    SizedBox(height: layout.contentGap),
+                    Expanded(child: timer),
+                  ],
+                ),
+              ),
+              SizedBox(width: layout.panelGap),
+              Expanded(
+                flex: PageLayout.medicationColumnFlex,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    adrenalinPanel,
+                    SizedBox(height: layout.panelGap),
+                    amiodaronPanel,
+                  ],
+                ),
+              ),
+            ],
+          );
+        }
+
+        final main = layout.isLandscape
+            ? Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    flex: PageLayout.elapsedPanelFlex,
+                    child: reanimationsdauerPanel,
+                  ),
+                  SizedBox(width: layout.panelGap),
+                  Expanded(flex: PageLayout.timerPanelFlex, child: timer),
+                ],
+              )
+            : Column(
+                children: [
+                  reanimationsdauerPanel,
+                  SizedBox(height: layout.panelGap),
+                  Expanded(child: timer),
+                ],
+              );
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(child: main),
+            SizedBox(height: layout.contentGap),
+            adrenalinPanel,
+            SizedBox(height: layout.contentGap),
+            amiodaronPanel,
+          ],
+        );
+      },
+      footer: (context, layout) => snapshot.istRosc
+          ? _RoscActionBar(
+              layout: layout,
+              onResumeResuscitation: _resumeResuscitation,
+              onEndCase: _endReanimationsfall,
+              onOpenActions: _openActions,
+              onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
+            )
+          : PhaseActionBar(
+              layout: layout,
+              onOpenActions: _openActions,
+              onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
+            ),
+    );
+  }
+}
+
+/// Hands the `Vorbehandlung erfassen` prompt actions to the phase strip of
+/// whichever phase panel is shown.
+class _VorbehandlungHinweisScope extends InheritedWidget {
+  const _VorbehandlungHinweisScope({
+    required this.onOpen,
+    required this.onDismiss,
+    required super.child,
+  });
+
+  final VoidCallback onOpen;
+  final VoidCallback onDismiss;
+
+  static _VorbehandlungHinweisScope? maybeOf(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<_VorbehandlungHinweisScope>();
+  }
+
+  @override
+  bool updateShouldNotify(_VorbehandlungHinweisScope oldWidget) => false;
 }
 
 class _ReanimationsfallHeader extends StatelessWidget {
@@ -669,6 +712,7 @@ class _PhasePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = tone.colors(context);
+    final hinweis = _VorbehandlungHinweisScope.maybeOf(context);
 
     return Container(
       padding: layout.phasePanelPadding,
@@ -685,7 +729,12 @@ class _PhasePanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          PhaseStrip(snapshot: snapshot),
+          PhaseStrip(
+            snapshot: snapshot,
+            onOpenVorbehandlung: hinweis?.onOpen,
+            onDismissVorbehandlungHinweis: hinweis?.onDismiss,
+            compact: layout.isCompact || layout.isLandscape,
+          ),
           SizedBox(height: layout.phaseStripGap),
           Expanded(child: child),
         ],

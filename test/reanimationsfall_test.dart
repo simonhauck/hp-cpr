@@ -63,48 +63,6 @@ void main() {
       },
     );
 
-    test('backdates the Startzeit and starts at the matching cycle offset', () {
-      final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8, 30));
-      final reanimationsfall = Reanimationsfall.start(
-        clock: clock,
-        backdate: const Duration(minutes: 1),
-      );
-
-      final snapshot = reanimationsfall.snapshot();
-
-      expect(snapshot.startzeit, DateTime(2026, 10, 25, 8, 29));
-      expect(snapshot.reanimationsdauer, const Duration(minutes: 1));
-      expect(snapshot.compressionRemaining, const Duration(minutes: 1));
-      expect(snapshot.isRhythmusanalyseDue, isFalse);
-    });
-
-    test('starts a long-running case already due for the Rhythmusanalyse', () {
-      final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8, 30));
-      final reanimationsfall = Reanimationsfall.start(
-        clock: clock,
-        backdate: const Duration(minutes: 5),
-      );
-
-      final snapshot = reanimationsfall.snapshot();
-
-      expect(snapshot.startzeit, DateTime(2026, 10, 25, 8, 25));
-      expect(snapshot.reanimationsdauer, const Duration(minutes: 5));
-      expect(snapshot.isRhythmusanalyseDue, isTrue);
-      expect(snapshot.rhythmusanalyseOverdue, const Duration(minutes: 3));
-    });
-
-    test('rejects a negative backdate', () {
-      final clock = FakeClock();
-
-      expect(
-        () => Reanimationsfall.start(
-          clock: clock,
-          backdate: const Duration(seconds: -1),
-        ),
-        throwsArgumentError,
-      );
-    });
-
     test('snapshots the alert settings per Reanimationsfall', () {
       final clock = FakeClock();
       final reanimationsfall = Reanimationsfall.start(
@@ -1244,6 +1202,329 @@ void main() {
         reanimationsfall.snapshot().reanimationsdauer,
         const Duration(minutes: 13),
       );
+    });
+  });
+
+  group('Startzeit and Übernahme', () {
+    DateTime wallTime(ReanimationsfallSnapshot snapshot, Duration zeitpunkt) =>
+        snapshot.startzeit.add(zeitpunkt);
+
+    test('records the Übernahme at the start tap', () {
+      final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8, 30));
+      final reanimationsfall = Reanimationsfall.start(clock: clock);
+
+      final snapshot = reanimationsfall.snapshot();
+
+      expect(
+        reanimationsfall.erfassteUebernahme,
+        DateTime(2026, 10, 25, 8, 30),
+      );
+      expect(snapshot.uebernahme, DateTime(2026, 10, 25, 8, 30));
+      expect(snapshot.startzeit, DateTime(2026, 10, 25, 8, 30));
+      expect(snapshot.laufzeitBeiUebernahme, Duration.zero);
+      expect(snapshot.zeigeVorbehandlungHinweis, isTrue);
+      expect(
+        snapshot.protokoll.eintraege.map((e) => e.typ),
+        isNot(contains(ProtokollEintragTyp.uebernahme)),
+      );
+    });
+
+    test('a Startzeit correction keeps every event at its wall-clock time and '
+        'leaves the countdown, the Zeitfenster and the phase unchanged', () {
+      final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8, 30));
+      final reanimationsfall = Reanimationsfall.start(clock: clock);
+      clock.advance(const Duration(seconds: 30));
+      reanimationsfall.recordSchock(energieJoule: 150);
+      clock.advance(const Duration(seconds: 20));
+      reanimationsfall.recordAdrenalin();
+      clock.advance(const Duration(seconds: 10));
+      reanimationsfall.recordNotiz('Zugang gelegt');
+      clock.advance(const Duration(seconds: 15));
+      final before = reanimationsfall.snapshot();
+
+      reanimationsfall.correctVorbehandlung(
+        uebernahme: DateTime(2026, 10, 25, 8, 30),
+        laufzeitBeiUebernahme: const Duration(minutes: 5),
+      );
+      final after = reanimationsfall.snapshot();
+
+      expect(after.startzeit, DateTime(2026, 10, 25, 8, 25));
+      expect(after.uebernahme, DateTime(2026, 10, 25, 8, 30));
+      expect(
+        after.reanimationsdauer,
+        before.reanimationsdauer + const Duration(minutes: 5),
+      );
+      expect(after.cprDauer, before.cprDauer + const Duration(minutes: 5));
+      expect(
+        wallTime(after, after.schocks.single.zeitpunkt),
+        DateTime(2026, 10, 25, 8, 30, 30),
+      );
+      expect(
+        wallTime(after, after.adrenalinGaben.single.zeitpunkt),
+        wallTime(before, before.adrenalinGaben.single.zeitpunkt),
+      );
+      expect(
+        wallTime(after, after.notizen.single.zeitpunkt),
+        wallTime(before, before.notizen.single.zeitpunkt),
+      );
+      for (final eintrag in after.protokoll.eintraege) {
+        if (eintrag.typ.istLebenszyklus) continue;
+        final original = before.protokoll.eintraege.singleWhere(
+          (e) => e.ref == eintrag.ref,
+        );
+        expect(
+          wallTime(after, eintrag.zeitpunkt),
+          wallTime(before, original.zeitpunkt),
+        );
+      }
+      expect(after.compressionRemaining, before.compressionRemaining);
+      expect(after.adrenalinSeitLetzterGabe, before.adrenalinSeitLetzterGabe);
+      expect(
+        after.adrenalinZeitfensterZustand,
+        before.adrenalinZeitfensterZustand,
+      );
+      expect(after.phase, before.phase);
+      expect(after.schockAnzahl, before.schockAnzahl);
+    });
+
+    test('leaves a running Analysephase untouched', () {
+      final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8, 30));
+      final reanimationsfall = Reanimationsfall.start(clock: clock);
+      clock.advance(const Duration(seconds: 50));
+      reanimationsfall.enterAnalysephase();
+      clock.advance(const Duration(seconds: 4));
+      final before = reanimationsfall.snapshot();
+
+      reanimationsfall.correctVorbehandlung(
+        uebernahme: DateTime(2026, 10, 25, 8, 30),
+        laufzeitBeiUebernahme: const Duration(minutes: 8),
+      );
+      final after = reanimationsfall.snapshot();
+
+      expect(after.phase, Reanimationsphase.analysephase);
+      expect(after.pauseDuration, before.pauseDuration);
+      expect(after.compressionRemaining, before.compressionRemaining);
+    });
+
+    test('shows the Übernahme in the Protokoll only when it differs from the '
+        'Startzeit', () {
+      final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8, 30));
+      final reanimationsfall = Reanimationsfall.start(clock: clock);
+      clock.advance(const Duration(minutes: 1));
+
+      reanimationsfall.correctVorbehandlung(
+        uebernahme: DateTime(2026, 10, 25, 8, 28),
+        laufzeitBeiUebernahme: const Duration(minutes: 2),
+      );
+      var protokoll = reanimationsfall.snapshot().protokoll;
+      final startzeit = protokoll.eintraege.first;
+      final uebernahme = protokoll.eintraege[1];
+
+      expect(startzeit.typ, ProtokollEintragTyp.startzeit);
+      expect(startzeit.daten, DateTime(2026, 10, 25, 8, 26));
+      expect(startzeit.istKorrigiert, isTrue);
+      expect(startzeit.istBearbeitbar, isTrue);
+      expect(startzeit.originalZeitpunkt, const Duration(minutes: 4));
+      expect(uebernahme.typ, ProtokollEintragTyp.uebernahme);
+      expect(uebernahme.zeitpunkt, const Duration(minutes: 2));
+      expect(uebernahme.istKorrigiert, isTrue);
+      expect(uebernahme.istBearbeitbar, isTrue);
+
+      reanimationsfall.correctVorbehandlung(
+        uebernahme: DateTime(2026, 10, 25, 8, 28),
+        laufzeitBeiUebernahme: Duration.zero,
+      );
+      protokoll = reanimationsfall.snapshot().protokoll;
+
+      expect(
+        protokoll.eintraege.map((e) => e.typ),
+        isNot(contains(ProtokollEintragTyp.uebernahme)),
+      );
+    });
+
+    test('appends each save as a Korrektur and the latest one wins', () {
+      final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8, 30));
+      final reanimationsfall = Reanimationsfall.start(clock: clock);
+      clock.advance(const Duration(seconds: 30));
+
+      reanimationsfall.correctVorbehandlung(
+        uebernahme: DateTime(2026, 10, 25, 8, 30),
+        laufzeitBeiUebernahme: const Duration(minutes: 5),
+      );
+      reanimationsfall.correctVorbehandlung(
+        uebernahme: DateTime(2026, 10, 25, 8, 30),
+        laufzeitBeiUebernahme: const Duration(minutes: 3),
+      );
+
+      expect(reanimationsfall.exportState().korrekturen, hasLength(2));
+      expect(
+        reanimationsfall.snapshot().startzeit,
+        DateTime(2026, 10, 25, 8, 27),
+      );
+    });
+
+    test('keeps a corrected event time across a later Startzeit correction', () {
+      final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8, 30));
+      final reanimationsfall = Reanimationsfall.start(clock: clock);
+      clock.advance(const Duration(seconds: 30));
+      reanimationsfall.recordSchock();
+      clock.advance(const Duration(minutes: 1));
+      reanimationsfall.correctVorbehandlung(
+        uebernahme: DateTime(2026, 10, 25, 8, 30),
+        laufzeitBeiUebernahme: const Duration(minutes: 2),
+      );
+      final schock = reanimationsfall
+          .snapshot()
+          .protokoll
+          .eintraege
+          .singleWhere((e) => e.typ == ProtokollEintragTyp.schock);
+
+      // Times in a Protokoll correction are relative to the current Startzeit.
+      reanimationsfall.applyProtokollKorrektur(
+        SchockKorrigiert(
+          ziel: schock.ref,
+          zeitpunkt: const Duration(minutes: 2, seconds: 40),
+        ),
+      );
+      reanimationsfall.correctVorbehandlung(
+        uebernahme: DateTime(2026, 10, 25, 8, 30),
+        laufzeitBeiUebernahme: const Duration(minutes: 7),
+      );
+      final snapshot = reanimationsfall.snapshot();
+
+      expect(
+        wallTime(snapshot, snapshot.schocks.single.zeitpunkt),
+        DateTime(2026, 10, 25, 8, 30, 40),
+      );
+    });
+
+    test('rejects an Übernahme after the first recorded event', () {
+      final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8, 30));
+      final reanimationsfall = Reanimationsfall.start(clock: clock);
+      clock.advance(const Duration(seconds: 30));
+      reanimationsfall.recordSchock();
+      clock.advance(const Duration(minutes: 1));
+
+      expect(
+        () => reanimationsfall.correctVorbehandlung(
+          uebernahme: DateTime(2026, 10, 25, 8, 30, 31),
+          laufzeitBeiUebernahme: Duration.zero,
+        ),
+        throwsArgumentError,
+      );
+      expect(
+        reanimationsfall.snapshot().spaetesteUebernahme,
+        DateTime(2026, 10, 25, 8, 30, 30),
+      );
+
+      reanimationsfall.correctVorbehandlung(
+        uebernahme: DateTime(2026, 10, 25, 8, 30, 30),
+        laufzeitBeiUebernahme: Duration.zero,
+      );
+      expect(
+        reanimationsfall.snapshot().uebernahme,
+        DateTime(2026, 10, 25, 8, 30, 30),
+      );
+    });
+
+    test('rejects an Übernahme in the future', () {
+      final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8, 30));
+      final reanimationsfall = Reanimationsfall.start(clock: clock);
+      clock.advance(const Duration(seconds: 10));
+
+      expect(
+        () => reanimationsfall.correctVorbehandlung(
+          uebernahme: DateTime(2026, 10, 25, 8, 30, 11),
+          laufzeitBeiUebernahme: const Duration(minutes: 1),
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('rejects a Startzeit after the Übernahme', () {
+      final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8, 30));
+      final reanimationsfall = Reanimationsfall.start(clock: clock);
+      clock.advance(const Duration(seconds: 10));
+
+      expect(
+        () => reanimationsfall.correctVorbehandlung(
+          uebernahme: DateTime(2026, 10, 25, 8, 30),
+          laufzeitBeiUebernahme: const Duration(seconds: -1),
+        ),
+        throwsArgumentError,
+      );
+      expect(reanimationsfall.exportState().korrekturen, isEmpty);
+    });
+
+    test('rejects an event correction before the Übernahme', () {
+      final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8, 30));
+      final reanimationsfall = Reanimationsfall.start(clock: clock);
+      clock.advance(const Duration(seconds: 30));
+      reanimationsfall.recordSchock();
+      clock.advance(const Duration(seconds: 30));
+      reanimationsfall.correctVorbehandlung(
+        uebernahme: DateTime(2026, 10, 25, 8, 30),
+        laufzeitBeiUebernahme: const Duration(minutes: 2),
+      );
+      final schock = reanimationsfall
+          .snapshot()
+          .protokoll
+          .eintraege
+          .singleWhere((e) => e.typ == ProtokollEintragTyp.schock);
+
+      expect(
+        () => reanimationsfall.applyProtokollKorrektur(
+          SchockKorrigiert(
+            ziel: schock.ref,
+            zeitpunkt: const Duration(minutes: 1),
+          ),
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('stays correctable after the case has ended', () {
+      final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8, 30));
+      final reanimationsfall = Reanimationsfall.start(clock: clock);
+      clock.advance(const Duration(minutes: 3));
+      reanimationsfall.endReanimationsfall(Beendigungsgrund.uebergabe);
+      clock.advance(const Duration(minutes: 10));
+      final before = reanimationsfall.snapshot();
+
+      reanimationsfall.correctVorbehandlung(
+        uebernahme: DateTime(2026, 10, 25, 8, 30),
+        laufzeitBeiUebernahme: const Duration(minutes: 4),
+      );
+      final after = reanimationsfall.snapshot();
+
+      expect(after.startzeit, DateTime(2026, 10, 25, 8, 26));
+      expect(
+        wallTime(after, after.ende!.zeitpunkt),
+        DateTime(2026, 10, 25, 8, 33),
+      );
+      expect(after.cprDauer, before.cprDauer + const Duration(minutes: 4));
+      expect(
+        () => reanimationsfall.correctVorbehandlung(
+          uebernahme: DateTime(2026, 10, 25, 8, 33, 1),
+          laufzeitBeiUebernahme: Duration.zero,
+        ),
+        throwsArgumentError,
+      );
+    });
+
+    test('hides the prompt once dismissed or saved', () {
+      final clock = FakeClock();
+      final dismissed = Reanimationsfall.start(clock: clock);
+      final saved = Reanimationsfall.start(clock: clock);
+
+      dismissed.dismissVorbehandlungHinweis();
+      saved.correctVorbehandlung(
+        uebernahme: saved.erfassteUebernahme,
+        laufzeitBeiUebernahme: const Duration(minutes: 1),
+      );
+
+      expect(dismissed.snapshot().zeigeVorbehandlungHinweis, isFalse);
+      expect(saved.snapshot().zeigeVorbehandlungHinweis, isFalse);
     });
   });
 }

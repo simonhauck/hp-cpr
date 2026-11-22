@@ -8,6 +8,7 @@ import 'package:hp_cpr/features/reanimationsfall/domain/protokoll.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/protokoll_ereignis.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/rhythmusanalyse.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/schock.dart';
+import 'package:hp_cpr/features/reanimationsfall/domain/zeitversatz.dart';
 
 export 'package:hp_cpr/features/reanimationsfall/domain/ereignisse.dart';
 export 'package:hp_cpr/features/reanimationsfall/domain/protokoll.dart';
@@ -47,9 +48,16 @@ class Reanimationsabschnitt {
 
 /// A Reanimationsfall, from the Startzeit onwards.
 ///
-/// Time zero is the first compression. The Reanimationsdauer is derived from
-/// the monotonic clock. On resume, the wall clock is used only to recover an
-/// interval in which the device was suspended.
+/// The internal timeline starts at the Übernahme recorded with the start tap:
+/// every stored time is relative to that instant, which never moves. The
+/// Startzeit and the Übernahme are derived from the latest
+/// [VorbehandlungKorrigiert], so correcting them keeps every recorded event's
+/// wall-clock time and leaves the running timers untouched. The snapshot
+/// reports every time relative to the corrected Startzeit.
+///
+/// The Reanimationsdauer is derived from the monotonic clock. On resume, the
+/// wall clock is used only to recover an interval in which the device was
+/// suspended.
 class Reanimationsfall {
   static int _nextId = 0;
 
@@ -59,23 +67,15 @@ class Reanimationsfall {
     this.vibrationEnabled = true,
     this.soundEnabled = false,
     this.demoMode = false,
-    Duration backdate = Duration.zero,
   }) : _clock = clock,
-       _monotonicStartOffset = clock.monotonicNow() - backdate,
+       _monotonicStartOffset = clock.monotonicNow(),
        id =
            '${clock.now().microsecondsSinceEpoch}-'
            '${clock.monotonicNow().inMicroseconds}-'
            '${_nextId++}',
-       startzeit = clock.now().subtract(backdate),
-       startzeitUtc = clock.now().toUtc().subtract(backdate),
-       utcOffsetMinutes = clock
-           .now()
-           .subtract(backdate)
-           .timeZoneOffset
-           .inMinutes {
-    if (backdate.isNegative) {
-      throw ArgumentError.value(backdate, 'backdate', 'must not be negative');
-    }
+       erfassteUebernahme = clock.now(),
+       erfassteUebernahmeUtc = clock.now().toUtc(),
+       utcOffsetMinutes = clock.now().timeZoneOffset.inMinutes {
     _compressionCycleStartOffset = _monotonicStartOffset;
   }
 
@@ -86,18 +86,19 @@ class Reanimationsfall {
   }) : _clock = clock,
        _monotonicStartOffset =
            clock.monotonicNow() -
-           clock.now().toUtc().difference(state.startzeitUtc),
+           clock.now().toUtc().difference(state.erfassteUebernahmeUtc),
        id = state.id,
        leitlinienprofil = state.leitlinienprofil,
        vibrationEnabled = state.vibrationEnabled,
        soundEnabled = state.soundEnabled,
        demoMode = state.demoMode,
-       startzeit = state.startzeit,
-       startzeitUtc = state.startzeitUtc,
+       erfassteUebernahme = state.erfassteUebernahme,
+       erfassteUebernahmeUtc = state.erfassteUebernahmeUtc,
        utcOffsetMinutes = state.utcOffsetMinutes {
     _zustand = state.zustand;
     _phase = state.phase;
     _demoOffset = state.demoOffset;
+    _vorbehandlungHinweisAusgeblendet = state.vorbehandlungHinweisAusgeblendet;
     _nextEreignisId = state.nextEreignisId;
     _compressionCycleStartOffset =
         _monotonicStartOffset + state.compressionCycleStartOffset;
@@ -146,14 +147,37 @@ class Reanimationsfall {
   /// Whether the Reanimationsfall was started in Demo-Modus.
   final bool demoMode;
 
-  /// The corrected wall-clock time zero of the Reanimationsfall.
-  final DateTime startzeit;
+  /// The Übernahme as recorded with the start tap, the fixed origin of the
+  /// internal timeline.
+  final DateTime erfassteUebernahme;
 
-  /// The time zero as an absolute instant.
-  final DateTime startzeitUtc;
+  /// The recorded Übernahme as an absolute instant.
+  final DateTime erfassteUebernahmeUtc;
 
   /// The device's UTC offset when the Reanimationsfall started.
   final int utcOffsetMinutes;
+
+  bool _vorbehandlungHinweisAusgeblendet = false;
+
+  /// The latest Vorbehandlung correction, if the form was ever saved.
+  VorbehandlungKorrigiert? get _vorbehandlung =>
+      letzteVorbehandlung(_korrekturen);
+
+  /// The Übernahme relative to the recorded Übernahme.
+  Duration get _uebernahmeOffset => _vorbehandlung?.uebernahme ?? Duration.zero;
+
+  /// The Startzeit relative to the recorded Übernahme; zero or negative
+  /// unless the Übernahme was corrected to after the start tap.
+  Duration get _startzeitOffset => _vorbehandlung?.startzeit ?? Duration.zero;
+
+  /// Turns an internal time into the time since the Startzeit.
+  Duration get _versatz => -_startzeitOffset;
+
+  /// The corrected wall-clock time zero of the Reanimationsfall.
+  DateTime get startzeit => erfassteUebernahme.add(_startzeitOffset);
+
+  /// The corrected wall-clock time of the Übernahme.
+  DateTime get uebernahme => erfassteUebernahme.add(_uebernahmeOffset);
 
   ReanimationsfallZustand _zustand = ReanimationsfallZustand.laufend;
   final List<RoscEreignis> _roscEreignisse = [];
@@ -197,7 +221,7 @@ class Reanimationsfall {
   /// is ignored. Demo-Modus time is excluded so a simulated advance is not
   /// mistaken for device sleep.
   void reconcileWithWallClock() {
-    final wallElapsed = _clock.now().toUtc().difference(startzeitUtc);
+    final wallElapsed = _clock.now().toUtc().difference(erfassteUebernahmeUtc);
     final realElapsed =
         _clock.monotonicNow() + _monotonicAdjustment - _monotonicStartOffset;
     if (wallElapsed > realElapsed) {
@@ -552,8 +576,89 @@ class Reanimationsfall {
     _ersteAdrenalinGabeFaellig = false;
   }
 
+  /// Hides the `Vorbehandlung erfassen` prompt for this case.
+  void dismissVorbehandlungHinweis() {
+    _vorbehandlungHinweisAusgeblendet = true;
+  }
+
+  /// Saves the Vorbehandlung form as an append-only correction.
+  ///
+  /// [uebernahme] is the wall-clock time the team took over and
+  /// [laufzeitBeiUebernahme] how long the resuscitation had been running by
+  /// then; together they define the Startzeit. The rule is
+  /// `Startzeit ≤ Übernahme ≤ first event recorded in the app`, never in the
+  /// future. Recorded events keep their wall-clock time and the running
+  /// Druckphase, the Adrenalin Zeitfenster and the phase stay untouched; only
+  /// the Reanimationsdauer changes. It works during and after the case.
+  void correctVorbehandlung({
+    required DateTime uebernahme,
+    required Duration laufzeitBeiUebernahme,
+  }) {
+    final offset = uebernahme.toUtc().difference(erfassteUebernahmeUtc);
+    applyProtokollKorrektur(
+      VorbehandlungKorrigiert(
+        uebernahme: Duration(milliseconds: offset.inMilliseconds),
+        laufzeitBeiUebernahme: Duration(
+          milliseconds: laufzeitBeiUebernahme.inMilliseconds,
+        ),
+      ),
+    );
+  }
+
+  void _applyVorbehandlung(VorbehandlungKorrigiert korrektur) {
+    if (korrektur.laufzeitBeiUebernahme.isNegative) {
+      throw ArgumentError.value(
+        korrektur.laufzeitBeiUebernahme,
+        'laufzeitBeiUebernahme',
+        'the Startzeit must not be after the Übernahme',
+      );
+    }
+    if (korrektur.uebernahme > _spaetesteUebernahmeOffset) {
+      throw ArgumentError.value(
+        korrektur.uebernahme,
+        'uebernahme',
+        'must not be after the first recorded event or in the future',
+      );
+    }
+    _appendKorrektur(korrektur);
+  }
+
+  /// The latest allowed Übernahme relative to the recorded Übernahme: the
+  /// first visible event recorded in the app, and never after now or the end
+  /// of the case.
+  Duration get _spaetesteUebernahmeOffset {
+    final states = _korrekturZustaende();
+    var spaeteste = _maxKorrekturZeitpunkt;
+    void consider(Iterable<ProtokollEreignis> ereignisse) {
+      for (final ereignis in ereignisse) {
+        if (ereignis.zeitpunkt < spaeteste) spaeteste = ereignis.zeitpunkt;
+      }
+    }
+
+    consider(_effektiveSchocks(states));
+    consider(_effektiveAdrenalinGaben(states));
+    consider(_effektiveAmiodaronGaben(states));
+    consider(_effektiveMesswerte(states));
+    consider(_effektiveNotizen(states));
+    consider(_effektiveRhythmusanalysen(states));
+    consider(_effektiveUeberspringungen(states));
+    consider(_effektiveDruckphaseNeustarts(states));
+    consider(_effektiveRosc(states));
+    consider(_effektiveWiederbeginn(states));
+    return spaeteste;
+  }
+
   /// Applies an append-only correction to one Protokoll entry.
-  void applyProtokollKorrektur(ProtokollKorrektur korrektur) {
+  ///
+  /// Times in [eingabe] are relative to the current Startzeit, as shown in the
+  /// Protokoll. They are stored relative to the recorded Übernahme so that a
+  /// later Startzeit correction keeps their wall-clock time.
+  void applyProtokollKorrektur(ProtokollKorrektur eingabe) {
+    if (eingabe is VorbehandlungKorrigiert) {
+      _applyVorbehandlung(eingabe);
+      return;
+    }
+    final korrektur = verschobeneKorrektur(eingabe, _startzeitOffset);
     final ref = korrektur.ziel;
     if (ref.typ.istLebenszyklus) {
       throw StateError('lifecycle entries are read-only');
@@ -638,7 +743,9 @@ class Reanimationsfall {
       case RoscKorrigiert(:final zeitpunkt):
         _requireTyp(ref, ProtokollEintragTyp.rosc);
         _requireValidKorrekturZeitpunkt(ref.typ, zeitpunkt, ref.id);
-      case ProtokollEintragEntfernt() || ProtokollEintragWiederhergestellt():
+      case ProtokollEintragEntfernt() ||
+          ProtokollEintragWiederhergestellt() ||
+          VorbehandlungKorrigiert():
         throw StateError('unreachable');
     }
 
@@ -773,6 +880,7 @@ class Reanimationsfall {
         (e) => e.id,
       ),
       ProtokollEintragTyp.startzeit ||
+      ProtokollEintragTyp.uebernahme ||
       ProtokollEintragTyp.reanimationsfallEnde ||
       ProtokollEintragTyp.verworfen => null,
     };
@@ -894,7 +1002,7 @@ class Reanimationsfall {
     Duration zeitpunkt,
     String id,
   ) {
-    if (zeitpunkt < Duration.zero || zeitpunkt > _maxKorrekturZeitpunkt) {
+    if (zeitpunkt < _uebernahmeOffset || zeitpunkt > _maxKorrekturZeitpunkt) {
       throw ArgumentError.value(
         zeitpunkt,
         'zeitpunkt',
@@ -942,7 +1050,9 @@ class Reanimationsfall {
 
     final index = struktur.indexWhere((eintrag) => eintrag.id == id);
     if (index == -1) return;
-    final previous = index > 0 ? struktur[index - 1].effective : Duration.zero;
+    final previous = index > 0
+        ? struktur[index - 1].effective
+        : _uebernahmeOffset;
     final next = index < struktur.length - 1
         ? struktur[index + 1].effective
         : _maxKorrekturZeitpunkt;
@@ -958,8 +1068,13 @@ class Reanimationsfall {
   Map<ProtokollEintragRef, _KorrekturZustand> _korrekturZustaende() {
     final states = <ProtokollEintragRef, _KorrekturZustand>{};
     for (final korrektur in _korrekturen) {
+      // The Startzeit and Übernahme entries derive from the latest
+      // Vorbehandlung directly.
+      if (korrektur is VorbehandlungKorrigiert) continue;
       final state = states.putIfAbsent(korrektur.ziel, _KorrekturZustand.new);
       switch (korrektur) {
+        case VorbehandlungKorrigiert():
+          break;
         case ProtokollEintragEntfernt():
           state.entfernt = true;
         case ProtokollEintragWiederhergestellt():
@@ -1241,23 +1356,36 @@ class Reanimationsfall {
   ProtokollEintragRef _ref(ProtokollEintragTyp typ, String id) =>
       ProtokollEintragRef(typ: typ, id: id);
 
+  /// A read-only view in which every time is relative to the Startzeit.
   ReanimationsfallSnapshot snapshot() {
+    final versatz = _versatz;
+    List<T> verschoben<T extends Object>(List<T> ereignisse) => [
+      for (final ereignis in ereignisse)
+        verschobenesEreignis(ereignis, versatz),
+    ];
+
     final states = _korrekturZustaende();
-    final schocks = _effektiveSchocks(states);
-    final adrenalinGaben = _effektiveAdrenalinGaben(states)
+    final schocks = verschoben(_effektiveSchocks(states));
+    final adrenalinGaben = verschoben(_effektiveAdrenalinGaben(states))
       ..sort((a, b) => a.zeitpunkt.compareTo(b.zeitpunkt));
-    final amiodaronGaben = _effektiveAmiodaronGaben(states)
+    final amiodaronGaben = verschoben(_effektiveAmiodaronGaben(states))
       ..sort((a, b) => a.zeitpunkt.compareTo(b.zeitpunkt));
-    final messwerte = _effektiveMesswerte(states);
-    final notizen = _effektiveNotizen(states);
-    final rhythmusanalysen = _effektiveRhythmusanalysen(states);
-    final ueberspringungen = _effektiveUeberspringungen(states);
-    final druckphaseNeustarts = _effektiveDruckphaseNeustarts(states);
-    final roscEreignisse = _effektiveRosc(states);
-    final wiederbeginnEreignisse = _effektiveWiederbeginn(states);
+    final messwerte = verschoben(_effektiveMesswerte(states));
+    final notizen = verschoben(_effektiveNotizen(states));
+    final rhythmusanalysen = verschoben(_effektiveRhythmusanalysen(states));
+    final ueberspringungen = verschoben(_effektiveUeberspringungen(states));
+    final druckphaseNeustarts = verschoben(
+      _effektiveDruckphaseNeustarts(states),
+    );
+    final roscEreignisse = verschoben(_effektiveRosc(states));
+    final wiederbeginnEreignisse = verschoben(_effektiveWiederbeginn(states));
+    final ende = _ende == null ? null : verschobenesEreignis(_ende!, versatz);
+    final verworfenAm = _verworfenAm == null ? null : _verworfenAm! + versatz;
 
     final now = _monotonicNow();
-    final elapsed = now - _monotonicStartOffset;
+    // The Reanimationsdauer counts from the corrected Startzeit; every timer
+    // below runs on the internal monotonic timeline and ignores corrections.
+    final elapsed = now - _monotonicStartOffset + versatz;
     final cycle = leitlinienprofil.compressionCycle;
     final isLaufend = _zustand == ReanimationsfallZustand.laufend;
     final isDruckphase = isLaufend && _phase == Reanimationsphase.druckphase;
@@ -1285,6 +1413,7 @@ class Reanimationsfall {
     final abschnitte = _deriveAbschnitte(
       roscEreignisse: roscEreignisse,
       wiederbeginnEreignisse: wiederbeginnEreignisse,
+      closedAt: verworfenAm ?? ende?.zeitpunkt,
     );
     final cprDauer = abschnitte.fold(
       Duration.zero,
@@ -1312,13 +1441,20 @@ class Reanimationsfall {
       soundEnabled: soundEnabled,
       demoMode: demoMode,
       startzeit: startzeit,
+      uebernahme: uebernahme,
+      laufzeitBeiUebernahme: _uebernahmeOffset + versatz,
+      spaetesteUebernahme: erfassteUebernahme.add(_spaetesteUebernahmeOffset),
+      zeigeVorbehandlungHinweis:
+          _istOffen &&
+          !_vorbehandlungHinweisAusgeblendet &&
+          _vorbehandlung == null,
       reanimationsdauer: elapsed,
       cprDauer: cprDauer,
       abschnitte: List.unmodifiable(abschnitte),
       roscEreignisse: List.unmodifiable(roscEreignisse),
       wiederbeginnEreignisse: List.unmodifiable(wiederbeginnEreignisse),
-      ende: _ende,
-      verworfenAm: _verworfenAm,
+      ende: ende,
+      verworfenAm: verworfenAm,
       compressionRemaining: compressionRemaining,
       rhythmusanalyseOverdue: rhythmusanalyseOverdue,
       isRhythmusanalyseDue: isRhythmusanalyseDue,
@@ -1346,6 +1482,7 @@ class Reanimationsfall {
   List<Reanimationsabschnitt> _deriveAbschnitte({
     required List<RoscEreignis> roscEreignisse,
     required List<Reanimationswiederbeginn> wiederbeginnEreignisse,
+    required Duration? closedAt,
   }) {
     final boundaries = <_Strukturgrenze>[
       for (final rosc in roscEreignisse)
@@ -1386,7 +1523,6 @@ class Reanimationsfall {
     }
 
     if (start != null) {
-      final closedAt = _verworfenAm ?? _ende?.zeitpunkt;
       abschnitte.add(
         Reanimationsabschnitt(index: index, start: start, ende: closedAt),
       );
@@ -1406,6 +1542,7 @@ class Reanimationsfall {
   Protokoll _buildProtokoll(
     Map<ProtokollEintragRef, _KorrekturZustand> states,
   ) {
+    final versatz = _versatz;
     final eintraege = <ProtokollEintrag>[];
     var legacyOrder = 0;
 
@@ -1416,7 +1553,10 @@ class Reanimationsfall {
     }) {
       final ref = _ref(typ, original.id);
       final state = states[ref];
-      final daten = apply(original, state?.letzteKorrektur);
+      final daten = verschobenesEreignis(
+        apply(original, state?.letzteKorrektur),
+        versatz,
+      );
       final istEntfernt = state?.entfernt ?? false;
       final istKorrigiert = state?.hatKorrektur ?? false;
       final canEdit = _kannKorrigieren(typ);
@@ -1424,9 +1564,9 @@ class Reanimationsfall {
         ref: ref,
         typ: typ,
         zeitpunkt: daten.zeitpunkt,
-        originalZeitpunkt: original.zeitpunkt,
+        originalZeitpunkt: original.zeitpunkt + versatz,
         daten: daten,
-        originalDaten: original,
+        originalDaten: verschobenesEreignis(original, versatz),
         istEntfernt: istEntfernt,
         istKorrigiert: istKorrigiert,
         istBearbeitbar: !istEntfernt && canEdit,
@@ -1435,6 +1575,8 @@ class Reanimationsfall {
       );
     }
 
+    // The Startzeit and the Übernahme open the Vorbehandlung form, during and
+    // after the case. Their original is the Übernahme recorded at the tap.
     eintraege.add(
       ProtokollEintrag(
         ref: const ProtokollEintragRef(
@@ -1443,16 +1585,34 @@ class Reanimationsfall {
         ),
         typ: ProtokollEintragTyp.startzeit,
         zeitpunkt: Duration.zero,
-        originalZeitpunkt: Duration.zero,
+        originalZeitpunkt: versatz,
         daten: startzeit,
-        originalDaten: startzeit,
+        originalDaten: erfassteUebernahme,
         istEntfernt: false,
-        istKorrigiert: false,
-        istBearbeitbar: false,
+        istKorrigiert: versatz != Duration.zero,
+        istBearbeitbar: true,
         istWiederherstellbar: false,
-        reihenfolge: -1,
+        reihenfolge: -2,
       ),
     );
+    final laufzeitBeiUebernahme = _uebernahmeOffset + versatz;
+    if (laufzeitBeiUebernahme != Duration.zero) {
+      eintraege.add(
+        ProtokollEintrag(
+          ref: VorbehandlungKorrigiert.zielRef,
+          typ: ProtokollEintragTyp.uebernahme,
+          zeitpunkt: laufzeitBeiUebernahme,
+          originalZeitpunkt: versatz,
+          daten: Uebernahme(zeitpunkt: laufzeitBeiUebernahme),
+          originalDaten: Uebernahme(zeitpunkt: versatz),
+          istEntfernt: false,
+          istKorrigiert: _uebernahmeOffset != Duration.zero,
+          istBearbeitbar: true,
+          istWiederherstellbar: false,
+          reihenfolge: -1,
+        ),
+      );
+    }
 
     for (final original in _schocks) {
       eintraege.add(
@@ -1567,10 +1727,10 @@ class Reanimationsfall {
             id: 'reanimationsfall-ende',
           ),
           typ: ProtokollEintragTyp.reanimationsfallEnde,
-          zeitpunkt: _ende!.zeitpunkt,
-          originalZeitpunkt: _ende!.zeitpunkt,
-          daten: _ende!,
-          originalDaten: _ende!,
+          zeitpunkt: _ende!.zeitpunkt + versatz,
+          originalZeitpunkt: _ende!.zeitpunkt + versatz,
+          daten: verschobenesEreignis(_ende!, versatz),
+          originalDaten: verschobenesEreignis(_ende!, versatz),
           istEntfernt: false,
           istKorrigiert: false,
           istBearbeitbar: false,
@@ -1587,10 +1747,10 @@ class Reanimationsfall {
             id: 'verworfen',
           ),
           typ: ProtokollEintragTyp.verworfen,
-          zeitpunkt: _verworfenAm!,
-          originalZeitpunkt: _verworfenAm!,
-          daten: _verworfenAm!,
-          originalDaten: _verworfenAm!,
+          zeitpunkt: _verworfenAm! + versatz,
+          originalZeitpunkt: _verworfenAm! + versatz,
+          daten: _verworfenAm! + versatz,
+          originalDaten: _verworfenAm! + versatz,
           istEntfernt: false,
           istKorrigiert: false,
           istBearbeitbar: false,
@@ -1702,8 +1862,9 @@ class Reanimationsfall {
 
     return ReanimationsfallState(
       id: id,
-      startzeit: startzeit,
-      startzeitUtc: startzeitUtc,
+      erfassteUebernahme: erfassteUebernahme,
+      erfassteUebernahmeUtc: erfassteUebernahmeUtc,
+      vorbehandlungHinweisAusgeblendet: _vorbehandlungHinweisAusgeblendet,
       utcOffsetMinutes: utcOffsetMinutes,
       leitlinienprofil: leitlinienprofil,
       vibrationEnabled: vibrationEnabled,
@@ -1790,6 +1951,10 @@ class ReanimationsfallSnapshot {
     required this.soundEnabled,
     required this.demoMode,
     required this.startzeit,
+    required this.uebernahme,
+    required this.laufzeitBeiUebernahme,
+    required this.spaetesteUebernahme,
+    required this.zeigeVorbehandlungHinweis,
     required this.reanimationsdauer,
     required this.cprDauer,
     required this.abschnitte,
@@ -1829,7 +1994,23 @@ class ReanimationsfallSnapshot {
   /// Whether the Reanimationsfall was started in Demo-Modus.
   final bool demoMode;
 
+  /// The corrected wall-clock time zero; every time in this snapshot is
+  /// relative to it.
   final DateTime startzeit;
+
+  /// The corrected wall-clock time the team took over.
+  final DateTime uebernahme;
+
+  /// How long the resuscitation had been running at the Übernahme.
+  final Duration laufzeitBeiUebernahme;
+
+  /// The latest Übernahme the Vorbehandlung form accepts: the first event
+  /// recorded in the app, now, or the end of the case, whichever is first.
+  final DateTime spaetesteUebernahme;
+
+  /// Whether the `Vorbehandlung erfassen` prompt is shown: on an open case
+  /// until the Vorbehandlung is saved or the prompt is dismissed.
+  final bool zeigeVorbehandlungHinweis;
 
   /// The time since the Startzeit, including ROSC pauses.
   final Duration reanimationsdauer;
@@ -1939,13 +2120,15 @@ class ReanimationsfallSnapshot {
 
 /// The serializable state of a Reanimationsfall.
 ///
-/// Event times and phase offsets are relative to the Startzeit so that the
-/// state can be restored with a fresh monotonic clock.
+/// Event times, correction times and phase offsets are relative to the
+/// Übernahme recorded at the start tap so that the state can be restored with
+/// a fresh monotonic clock and a corrected Startzeit never moves an event.
 class ReanimationsfallState {
   const ReanimationsfallState({
     required this.id,
-    required this.startzeit,
-    required this.startzeitUtc,
+    required this.erfassteUebernahme,
+    required this.erfassteUebernahmeUtc,
+    this.vorbehandlungHinweisAusgeblendet = false,
     required this.utcOffsetMinutes,
     required this.leitlinienprofil,
     required this.vibrationEnabled,
@@ -1975,9 +2158,25 @@ class ReanimationsfallState {
   });
 
   final String id;
-  final DateTime startzeit;
-  final DateTime startzeitUtc;
+
+  /// The Übernahme recorded at the start tap, the origin of every stored time.
+  final DateTime erfassteUebernahme;
+  final DateTime erfassteUebernahmeUtc;
+
+  /// Whether the `Vorbehandlung erfassen` prompt was dismissed.
+  final bool vorbehandlungHinweisAusgeblendet;
+
   final int utcOffsetMinutes;
+
+  Duration get _startzeitOffset =>
+      letzteVorbehandlung(korrekturen)?.startzeit ?? Duration.zero;
+
+  /// The corrected wall-clock Startzeit.
+  DateTime get startzeit => erfassteUebernahme.add(_startzeitOffset);
+
+  /// The corrected Startzeit as an absolute instant.
+  DateTime get startzeitUtc => erfassteUebernahmeUtc.add(_startzeitOffset);
+
   final Leitlinienprofil leitlinienprofil;
   final bool vibrationEnabled;
   final bool soundEnabled;
