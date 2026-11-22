@@ -6,7 +6,7 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/medikament_card.da
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
-import 'package:hp_cpr/ui/theme/due_colors.dart';
+import 'package:hp_cpr/ui/theme/panel_tone.dart';
 
 /// The Adrenalin Zeitfenster and the action to record a dose.
 class AdrenalinPanel extends StatelessWidget {
@@ -29,15 +29,21 @@ class AdrenalinPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final dueColors = DueColors.of(context);
     final state = snapshot.adrenalinZeitfensterZustand;
-    final stateColor = switch (state) {
+    final isFirstDoseDue = snapshot.istErsteAdrenalinGabeFaellig;
+    final stateTone = switch (state) {
+      AdrenalinZeitfensterZustand.keine when isFirstDoseDue => PanelTone.due,
       AdrenalinZeitfensterZustand.keine ||
-      AdrenalinZeitfensterZustand.wartet => theme.colorScheme.onSurfaceVariant,
-      AdrenalinZeitfensterZustand.faellig => dueColors.due,
-      AdrenalinZeitfensterZustand.ueberfaellig => theme.colorScheme.error,
+      AdrenalinZeitfensterZustand.wartet => PanelTone.neutral,
+      AdrenalinZeitfensterZustand.faellig => PanelTone.due,
+      AdrenalinZeitfensterZustand.ueberfaellig => PanelTone.overdue,
     };
+    // Without a way to record, the card does not call for a dose.
+    final tone = isRecordingEnabled ? stateTone : PanelTone.neutral;
+    final stateColor = tone.colors(context).accent;
     final stateLabel = switch (state) {
+      AdrenalinZeitfensterZustand.keine when isFirstDoseDue =>
+        l10n.adrenalinStateDue,
       AdrenalinZeitfensterZustand.keine => '',
       AdrenalinZeitfensterZustand.wartet => l10n.adrenalinStateWaiting,
       AdrenalinZeitfensterZustand.faellig => l10n.adrenalinStateDue,
@@ -53,16 +59,10 @@ class AdrenalinPanel extends StatelessWidget {
     Widget details(bool allowWrap) {
       if (lastDose == null || sinceLastDose == null) {
         return Text(
-          snapshot.istErsteAdrenalinGabeFaellig
-              ? l10n.adrenalinFirstDoseDue
-              : l10n.adrenalinNotDue,
+          isFirstDoseDue ? l10n.adrenalinFirstDoseDue : l10n.adrenalinNotDue,
           style: theme.textTheme.bodySmall?.copyWith(
-            color: snapshot.istErsteAdrenalinGabeFaellig
-                ? dueColors.due
-                : theme.colorScheme.onSurfaceVariant,
-            fontWeight: snapshot.istErsteAdrenalinGabeFaellig
-                ? FontWeight.w700
-                : null,
+            color: stateColor,
+            fontWeight: isFirstDoseDue ? FontWeight.w700 : null,
           ),
         );
       }
@@ -122,7 +122,7 @@ class AdrenalinPanel extends StatelessWidget {
       icon: Icons.medication_outlined,
       label: l10n.adrenalinLabel,
       stateLabel: stateLabel,
-      stateColor: stateColor,
+      tone: tone,
       onRecord: isRecordingEnabled ? onRecordAdrenalin : null,
       details: details,
     );

@@ -126,6 +126,10 @@ class PageLayout {
   static const int elapsedPanelFlex = 4;
   static const int timerPanelFlex = 6;
 
+  // The landscape phone split between the phase and the medication column.
+  static const int phaseColumnFlex = 3;
+  static const int medicationColumnFlex = 2;
+
   /// The largest share of a medication title row the "Gabe erfassen" button
   /// takes before its label scales down.
   static const double medicationActionMaxWidthFactor = 0.45;
@@ -157,11 +161,14 @@ class PageLayout {
   double get elapsedTimerFontSize =>
       isPhone ? phoneElapsedTimerFontSize : wideElapsedTimerFontSize;
 
-  /// Whether the Adrenalin card uses the vertical phone layout.
-  ///
-  /// Landscape phones keep the compact side-by-side card so it fits into the
-  /// short viewport.
+  /// Whether the medication cards put the "Gabe erfassen" button into the
+  /// title row on portrait phones.
   bool get stacksMedicationPanel => isPhone && !isLandscape;
+
+  /// Whether landscape phones show the medication cards in a column beside
+  /// the Reanimationsdauer and the phase, which keeps the short viewport free
+  /// for the phase timer.
+  bool get placesMedicationBeside => isPhone && isLandscape;
 
   /// Whether the start page header uses two rows on portrait phones.
   bool get stacksStartHeader => isPhone && !isLandscape;
@@ -208,7 +215,7 @@ class PageLayout {
 
   /// The height of the "Gabe erfassen" button on the medication cards. Both
   /// cards always show it, so it stays low to leave room for the phase panel.
-  double get medicationActionHeight => isCompact ? 36 : 40;
+  double get medicationActionHeight => 40;
 
   /// The gap between a card title and its subtitle.
   double get cardTitleGap => isCompact ? space2 : space4;
@@ -301,4 +308,17 @@ class PageLayout {
 
   /// The border width of a normal phase panel.
   double get panelBorderWidth => 1;
+
+  /// The outline around a due or overdue medication card. It is painted
+  /// outside the card so the card keeps its size when the state changes.
+  double get medicationOutlineWidth => 2;
+
+  /// The padding inside a filled status badge.
+  EdgeInsets get statusBadgePadding => EdgeInsets.symmetric(
+    horizontal: space6,
+    vertical: isCompact ? space0 : space2,
+  );
+
+  /// The corner radius of a filled status badge.
+  double get statusBadgeRadius => radius4;
 }

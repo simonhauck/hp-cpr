@@ -25,6 +25,7 @@ import 'package:hp_cpr/ui/dialogs/destructive_confirm_dialog.dart';
 import 'package:hp_cpr/ui/dialogs/notiz_erfassen_dialog.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 import 'package:hp_cpr/ui/theme/due_colors.dart';
+import 'package:hp_cpr/ui/theme/panel_tone.dart';
 import 'package:hp_cpr/ui/layout/page_scaffold.dart';
 import 'package:hp_cpr/ui/navigation/app_drawer.dart';
 import 'package:hp_cpr/ui/navigation/app_routes.dart';
@@ -290,6 +291,51 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
             onRecordUnklar: _recordUnklar,
           );
 
+          final adrenalinPanel = AdrenalinPanel(
+            snapshot: snapshot,
+            layout: layout,
+            onRecordAdrenalin: _recordAdrenalin,
+            isRecordingEnabled: snapshot.istLaufend,
+          );
+          final amiodaronPanel = AmiodaronPanel(
+            snapshot: snapshot,
+            layout: layout,
+            onRecordAmiodaron: _recordAmiodaron,
+            isRecordingEnabled: snapshot.istLaufend,
+          );
+
+          if (layout.placesMedicationBeside) {
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  flex: PageLayout.phaseColumnFlex,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      reanimationsdauerPanel,
+                      SizedBox(height: layout.contentGap),
+                      Expanded(child: timer),
+                    ],
+                  ),
+                ),
+                SizedBox(width: layout.panelGap),
+                Expanded(
+                  flex: PageLayout.medicationColumnFlex,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      adrenalinPanel,
+                      SizedBox(height: layout.panelGap),
+                      amiodaronPanel,
+                    ],
+                  ),
+                ),
+              ],
+            );
+          }
+
           final main = layout.isLandscape
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -315,19 +361,9 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
             children: [
               Expanded(child: main),
               SizedBox(height: layout.contentGap),
-              AdrenalinPanel(
-                snapshot: snapshot,
-                layout: layout,
-                onRecordAdrenalin: _recordAdrenalin,
-                isRecordingEnabled: snapshot.istLaufend,
-              ),
+              adrenalinPanel,
               SizedBox(height: layout.contentGap),
-              AmiodaronPanel(
-                snapshot: snapshot,
-                layout: layout,
-                onRecordAmiodaron: _recordAmiodaron,
-                isRecordingEnabled: snapshot.istLaufend,
-              ),
+              amiodaronPanel,
             ],
           );
         },
@@ -385,6 +421,40 @@ class _ReanimationsdauerPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+
+    // Beside the medication column, one line leaves the height to the phase.
+    if (layout.placesMedicationBeside) {
+      return FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Text(
+              l10n.elapsedTimeLabel,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(width: PageLayout.space8),
+            Text(
+              formatReanimationsdauer(snapshot.reanimationsdauer),
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+            const SizedBox(width: PageLayout.space12),
+            Text(
+              l10n.startzeitValue(formatWallTime(snapshot.startzeit)),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Center(
       child: FittedBox(
@@ -472,7 +542,7 @@ class _RoscPanel extends StatelessWidget {
     final theme = Theme.of(context);
 
     return _PhasePanel(
-      tone: _PanelTone.neutral,
+      tone: PanelTone.neutral,
       layout: layout,
       snapshot: snapshot,
       child: Column(
@@ -566,8 +636,6 @@ class _RoscActionBar extends StatelessWidget {
 }
 
 /// How strongly a phase panel signals: neutral, due now, or overdue.
-enum _PanelTone { neutral, due, overdue }
-
 class _PhasePanel extends StatelessWidget {
   const _PhasePanel({
     required this.tone,
@@ -576,37 +644,25 @@ class _PhasePanel extends StatelessWidget {
     required this.child,
   });
 
-  final _PanelTone tone;
+  final PanelTone tone;
   final ReanimationsfallSnapshot snapshot;
   final PageLayout layout;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final dueColors = DueColors.of(context);
-    final (background, border) = switch (tone) {
-      _PanelTone.neutral => (
-        theme.colorScheme.surfaceContainerHighest,
-        theme.colorScheme.outlineVariant,
-      ),
-      _PanelTone.due => (dueColors.dueContainer, dueColors.due),
-      _PanelTone.overdue => (
-        theme.colorScheme.errorContainer,
-        theme.colorScheme.error,
-      ),
-    };
+    final colors = tone.colors(context);
 
     return Container(
       padding: layout.phasePanelPadding,
       decoration: BoxDecoration(
-        color: background,
+        color: colors.background,
         borderRadius: BorderRadius.circular(layout.phasePanelRadius),
         border: Border.all(
-          color: border,
-          width: tone == _PanelTone.neutral
-              ? layout.panelBorderWidth
-              : layout.alertBorderWidth,
+          color: colors.border,
+          width: tone.isEmphasized
+              ? layout.alertBorderWidth
+              : layout.panelBorderWidth,
         ),
       ),
       child: Column(
@@ -656,7 +712,7 @@ class _DruckphaseTimerPanel extends StatelessWidget {
 
     if (layout.isCompact) {
       return _PhasePanel(
-        tone: isDue ? _PanelTone.due : _PanelTone.neutral,
+        tone: isDue ? PanelTone.due : PanelTone.neutral,
         layout: layout,
         snapshot: snapshot,
         child: Row(
@@ -714,7 +770,7 @@ class _DruckphaseTimerPanel extends StatelessWidget {
     }
 
     return _PhasePanel(
-      tone: isDue ? _PanelTone.due : _PanelTone.neutral,
+      tone: isDue ? PanelTone.due : PanelTone.neutral,
       layout: layout,
       snapshot: snapshot,
       child: Column(
@@ -818,7 +874,7 @@ class _AnalysephaseTimerPanel extends StatelessWidget {
     ];
 
     return _PhasePanel(
-      tone: isOverdue ? _PanelTone.overdue : _PanelTone.neutral,
+      tone: isOverdue ? PanelTone.overdue : PanelTone.neutral,
       layout: layout,
       snapshot: snapshot,
       child: layout.isCompact

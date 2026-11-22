@@ -4,9 +4,14 @@ import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
+import 'package:hp_cpr/ui/theme/panel_tone.dart';
 
-/// Shared shell of the medication cards: container, title row with status
-/// label, the "Gabe erfassen" button and the stacked or side-by-side layout.
+/// Shared shell of the medication cards: container, title row with status,
+/// the "Gabe erfassen" button and the arrangement for the current layout.
+///
+/// A due or overdue [tone] tints the card, outlines it, turns the status into
+/// a filled badge and fills the button, so the state does not depend on color
+/// alone.
 class MedikamentCard extends StatelessWidget {
   const MedikamentCard({
     super.key,
@@ -14,7 +19,7 @@ class MedikamentCard extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.stateLabel,
-    required this.stateColor,
+    required this.tone,
     required this.onRecord,
     this.details,
   });
@@ -23,7 +28,7 @@ class MedikamentCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final String stateLabel;
-  final Color stateColor;
+  final PanelTone tone;
 
   /// Null disables the button.
   final VoidCallback? onRecord;
@@ -36,20 +41,57 @@ class MedikamentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final colors = tone.colors(context);
 
-    final gabeButton = FilledButton.tonal(
-      onPressed: onRecord,
-      style: FilledButton.styleFrom(
-        minimumSize: Size(PageLayout.space0, layout.medicationActionHeight),
-        padding: const EdgeInsets.symmetric(horizontal: PageLayout.space8),
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        textStyle: theme.textTheme.titleSmall,
-      ),
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Text(l10n.medikamentGabeButton),
-      ),
+    final buttonStyle = FilledButton.styleFrom(
+      minimumSize: Size(PageLayout.space0, layout.medicationActionHeight),
+      padding: const EdgeInsets.symmetric(horizontal: PageLayout.space8),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      textStyle: theme.textTheme.titleSmall,
     );
+    final buttonLabel = FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(l10n.medikamentGabeButton),
+    );
+    final gabeButton = tone.isEmphasized
+        ? FilledButton(
+            onPressed: onRecord,
+            style: buttonStyle.copyWith(
+              backgroundColor: WidgetStatePropertyAll(colors.accent),
+              foregroundColor: WidgetStatePropertyAll(colors.onAccent),
+            ),
+            child: buttonLabel,
+          )
+        : FilledButton.tonal(
+            onPressed: onRecord,
+            style: buttonStyle,
+            child: buttonLabel,
+          );
+
+    final status = tone.isEmphasized
+        ? DecoratedBox(
+            decoration: BoxDecoration(
+              color: colors.accent,
+              borderRadius: BorderRadius.circular(layout.statusBadgeRadius),
+            ),
+            child: Padding(
+              padding: layout.statusBadgePadding,
+              child: Text(
+                stateLabel,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: colors.onAccent,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          )
+        : Text(
+            stateLabel,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: colors.accent,
+              fontWeight: FontWeight.w700,
+            ),
+          );
 
     Widget titleRow({Widget? trailing}) {
       Widget row({Widget? trailing}) {
@@ -58,7 +100,9 @@ class MedikamentCard extends StatelessWidget {
             Icon(
               icon,
               size: PageLayout.iconSmall,
-              color: theme.colorScheme.primary,
+              color: tone.isEmphasized
+                  ? colors.accent
+                  : theme.colorScheme.primary,
             ),
             const SizedBox(width: PageLayout.space6),
             Text(
@@ -71,16 +115,7 @@ class MedikamentCard extends StatelessWidget {
             Expanded(
               child: Align(
                 alignment: Alignment.centerRight,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    stateLabel,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: stateColor,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
+                child: FittedBox(fit: BoxFit.scaleDown, child: status),
               ),
             ),
             if (trailing != null) ...[
@@ -125,21 +160,43 @@ class MedikamentCard extends StatelessWidget {
       );
     }
 
+    final Widget content;
+    if (layout.placesMedicationBeside) {
+      content = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          body(allowWrap: false),
+          SizedBox(height: layout.cardLabelGap),
+          gabeButton,
+        ],
+      );
+    } else if (layout.stacksMedicationPanel) {
+      content = body(allowWrap: true, trailing: gabeButton);
+    } else {
+      content = Row(
+        children: [
+          Expanded(child: body(allowWrap: false)),
+          const SizedBox(width: PageLayout.space8),
+          gabeButton,
+        ],
+      );
+    }
+
     return Container(
       padding: layout.medicationPanelPadding,
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest,
+        color: colors.background,
         borderRadius: BorderRadius.circular(layout.cardRadius),
-      ),
-      child: layout.stacksMedicationPanel
-          ? body(allowWrap: true, trailing: gabeButton)
-          : Row(
-              children: [
-                Expanded(child: body(allowWrap: false)),
-                const SizedBox(width: PageLayout.space8),
-                gabeButton,
-              ],
+        boxShadow: [
+          if (tone.isEmphasized)
+            BoxShadow(
+              color: colors.border,
+              spreadRadius: layout.medicationOutlineWidth,
             ),
+        ],
+      ),
+      child: content,
     );
   }
 }
