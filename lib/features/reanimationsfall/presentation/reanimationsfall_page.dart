@@ -18,11 +18,13 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/leave_reanimations
 import 'package:hp_cpr/features/reanimationsfall/presentation/phase_action_bar.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/phase_strip.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_corrections_mixin.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_format.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/protokoll_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/reanimationsfall_summary_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/rhythmusanalyse_dialog.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/schock_count_chip.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/undo_banner.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/dialogs/destructive_confirm_dialog.dart';
 import 'package:hp_cpr/ui/dialogs/notiz_erfassen_dialog.dart';
@@ -60,6 +62,10 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
         ProtokollCorrectionsMixin<ReanimationsfallPage> {
   Timer? _ticker;
   final _signalDetector = SignalDetector();
+  Timer? _undoTimer;
+
+  /// The entries the undo notice currently offers to remove, and its text.
+  ({List<ProtokollEintragRef> refs, String text})? _undoAngebot;
 
   @override
   Reanimationsfall get protokollFall => widget.reanimationsfall;
@@ -84,6 +90,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
   @override
   void dispose() {
     _ticker?.cancel();
+    _undoTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     unawaited(widget.wakeLock.disable());
     super.dispose();
@@ -110,20 +117,66 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     unawaited(widget.session.persist(widget.reanimationsfall));
   }
 
+  /// How long the undo SnackBar after a one-tap entry stays visible.
+  static const _undoDuration = Duration(seconds: 6);
+
+  /// Runs a one-tap command and offers to undo the entries it recorded.
+  void _mutateWithUndo(List<ProtokollEintragRef> Function() action) {
+    var refs = const <ProtokollEintragRef>[];
+    _mutate(() => refs = action());
+    _offerUndo(refs);
+  }
+
+  /// Shows the undo notice for [refs], replacing any previous one.
+  void _offerUndo(List<ProtokollEintragRef> refs) {
+    if (refs.isEmpty) return;
+    final l10n = AppLocalizations.of(context);
+    final eintraege = widget.reanimationsfall.snapshot().protokoll.eintraege;
+    final text = [
+      for (final ref in refs)
+        for (final eintrag in eintraege)
+          if (eintrag.ref == ref)
+            protokollDatenText(l10n, eintrag.daten, nummer: eintrag.nummer),
+    ].join(' · ');
+
+    _undoTimer?.cancel();
+    _undoTimer = Timer(_undoDuration, _dismissUndo);
+    setState(() => _undoAngebot = (refs: refs, text: text));
+  }
+
+  void _dismissUndo() {
+    _undoTimer?.cancel();
+    _undoTimer = null;
+    if (!mounted || _undoAngebot == null) return;
+    setState(() => _undoAngebot = null);
+  }
+
+  /// Removes the entries of the last one-tap command as append-only
+  /// Korrekturen, so the Änderungsverlauf keeps them.
+  void _undo(List<ProtokollEintragRef> refs) {
+    _dismissUndo();
+    if (!mounted) return;
+    for (final ref in refs) {
+      if (!applyProtokollKorrektur(ProtokollEintragEntfernt(ziel: ref))) {
+        return;
+      }
+    }
+  }
+
   void _enterAnalysephase() {
-    _mutate(widget.reanimationsfall.enterAnalysephase);
+    _mutateWithUndo(() => [widget.reanimationsfall.enterAnalysephase()]);
   }
 
   void _recordSchock() {
-    _mutate(widget.reanimationsfall.recordSchock);
+    _mutateWithUndo(() => [widget.reanimationsfall.recordSchock()]);
   }
 
   void _recordAdrenalin() {
-    _mutate(widget.reanimationsfall.recordAdrenalin);
+    _mutateWithUndo(() => [widget.reanimationsfall.recordAdrenalin()]);
   }
 
   void _recordAmiodaron() {
-    _mutate(widget.reanimationsfall.recordAmiodaron);
+    _mutateWithUndo(() => [widget.reanimationsfall.recordAmiodaron()]);
   }
 
   void _resumeResuscitation() {
@@ -151,7 +204,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
   }
 
   void _restartDruckphase() {
-    _mutate(widget.reanimationsfall.restartDruckphase);
+    _mutateWithUndo(() => [widget.reanimationsfall.restartDruckphase()]);
   }
 
   void _advanceDemoTime() {
@@ -261,19 +314,19 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     );
     if (abschluss == null || !mounted) return;
 
-    _mutate(() {
-      widget.reanimationsfall.completeRhythmusanalyse(
+    _mutateWithUndo(
+      () => widget.reanimationsfall.completeRhythmusanalyse(
         abschluss.ergebnis,
         schockAbgegeben: abschluss.schockAbgegeben,
-      );
-    });
+      ),
+    );
   }
 
   Future<void> _recordRosc() async {
     final confirmed = await showRoscConfirmDialog(context);
     if (confirmed != true || !mounted) return;
 
-    _mutate(
+    _mutateWithUndo(
       () => widget.reanimationsfall.completeRhythmusanalyse(
         RhythmusanalyseErgebnis.rosc,
       ),
@@ -281,7 +334,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
   }
 
   void _recordUnklar() {
-    _mutate(
+    _mutateWithUndo(
       () => widget.reanimationsfall.completeRhythmusanalyse(
         RhythmusanalyseErgebnis.unklar,
       ),
@@ -303,7 +356,37 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
       child: _VorbehandlungHinweisScope(
         onOpen: () => unawaited(openVorbehandlung()),
         onDismiss: _dismissVorbehandlungHinweis,
-        child: _buildScaffold(snapshot),
+        child: Stack(children: [_buildScaffold(snapshot), _buildUndoBanner()]),
+      ),
+    );
+  }
+
+  Widget _buildUndoBanner() {
+    final angebot = _undoAngebot;
+    return SafeArea(
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: PageLayout.activeCaseMaxWidth,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(PageLayout.space8),
+            child: AnimatedSwitcher(
+              duration: kThemeAnimationDuration,
+              child: angebot == null
+                  ? const SizedBox.shrink()
+                  : UndoBanner(
+                      key: ObjectKey(angebot),
+                      text: AppLocalizations.of(context)
+                          .undoRecordedNotice(angebot.text),
+                      actionLabel: AppLocalizations.of(context).undoAction,
+                      onUndo: () => _undo(angebot.refs),
+                      onDismissed: _dismissUndo,
+                    ),
+            ),
+          ),
+        ),
       ),
     );
   }
