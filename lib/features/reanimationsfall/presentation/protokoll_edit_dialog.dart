@@ -79,6 +79,7 @@ Future<ProtokollKorrektur?> showProtokollEditDialog(
       ),
     ),
     RhythmusanalyseUeberspringung() ||
+    AnalysephaseBeginn() ||
     DruckphaseNeustart() ||
     RoscEreignis() ||
     Reanimationswiederbeginn() => showDialog<ProtokollKorrektur>(

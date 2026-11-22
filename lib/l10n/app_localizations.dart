@@ -328,12 +328,6 @@ abstract class AppLocalizations {
   /// **'Änderungsverlauf'**
   String get protokollAuditToggle;
 
-  /// Hinweis auf die gesperrten Strukturereignisse im laufenden Fall
-  ///
-  /// In de, this message translates to:
-  /// **'Im laufenden Fall sind nur Startzeit, Übernahme, Schocks, Medikamente, Messwerte und Notizen korrigierbar.'**
-  String get protokollLiveEditHint;
-
   /// Aktion zum Bearbeiten eines Protokolleintrags
   ///
   /// In de, this message translates to:
@@ -429,12 +423,6 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Eintrag wiederhergestellt'**
   String get protokollRestoredSnackbar;
-
-  /// Tooltip für ein gesperrtes Strukturereignis
-  ///
-  /// In de, this message translates to:
-  /// **'Strukturereignis – während des Falls gesperrt'**
-  String get protokollLockedTooltip;
 
   /// Fehlermeldung bei einem Zeitpunkt außerhalb des Falls
   ///
@@ -963,6 +951,12 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Rhythmusanalyse übersprungen'**
   String get eventRhythmusanalyseSkipped;
+
+  /// Ereignis: Beginn der Analysephase
+  ///
+  /// In de, this message translates to:
+  /// **'Analyse begonnen'**
+  String get eventAnalysephaseStarted;
 
   /// Ereignis: Manueller Neustart der Druckphase
   ///

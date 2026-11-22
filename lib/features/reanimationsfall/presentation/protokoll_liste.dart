@@ -15,13 +15,11 @@ class ProtokollListe extends StatefulWidget {
     super.key,
     required this.protokoll,
     required this.startzeit,
-    required this.isLive,
     required this.onOpenEintrag,
   });
 
   final Protokoll protokoll;
   final DateTime startzeit;
-  final bool isLive;
   final ValueChanged<ProtokollEintrag> onOpenEintrag;
 
   @override
@@ -62,15 +60,6 @@ class _ProtokollListeState extends State<ProtokollListe> {
             ),
           ],
         ),
-        if (widget.isLive) ...[
-          const SizedBox(height: PageLayout.space4),
-          Text(
-            l10n.protokollLiveEditHint,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ],
         const SizedBox(height: PageLayout.space8),
         Card(
           margin: EdgeInsets.zero,
@@ -262,15 +251,6 @@ class _ProtokollZeile extends StatelessWidget {
                 Icons.chevron_right,
                 size: PageLayout.iconSmall,
                 color: muted,
-              )
-            else if (zeile.eintrag.istGesperrt && !zeile.istOriginal)
-              Tooltip(
-                message: l10n.protokollLockedTooltip,
-                child: Icon(
-                  Icons.lock_outline,
-                  size: PageLayout.iconSmall,
-                  color: muted,
-                ),
               ),
           ],
         ),

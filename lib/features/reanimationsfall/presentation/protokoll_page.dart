@@ -45,7 +45,6 @@ class _ProtokollPageState extends State<ProtokollPage>
         ProtokollListe(
           protokoll: snapshot.protokoll,
           startzeit: snapshot.startzeit,
-          isLive: snapshot.istLaufend || snapshot.istRosc,
           onOpenEintrag: openProtokollEintrag,
         ),
       ],

@@ -113,6 +113,7 @@ class Reanimationsfall {
     _schocks.addAll(state.schocks);
     _adrenalinGaben.addAll(state.adrenalinGaben);
     _amiodaronGaben.addAll(state.amiodaronGaben);
+    _analysephaseBeginne.addAll(state.analysephaseBeginne);
     _uebersprungeneRhythmusanalysen.addAll(
       state.uebersprungeneRhythmusanalysen,
     );
@@ -197,6 +198,7 @@ class Reanimationsfall {
   Duration _compressionRemainingAtPause = Duration.zero;
   Duration? _analysephaseStartOffset;
 
+  final List<AnalysephaseBeginn> _analysephaseBeginne = [];
   final List<RhythmusanalyseUeberspringung> _uebersprungeneRhythmusanalysen =
       [];
   final List<DruckphaseNeustart> _druckphaseNeustarts = [];
@@ -233,7 +235,8 @@ class Reanimationsfall {
     }
   }
 
-  /// Pauses the compression timer and starts the Analysephase.
+  /// Pauses the compression timer, records an [AnalysephaseBeginn], and
+  /// starts the Analysephase.
   void enterAnalysephase() {
     _requireLaufend();
     if (_phase != Reanimationsphase.druckphase) {
@@ -241,6 +244,12 @@ class Reanimationsfall {
     }
 
     final now = _monotonicNow();
+    _analysephaseBeginne.add(
+      AnalysephaseBeginn(
+        id: _newEreignisId(),
+        zeitpunkt: now - _monotonicStartOffset,
+      ),
+    );
     _compressionRemainingAtPause = _remainingInCycle(now);
     _analysephaseStartOffset = now;
     _phase = Reanimationsphase.analysephase;
@@ -692,6 +701,10 @@ class Reanimationsfall {
   /// Times in [eingabe] are relative to the current Startzeit, as shown in the
   /// Protokoll. They are stored relative to the recorded Übernahme so that a
   /// later Startzeit correction keeps their wall-clock time.
+  ///
+  /// Every clinical entry can be corrected, removed, and restored, also while
+  /// the case is open. A correction to a structural entry replays the live
+  /// state (phase, timers, ROSC state) from the corrected Protokoll.
   void applyProtokollKorrektur(ProtokollKorrektur eingabe) {
     if (eingabe is VorbehandlungKorrigiert) {
       _applyVorbehandlung(eingabe);
@@ -706,17 +719,13 @@ class Reanimationsfall {
     if (original == null) {
       throw ArgumentError.value(ref, 'ziel', 'unknown Protokoll entry');
     }
-    _requireKorrekturScope(ref.typ);
 
     if (korrektur is ProtokollEintragEntfernt) {
       _requireNotRemoved(ref);
       _requireNotPairedRoscRhythmusanalyse(ref);
       _appendKorrektur(korrektur);
       _appendPairRemoval(ref);
-      if (ref.typ == ProtokollEintragTyp.schock ||
-          ref.typ == ProtokollEintragTyp.adrenalin) {
-        _updateAdrenalinGabeFaelligkeit();
-      }
+      _afterKorrektur(ref);
       return;
     }
     if (korrektur is ProtokollEintragWiederhergestellt) {
@@ -724,10 +733,7 @@ class Reanimationsfall {
       _requireNotPairedRoscRhythmusanalyse(ref);
       _appendKorrektur(korrektur);
       _appendPairRestore(ref);
-      if (ref.typ == ProtokollEintragTyp.schock ||
-          ref.typ == ProtokollEintragTyp.adrenalin) {
-        _updateAdrenalinGabeFaelligkeit();
-      }
+      _afterKorrektur(ref);
       return;
     }
 
@@ -769,7 +775,8 @@ class Reanimationsfall {
         }
         _requireValidKorrekturZeitpunkt(ref.typ, zeitpunkt, ref.id);
       case ZeitpunktKorrigiert(:final zeitpunkt):
-        if (ref.typ != ProtokollEintragTyp.ueberspringung &&
+        if (ref.typ != ProtokollEintragTyp.analysephaseBeginn &&
+            ref.typ != ProtokollEintragTyp.ueberspringung &&
             ref.typ != ProtokollEintragTyp.druckphaseNeustart &&
             ref.typ != ProtokollEintragTyp.wiederbeginn) {
           throw ArgumentError.value(
@@ -792,7 +799,14 @@ class Reanimationsfall {
     if (ref.typ == ProtokollEintragTyp.rosc) {
       _appendRoscPairTime(korrektur);
     }
-    if (ref.typ == ProtokollEintragTyp.schock ||
+    _afterKorrektur(ref);
+  }
+
+  /// Recomputes the state derived from the corrected Protokoll.
+  void _afterKorrektur(ProtokollEintragRef ref) {
+    if (ref.typ.istStrukturell) {
+      _rebuildLiveState();
+    } else if (ref.typ == ProtokollEintragTyp.schock ||
         ref.typ == ProtokollEintragTyp.adrenalin) {
       _updateAdrenalinGabeFaelligkeit();
     }
@@ -818,34 +832,77 @@ class Reanimationsfall {
     );
   }
 
+  /// Removes the paired Rhythmusanalyse and the following
+  /// Reanimationswiederbeginn together with a ROSC, as if neither happened.
   void _appendPairRemoval(ProtokollEintragRef ref) {
     if (ref.typ != ProtokollEintragTyp.rosc) return;
-    final rosc = _findRosc(ref.id);
-    final pairId = rosc?.rhythmusanalyseId;
-    if (pairId == null) return;
-    _korrekturen.add(
-      ProtokollEintragEntfernt(
-        ziel: ProtokollEintragRef(
-          typ: ProtokollEintragTyp.rhythmusanalyse,
-          id: pairId,
-        ),
-      ),
+    // Resolve the Wiederbeginn before the ROSC removal changes the timeline.
+    final folgenderWiederbeginn = _folgenderWiederbeginn(
+      ref.id,
+      ohneEntfernung: ref,
     );
+    final pairId = _findRosc(ref.id)?.rhythmusanalyseId;
+    if (pairId != null) {
+      _korrekturen.add(
+        ProtokollEintragEntfernt(
+          ziel: _ref(ProtokollEintragTyp.rhythmusanalyse, pairId),
+        ),
+      );
+    }
+    if (folgenderWiederbeginn != null) {
+      _korrekturen.add(
+        ProtokollEintragEntfernt(
+          ziel: _ref(ProtokollEintragTyp.wiederbeginn, folgenderWiederbeginn),
+        ),
+      );
+    }
   }
 
+  /// Restores everything that was removed together with a ROSC.
   void _appendPairRestore(ProtokollEintragRef ref) {
     if (ref.typ != ProtokollEintragTyp.rosc) return;
-    final rosc = _findRosc(ref.id);
-    final pairId = rosc?.rhythmusanalyseId;
-    if (pairId == null) return;
-    _korrekturen.add(
-      ProtokollEintragWiederhergestellt(
-        ziel: ProtokollEintragRef(
-          typ: ProtokollEintragTyp.rhythmusanalyse,
-          id: pairId,
-        ),
-      ),
+    final removalIndex = _korrekturen.lastIndexWhere(
+      (k) => k is ProtokollEintragEntfernt && k.ziel == ref,
     );
+    if (removalIndex == -1) return;
+    final cascade = <ProtokollEintragRef>[];
+    for (final korrektur in _korrekturen.skip(removalIndex + 1)) {
+      if (korrektur is! ProtokollEintragEntfernt) break;
+      final ziel = korrektur.ziel;
+      if (ziel.typ != ProtokollEintragTyp.rhythmusanalyse &&
+          ziel.typ != ProtokollEintragTyp.wiederbeginn) {
+        break;
+      }
+      cascade.add(ziel);
+    }
+    final states = _korrekturZustaende();
+    for (final ziel in cascade) {
+      if (!(states[ziel]?.entfernt ?? false)) continue;
+      _korrekturen.add(ProtokollEintragWiederhergestellt(ziel: ziel));
+    }
+  }
+
+  /// The id of the effective Reanimationswiederbeginn that ends the ROSC
+  /// interval started by the ROSC [roscId], if any.
+  ///
+  /// [ohneEntfernung] is the ROSC removal that was just appended; it is
+  /// ignored so the ROSC itself is still part of the timeline.
+  String? _folgenderWiederbeginn(
+    String roscId, {
+    required ProtokollEintragRef ohneEntfernung,
+  }) {
+    final states = _korrekturZustaende();
+    states[ohneEntfernung]?.entfernt = false;
+    final struktur = _effektiveStruktur(states);
+    final index = struktur.indexWhere(
+      (e) => e.typ == ProtokollEintragTyp.rosc && e.id == roscId,
+    );
+    if (index == -1) return null;
+    for (final eintrag in struktur.skip(index + 1)) {
+      if (eintrag.typ == ProtokollEintragTyp.rosc) return null;
+      if (eintrag.typ == ProtokollEintragTyp.wiederbeginn) return eintrag.id;
+    }
+    return null;
   }
 
   bool _isPairedRoscRhythmusanalyse(String id) =>
@@ -892,6 +949,11 @@ class Reanimationsfall {
         ref.id,
         (e) => e.id,
       ),
+      ProtokollEintragTyp.analysephaseBeginn => _findById<AnalysephaseBeginn>(
+        _analysephaseBeginne,
+        ref.id,
+        (e) => e.id,
+      ),
       ProtokollEintragTyp.rhythmusanalyse => _findById<RhythmusanalyseEintrag>(
         _rhythmusanalyseEintraege,
         ref.id,
@@ -932,18 +994,6 @@ class Reanimationsfall {
     }
     return null;
   }
-
-  void _requireKorrekturScope(ProtokollEintragTyp typ) {
-    if (_istOffen && typ.istStrukturell) {
-      throw StateError(
-        'structural Protokoll entries are read-only while the case is open',
-      );
-    }
-  }
-
-  bool get _istOffen =>
-      _zustand == ReanimationsfallZustand.laufend ||
-      _zustand == ReanimationsfallZustand.rosc;
 
   void _requireTyp(ProtokollEintragRef ref, ProtokollEintragTyp typ) {
     if (ref.typ != typ) {
@@ -1049,52 +1099,33 @@ class Reanimationsfall {
         'must be inside the case',
       );
     }
-    if (typ == ProtokollEintragTyp.rosc ||
-        typ == ProtokollEintragTyp.wiederbeginn) {
-      _requireBetweenStructuralNeighbours(zeitpunkt, id);
+    if (typ.istStrukturell) {
+      _requireBetweenStructuralNeighbours(zeitpunkt, typ, id);
     }
   }
 
-  void _requireBetweenStructuralNeighbours(Duration zeitpunkt, String id) {
-    final states = _korrekturZustaende();
-    final struktur =
-        <({String id, Duration original, Duration effective})>[
-          for (final rosc in _roscEreignisse)
-            if (!(states[_ref(ProtokollEintragTyp.rosc, rosc.id)]?.entfernt ??
-                false))
-              (
-                id: rosc.id,
-                original: rosc.zeitpunkt,
-                effective: _effektiveRosc(states)
-                    .firstWhere((e) => e.id == rosc.id)
-                    .zeitpunkt,
-              ),
-          for (final wiederbeginn in _wiederbeginnEreignisse)
-            if (!(states[_ref(
-                      ProtokollEintragTyp.wiederbeginn,
-                      wiederbeginn.id,
-                    )]
-                    ?.entfernt ??
-                false))
-              (
-                id: wiederbeginn.id,
-                original: wiederbeginn.zeitpunkt,
-                effective: _effektiveWiederbeginn(states)
-                    .firstWhere((e) => e.id == wiederbeginn.id)
-                    .zeitpunkt,
-              ),
-        ]..sort((a, b) {
-          final byTime = a.original.compareTo(b.original);
-          return byTime != 0 ? byTime : a.id.compareTo(b.id);
-        });
+  /// Keeps a corrected structural entry between its effective neighbours so
+  /// the replayed sequence of the case stays the same.
+  void _requireBetweenStructuralNeighbours(
+    Duration zeitpunkt,
+    ProtokollEintragTyp typ,
+    String id,
+  ) {
+    final struktur = _effektiveStruktur(_korrekturZustaende())
+        .where(
+          (e) =>
+              e.typ != ProtokollEintragTyp.rhythmusanalyse ||
+              !_isPairedRoscRhythmusanalyse(e.id),
+        )
+        .toList();
 
-    final index = struktur.indexWhere((eintrag) => eintrag.id == id);
+    final index = struktur.indexWhere((e) => e.typ == typ && e.id == id);
     if (index == -1) return;
     final previous = index > 0
-        ? struktur[index - 1].effective
+        ? struktur[index - 1].zeitpunkt
         : _uebernahmeOffset;
     final next = index < struktur.length - 1
-        ? struktur[index + 1].effective
+        ? struktur[index + 1].zeitpunkt
         : _maxKorrekturZeitpunkt;
     if (zeitpunkt < previous || zeitpunkt > next) {
       throw ArgumentError.value(
@@ -1103,6 +1134,121 @@ class Reanimationsfall {
         'must stay between the neighbouring structural entries',
       );
     }
+  }
+
+  /// Every effective structural entry in replay order.
+  List<_Strukturereignis> _effektiveStruktur(
+    Map<ProtokollEintragRef, _KorrekturZustand> states,
+  ) {
+    var legacyOrder = 0;
+    _Strukturereignis eintrag(ProtokollEintragTyp typ, ProtokollEreignis e) {
+      return _Strukturereignis(
+        typ: typ,
+        daten: e,
+        reihenfolge: _ereignisReihenfolge(e.id, legacyOrder++),
+      );
+    }
+
+    return [
+      for (final e in _effektiveAnalysephaseBeginne(states))
+        eintrag(ProtokollEintragTyp.analysephaseBeginn, e),
+      for (final e in _effektiveRhythmusanalysen(states))
+        eintrag(ProtokollEintragTyp.rhythmusanalyse, e),
+      for (final e in _effektiveUeberspringungen(states))
+        eintrag(ProtokollEintragTyp.ueberspringung, e),
+      for (final e in _effektiveDruckphaseNeustarts(states))
+        eintrag(ProtokollEintragTyp.druckphaseNeustart, e),
+      for (final e in _effektiveRosc(states))
+        eintrag(ProtokollEintragTyp.rosc, e),
+      for (final e in _effektiveWiederbeginn(states))
+        eintrag(ProtokollEintragTyp.wiederbeginn, e),
+    ]..sort((a, b) {
+      final byTime = a.zeitpunkt.compareTo(b.zeitpunkt);
+      if (byTime != 0) return byTime;
+      return a.reihenfolge.compareTo(b.reihenfolge);
+    });
+  }
+
+  /// Replays the live state from the effective structural Protokoll entries,
+  /// as if the corrected history had happened that way.
+  ///
+  /// The rules mirror the recording commands. An entry that does not fit the
+  /// replayed state, for example a Wiederbeginn without a preceding ROSC, has
+  /// no effect. A closed case keeps its lifecycle state.
+  void _rebuildLiveState() {
+    final cycle = leitlinienprofil.compressionCycle;
+    var zustand = ReanimationsfallZustand.laufend;
+    var phase = Reanimationsphase.druckphase;
+    var cycleStart = Duration.zero;
+    var remainingAtPause = Duration.zero;
+    Duration? pauseStart;
+    RhythmusanalyseErgebnis? ausloesendesErgebnis;
+
+    void startDruckphase(Duration t) {
+      phase = Reanimationsphase.druckphase;
+      cycleStart = t;
+      remainingAtPause = Duration.zero;
+      pauseStart = null;
+    }
+
+    for (final eintrag in _effektiveStruktur(_korrekturZustaende())) {
+      final t = eintrag.zeitpunkt;
+      final laufend = zustand == ReanimationsfallZustand.laufend;
+      switch (eintrag.daten) {
+        case AnalysephaseBeginn():
+          if (laufend && phase == Reanimationsphase.druckphase) {
+            final cycleElapsed = t - cycleStart;
+            remainingAtPause = cycleElapsed >= cycle
+                ? Duration.zero
+                : cycle - cycleElapsed;
+            pauseStart = t;
+            phase = Reanimationsphase.analysephase;
+          }
+        case RhythmusanalyseEintrag(:final ergebnis):
+          if (laufend) {
+            ausloesendesErgebnis = ergebnis;
+            // A ROSC result changes the state through its ROSC entry.
+            if (ergebnis != RhythmusanalyseErgebnis.rosc) startDruckphase(t);
+          }
+        case RhythmusanalyseUeberspringung():
+          if (laufend) startDruckphase(t);
+        case DruckphaseNeustart():
+          if (laufend && phase == Reanimationsphase.druckphase) {
+            cycleStart = t;
+            remainingAtPause = Duration.zero;
+          }
+        case RoscEreignis():
+          if (laufend) {
+            zustand = ReanimationsfallZustand.rosc;
+            phase = Reanimationsphase.druckphase;
+            pauseStart = null;
+          }
+        case Reanimationswiederbeginn():
+          if (zustand == ReanimationsfallZustand.rosc) {
+            zustand = ReanimationsfallZustand.laufend;
+            startDruckphase(t);
+          }
+      }
+    }
+
+    final offen =
+        _zustand == ReanimationsfallZustand.laufend ||
+        _zustand == ReanimationsfallZustand.rosc;
+    if (offen) _zustand = zustand;
+    if (_zustand != ReanimationsfallZustand.laufend) {
+      phase = Reanimationsphase.druckphase;
+      pauseStart = null;
+    }
+
+    _phase = phase;
+    _compressionCycleStartOffset = _monotonicStartOffset + cycleStart;
+    _compressionRemainingAtPause = remainingAtPause;
+    final start = pauseStart;
+    _analysephaseStartOffset = start == null
+        ? null
+        : _monotonicStartOffset + start;
+    _adrenalinAusloesendesErgebnis = ausloesendesErgebnis;
+    _updateAdrenalinGabeFaelligkeit();
   }
 
   Map<ProtokollEintragRef, _KorrekturZustand> _korrekturZustaende() {
@@ -1213,6 +1359,19 @@ class Reanimationsfall {
       ),
       _ => original,
     };
+  }
+
+  AnalysephaseBeginn _applyAnalysephaseBeginn(
+    AnalysephaseBeginn original,
+    ProtokollKorrektur? korrektur,
+  ) {
+    if (korrektur is ZeitpunktKorrigiert) {
+      return AnalysephaseBeginn(
+        id: original.id,
+        zeitpunkt: korrektur.zeitpunkt,
+      );
+    }
+    return original;
   }
 
   RhythmusanalyseUeberspringung _applyUeberspringung(
@@ -1349,6 +1508,17 @@ class Reanimationsfall {
     );
   }
 
+  List<AnalysephaseBeginn> _effektiveAnalysephaseBeginne(
+    Map<ProtokollEintragRef, _KorrekturZustand> states,
+  ) {
+    return _effektiveListe(
+      typ: ProtokollEintragTyp.analysephaseBeginn,
+      original: _analysephaseBeginne,
+      apply: _applyAnalysephaseBeginn,
+      states: states,
+    );
+  }
+
   List<RhythmusanalyseUeberspringung> _effektiveUeberspringungen(
     Map<ProtokollEintragRef, _KorrekturZustand> states,
   ) {
@@ -1413,6 +1583,9 @@ class Reanimationsfall {
     final messwerte = verschoben(_effektiveMesswerte(states));
     final notizen = verschoben(_effektiveNotizen(states));
     final rhythmusanalysen = verschoben(_effektiveRhythmusanalysen(states));
+    final analysephaseBeginne = verschoben(
+      _effektiveAnalysephaseBeginne(states),
+    );
     final ueberspringungen = verschoben(_effektiveUeberspringungen(states));
     final druckphaseNeustarts = verschoben(
       _effektiveDruckphaseNeustarts(states),
@@ -1504,6 +1677,7 @@ class Reanimationsfall {
       druckphaseNeustarts: List.unmodifiable(druckphaseNeustarts),
       messwerte: List.unmodifiable(messwerte),
       notizen: List.unmodifiable(notizen),
+      analysephaseBeginne: List.unmodifiable(analysephaseBeginne),
       uebersprungeneRhythmusanalysen: List.unmodifiable(ueberspringungen),
       schocks: List.unmodifiable(schocks),
       adrenalinGaben: List.unmodifiable(adrenalinGaben),
@@ -1711,6 +1885,16 @@ class Reanimationsfall {
       );
     }
 
+    for (final original in _analysephaseBeginne) {
+      eintraege.add(
+        build(
+          typ: ProtokollEintragTyp.analysephaseBeginn,
+          original: original,
+          apply: _applyAnalysephaseBeginn,
+        ),
+      );
+    }
+
     final pairedRoscRhythmusIds = <String>{
       for (final rosc in _roscEreignisse)
         if (rosc.rhythmusanalyseId != null) rosc.rhythmusanalyseId!,
@@ -1869,11 +2053,11 @@ class Reanimationsfall {
     return a.reihenfolge.compareTo(b.reihenfolge);
   }
 
-  bool _kannKorrigieren(ProtokollEintragTyp typ) {
-    if (typ.istLebenszyklus) return false;
-    if (_istOffen) return typ.istAufzeichnung;
-    return true;
-  }
+  bool _kannKorrigieren(ProtokollEintragTyp typ) => !typ.istLebenszyklus;
+
+  bool get _istOffen =>
+      _zustand == ReanimationsfallZustand.laufend ||
+      _zustand == ReanimationsfallZustand.rosc;
 
   /// The contextual Amiodaron hint for the current Schock count.
   ///
@@ -1949,6 +2133,7 @@ class Reanimationsfall {
       schocks: List.unmodifiable(_schocks),
       adrenalinGaben: List.unmodifiable(_adrenalinGaben),
       amiodaronGaben: List.unmodifiable(_amiodaronGaben),
+      analysephaseBeginne: List.unmodifiable(_analysephaseBeginne),
       uebersprungeneRhythmusanalysen: List.unmodifiable(
         _uebersprungeneRhythmusanalysen,
       ),
@@ -1990,6 +2175,22 @@ class _KorrekturZustand {
   bool entfernt = false;
   bool hatKorrektur = false;
   ProtokollKorrektur? letzteKorrektur;
+}
+
+/// One effective structural entry, used to replay the live state.
+class _Strukturereignis {
+  const _Strukturereignis({
+    required this.typ,
+    required this.daten,
+    required this.reihenfolge,
+  });
+
+  final ProtokollEintragTyp typ;
+  final ProtokollEreignis daten;
+  final int reihenfolge;
+
+  String get id => daten.id;
+  Duration get zeitpunkt => daten.zeitpunkt;
 }
 
 enum _StrukturgrenzeTyp { rosc, wiederbeginn }
@@ -2036,6 +2237,7 @@ class ReanimationsfallSnapshot {
     required this.druckphaseNeustarts,
     required this.messwerte,
     required this.notizen,
+    required this.analysephaseBeginne,
     required this.uebersprungeneRhythmusanalysen,
     required this.schocks,
     required this.adrenalinGaben,
@@ -2121,6 +2323,9 @@ class ReanimationsfallSnapshot {
 
   /// Every recorded free-text note.
   final List<ReanimationsfallNotiz> notizen;
+
+  /// Every recorded Analysephase start.
+  final List<AnalysephaseBeginn> analysephaseBeginne;
 
   /// Every skipped Rhythmusanalyse.
   final List<RhythmusanalyseUeberspringung> uebersprungeneRhythmusanalysen;
@@ -2231,6 +2436,7 @@ class ReanimationsfallState {
     required this.schocks,
     required this.adrenalinGaben,
     required this.amiodaronGaben,
+    required this.analysephaseBeginne,
     required this.uebersprungeneRhythmusanalysen,
     required this.rhythmusanalyseEintraege,
     required this.druckphaseNeustarts,
@@ -2284,6 +2490,7 @@ class ReanimationsfallState {
   final List<SchockEreignis> schocks;
   final List<AdrenalinGabe> adrenalinGaben;
   final List<AmiodaronGabe> amiodaronGaben;
+  final List<AnalysephaseBeginn> analysephaseBeginne;
   final List<RhythmusanalyseUeberspringung> uebersprungeneRhythmusanalysen;
   final List<RhythmusanalyseEintrag> rhythmusanalyseEintraege;
   final List<DruckphaseNeustart> druckphaseNeustarts;

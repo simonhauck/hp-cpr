@@ -48,6 +48,10 @@ _Avoid_: Cycle restart, timer reset
 The paused period in which the team performs the rhythm analysis and may deliver a shock; the compression timer is stopped.
 _Avoid_: Analysis phase, rhythm phase
 
+**Analysephasenbeginn**:
+The recorded moment the Analysephase started and the compression timer was paused; a correctable Protokolleintrag separate from the Rhythmusanalyse result.
+_Avoid_: Analysestart, analysis start
+
 **Schockbar**:
 An analysis result indicating a shockable rhythm (VF or pVT), or an AED shock advisory when the rhythm itself is unknown.
 _Avoid_: Shockable rhythm in UI copy

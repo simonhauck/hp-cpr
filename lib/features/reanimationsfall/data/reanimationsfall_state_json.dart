@@ -64,6 +64,10 @@ Map<String, dynamic> reanimationsfallStateToJson(ReanimationsfallState state) {
           'ergebnis': entry.ergebnis.name,
         },
     ],
+    'analysephaseBeginne': [
+      for (final entry in state.analysephaseBeginne)
+        {'id': entry.id, 'zeitpunkt': _millis(entry.zeitpunkt)},
+    ],
     'druckphaseNeustarts': [
       for (final entry in state.druckphaseNeustarts)
         {'id': entry.id, 'zeitpunkt': _millis(entry.zeitpunkt)},
@@ -183,6 +187,13 @@ ReanimationsfallState reanimationsfallStateFromJson(Map<String, dynamic> json) {
           ergebnis: RhythmusanalyseErgebnis.values.byName(
             map(item)['ergebnis'] as String,
           ),
+        ),
+    ],
+    analysephaseBeginne: [
+      for (final (index, item) in list(json['analysephaseBeginne']).indexed)
+        AnalysephaseBeginn(
+          id: _id(map(item), 'legacy-analysephase-beginn-$index'),
+          zeitpunkt: _duration(map(item)['zeitpunkt']),
         ),
     ],
     druckphaseNeustarts: [

@@ -137,10 +137,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get protokollAuditToggle => 'Änderungsverlauf';
 
   @override
-  String get protokollLiveEditHint =>
-      'Im laufenden Fall sind nur Startzeit, Übernahme, Schocks, Medikamente, Messwerte und Notizen korrigierbar.';
-
-  @override
   String get protokollEdit => 'Bearbeiten';
 
   @override
@@ -189,10 +185,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get protokollRestoredSnackbar => 'Eintrag wiederhergestellt';
-
-  @override
-  String get protokollLockedTooltip =>
-      'Strukturereignis – während des Falls gesperrt';
 
   @override
   String get protokollTimeInvalid =>
@@ -491,6 +483,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get eventRhythmusanalyseSkipped => 'Rhythmusanalyse übersprungen';
+
+  @override
+  String get eventAnalysephaseStarted => 'Analyse begonnen';
 
   @override
   String get eventDruckphaseRestarted => 'Druckphase neu gestartet';

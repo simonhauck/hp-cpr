@@ -171,10 +171,6 @@
   "@protokollAuditToggle": {
     "description": "Schalter zum Anzeigen korrigierter und entfernter Einträge"
   },
-  "protokollLiveEditHint": "Im laufenden Fall sind nur Startzeit, Übernahme, Schocks, Medikamente, Messwerte und Notizen korrigierbar.",
-  "@protokollLiveEditHint": {
-    "description": "Hinweis auf die gesperrten Strukturereignisse im laufenden Fall"
-  },
   "protokollEdit": "Bearbeiten",
   "@protokollEdit": {
     "description": "Aktion zum Bearbeiten eines Protokolleintrags"
@@ -243,10 +239,6 @@
   "protokollRestoredSnackbar": "Eintrag wiederhergestellt",
   "@protokollRestoredSnackbar": {
     "description": "Bestätigung nach dem Wiederherstellen eines Protokolleintrags"
-  },
-  "protokollLockedTooltip": "Strukturereignis – während des Falls gesperrt",
-  "@protokollLockedTooltip": {
-    "description": "Tooltip für ein gesperrtes Strukturereignis"
   },
   "protokollTimeInvalid": "Bitte einen Zeitpunkt innerhalb des Falls eingeben.",
   "@protokollTimeInvalid": {
@@ -670,6 +662,10 @@
   "eventRhythmusanalyseSkipped": "Rhythmusanalyse übersprungen",
   "@eventRhythmusanalyseSkipped": {
     "description": "Ereignis: Rhythmusanalyse übersprungen"
+  },
+  "eventAnalysephaseStarted": "Analyse begonnen",
+  "@eventAnalysephaseStarted": {
+    "description": "Ereignis: Beginn der Analysephase"
   },
   "eventDruckphaseRestarted": "Druckphase neu gestartet",
   "@eventDruckphaseRestarted": {
