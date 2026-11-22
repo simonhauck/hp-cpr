@@ -442,6 +442,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get summaryStartzeit => 'Startzeit';
 
   @override
+  String get summaryUebernahme => 'Übernahme';
+
+  @override
   String get summaryEndzeit => 'Endzeit';
 
   @override
@@ -449,6 +452,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get summaryShocks => 'Schocks';
+
+  @override
+  String summaryVorbehandlungDavon(int anzahl) {
+    return '(davon $anzahl vor Übernahme)';
+  }
 
   @override
   String get summaryEvents => 'Ereignisse';

@@ -88,20 +88,39 @@ class _ReanimationsfallSummaryPageState
                 ),
                 _SummaryRow(
                   label: l10n.summaryShocks,
-                  value: '${snapshot.schockAnzahl}',
+                  value: _withVorbehandlung(
+                    l10n,
+                    snapshot.schockAnzahl,
+                    snapshot.vorbehandlung.schocks,
+                  ),
                 ),
                 _SummaryRow(
                   label: l10n.adrenalinLabel,
-                  value: '${snapshot.adrenalinGaben.length}',
+                  value: _withVorbehandlung(
+                    l10n,
+                    snapshot.adrenalinAnzahl,
+                    snapshot.vorbehandlung.adrenalin,
+                  ),
                 ),
                 _SummaryRow(
                   label: l10n.amiodaronLabel,
-                  value: '${snapshot.amiodaronGaben.length}',
+                  value: _withVorbehandlung(
+                    l10n,
+                    snapshot.amiodaronAnzahl,
+                    snapshot.vorbehandlung.amiodaron,
+                  ),
                 ),
                 _SummaryRow(
                   label: l10n.summaryStartzeit,
                   value: l10n.wallTimeValue(formatWallTime(snapshot.startzeit)),
                 ),
+                if (snapshot.uebernahme != snapshot.startzeit)
+                  _SummaryRow(
+                    label: l10n.summaryUebernahme,
+                    value: l10n.wallTimeValue(
+                      formatWallTime(snapshot.uebernahme),
+                    ),
+                  ),
                 if (endZeitpunkt != null)
                   _SummaryRow(
                     label: l10n.summaryEndzeit,
@@ -128,6 +147,12 @@ class _ReanimationsfallSummaryPageState
       ],
     );
   }
+}
+
+/// The total, followed by the Vorbehandlung share when there is one.
+String _withVorbehandlung(AppLocalizations l10n, int total, int vorbehandlung) {
+  if (vorbehandlung == 0) return '$total';
+  return '$total ${l10n.summaryVorbehandlungDavon(vorbehandlung)}';
 }
 
 class _SummaryRow extends StatelessWidget {
