@@ -1031,7 +1031,7 @@ class _RhythmusanalyseChoiceButton extends StatelessWidget {
         : theme.textTheme.titleSmall;
 
     return switch (emphasis) {
-      PhaseActionEmphasis.filled => FilledButton.tonal(
+      PhaseActionEmphasis.filled => FilledButton(
         onPressed: onPressed,
         style: FilledButton.styleFrom(
           minimumSize: minimumSize,

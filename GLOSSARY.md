@@ -13,8 +13,16 @@ One resuscitation case, from the first compression to the end of the case.
 _Avoid_: Session, run, event
 
 **Startzeit**:
-The corrected time zero of a case, set from the first compression; it can be backdated on the start screen.
+The time zero of a case, the first compression; it can be corrected at any time, but never to after the Übernahme.
 _Avoid_: Start timestamp, begin time
+
+**Übernahme**:
+The moment the Zeitnehmer took over timekeeping for a case; it equals the Startzeit unless the resuscitation was already running, and it can be corrected.
+_Avoid_: Takeover, arrival, app start
+
+**Vorbehandlung**:
+The Schocks, Adrenalin Gaben, and Amiodaron Gaben given before the Übernahme, recorded only as counts without times.
+_Avoid_: Vorgeschichte, prior treatment, history
 
 **Reanimationsdauer**:
 The time from the Startzeit to now, shown on the running case screen.

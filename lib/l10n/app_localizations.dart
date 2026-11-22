@@ -223,7 +223,7 @@ abstract class AppLocalizations {
   /// Anzeige der Startzeit mit Uhrzeit
   ///
   /// In de, this message translates to:
-  /// **'Startzeit {time}'**
+  /// **'Startzeit {time} Uhr'**
   String startzeitValue(String time);
 
   /// Beschriftung des Demo-Modus-Schalters auf der Startseite
@@ -421,13 +421,13 @@ abstract class AppLocalizations {
   /// Beschriftung der fallrelativen Zeit
   ///
   /// In de, this message translates to:
-  /// **'Fallzeit'**
+  /// **'Zeitpunkt (seit Start)'**
   String get protokollCaseTime;
 
   /// Vorschau der Wanduhrzeit eines korrigierten Zeitpunkts
   ///
   /// In de, this message translates to:
-  /// **'Uhrzeit {time}'**
+  /// **'{time} Uhr'**
   String protokollWallTime(String time);
 
   /// Titel des Dialogs für eine korrigierte Medikamentendosis
@@ -535,7 +535,7 @@ abstract class AppLocalizations {
   /// Überfälligkeitshinweis in der Analysephase für AHA 2025
   ///
   /// In de, this message translates to:
-  /// **'Pulscheck über {seconds} s – CPR fortsetzen'**
+  /// **'Pulskontrolle über {seconds} s – CPR fortsetzen'**
   String pauseOverdueAha(int seconds);
 
   /// Überfälligkeitshinweis in der Analysephase für ERC 2025
@@ -865,7 +865,7 @@ abstract class AppLocalizations {
   /// Schaltfläche zum Start eines neuen Reanimationsabschnitts nach ROSC
   ///
   /// In de, this message translates to:
-  /// **'Reanimationswiederbeginn'**
+  /// **'Reanimation wieder aufnehmen'**
   String get resumeResuscitationButton;
 
   /// Schaltfläche zum Beenden des Reanimationsfalls
@@ -919,8 +919,20 @@ abstract class AppLocalizations {
   /// Beschriftung der gesamten CPR-Dauer
   ///
   /// In de, this message translates to:
-  /// **'CPR-Dauer'**
+  /// **'CPR-Dauer (ohne ROSC)'**
   String get summaryCprDuration;
+
+  /// Beschriftung der Gesamtdauer von Startzeit bis Ende
+  ///
+  /// In de, this message translates to:
+  /// **'Reanimationsdauer (gesamt)'**
+  String get summaryReanimationsdauer;
+
+  /// Uhrzeit mit Einheit, z. B. 12:03:45 Uhr
+  ///
+  /// In de, this message translates to:
+  /// **'{time} Uhr'**
+  String wallTimeValue(String time);
 
   /// Beschriftung der Startzeit in der Zusammenfassung
   ///
@@ -1045,7 +1057,7 @@ abstract class AppLocalizations {
   /// Erklärung der Fortsetzen-Karte
   ///
   /// In de, this message translates to:
-  /// **'Der Reanimationsfall läuft bereits. Setze ihn fort, um weiterzutimen.'**
+  /// **'Der Reanimationsfall läuft noch und kann fortgesetzt werden.'**
   String get activeCaseDescription;
 
   /// Schaltfläche zum Fortsetzen des gespeicherten aktiven Falls

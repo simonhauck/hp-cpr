@@ -79,6 +79,10 @@ class _ReanimationsfallSummaryPageState
                 ),
                 const SizedBox(height: PageLayout.space12),
                 _SummaryRow(
+                  label: l10n.summaryReanimationsdauer,
+                  value: formatReanimationsdauer(snapshot.reanimationsdauer),
+                ),
+                _SummaryRow(
                   label: l10n.summaryCprDuration,
                   value: formatReanimationsdauer(snapshot.cprDauer),
                 ),
@@ -96,12 +100,14 @@ class _ReanimationsfallSummaryPageState
                 ),
                 _SummaryRow(
                   label: l10n.summaryStartzeit,
-                  value: formatWallTime(snapshot.startzeit),
+                  value: l10n.wallTimeValue(formatWallTime(snapshot.startzeit)),
                 ),
                 if (endZeitpunkt != null)
                   _SummaryRow(
                     label: l10n.summaryEndzeit,
-                    value: formatWallTime(snapshot.startzeit.add(endZeitpunkt)),
+                    value: l10n.wallTimeValue(
+                      formatWallTime(snapshot.startzeit.add(endZeitpunkt)),
+                    ),
                   ),
                 if (ende != null)
                   _SummaryRow(

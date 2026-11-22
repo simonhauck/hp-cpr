@@ -80,7 +80,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String startzeitValue(String time) {
-    return 'Startzeit $time';
+    return 'Startzeit $time Uhr';
   }
 
   @override
@@ -187,11 +187,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get protokollTimeTitle => 'Zeitpunkt korrigieren';
 
   @override
-  String get protokollCaseTime => 'Fallzeit';
+  String get protokollCaseTime => 'Zeitpunkt (seit Start)';
 
   @override
   String protokollWallTime(String time) {
-    return 'Uhrzeit $time';
+    return '$time Uhr';
   }
 
   @override
@@ -253,7 +253,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String pauseOverdueAha(int seconds) {
-    return 'Pulscheck über $seconds s – CPR fortsetzen';
+    return 'Pulskontrolle über $seconds s – CPR fortsetzen';
   }
 
   @override
@@ -431,7 +431,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get roscDescription => 'Kreislauf zurückgekehrt';
 
   @override
-  String get resumeResuscitationButton => 'Reanimationswiederbeginn';
+  String get resumeResuscitationButton => 'Reanimation wieder aufnehmen';
 
   @override
   String get endCaseButton => 'Fall beenden';
@@ -458,7 +458,15 @@ class AppLocalizationsDe extends AppLocalizations {
   String get summaryCaseEnded => 'Reanimationsfall beendet';
 
   @override
-  String get summaryCprDuration => 'CPR-Dauer';
+  String get summaryCprDuration => 'CPR-Dauer (ohne ROSC)';
+
+  @override
+  String get summaryReanimationsdauer => 'Reanimationsdauer (gesamt)';
+
+  @override
+  String wallTimeValue(String time) {
+    return '$time Uhr';
+  }
 
   @override
   String get summaryStartzeit => 'Startzeit';
@@ -534,7 +542,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get activeCaseDescription =>
-      'Der Reanimationsfall läuft bereits. Setze ihn fort, um weiterzutimen.';
+      'Der Reanimationsfall läuft noch und kann fortgesetzt werden.';
 
   @override
   String get resumeCaseButton => 'Fortsetzen';
