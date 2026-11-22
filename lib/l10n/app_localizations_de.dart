@@ -678,9 +678,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get vorbehandlungErfassen => 'Vorbehandlung erfassen';
 
   @override
-  String get vorbehandlungHinweisAusblenden => 'Hinweis ausblenden';
-
-  @override
   String get vorbehandlungLaufzeitLabel => 'Lief bei Übernahme seit';
 
   @override

@@ -1282,17 +1282,11 @@ abstract class AppLocalizations {
   /// **'Vorbehandlung'**
   String get vorbehandlungTitle;
 
-  /// Hinweis im Phasenstreifen und Eintrag in Weitere Aktionen zum Öffnen des Vorbehandlung-Formulars
+  /// Schaltfläche in der Aktionsleiste und Eintrag in Weitere Aktionen zum Öffnen des Vorbehandlung-Formulars
   ///
   /// In de, this message translates to:
   /// **'Vorbehandlung erfassen'**
   String get vorbehandlungErfassen;
-
-  /// Tooltip zum Ausblenden des Hinweises Vorbehandlung erfassen
-  ///
-  /// In de, this message translates to:
-  /// **'Hinweis ausblenden'**
-  String get vorbehandlungHinweisAusblenden;
 
   /// Beschriftung der Auswahl, wie lange die Reanimation bei der Übernahme bereits lief
   ///

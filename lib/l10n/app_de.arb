@@ -947,11 +947,7 @@
   },
   "vorbehandlungErfassen": "Vorbehandlung erfassen",
   "@vorbehandlungErfassen": {
-    "description": "Hinweis im Phasenstreifen und Eintrag in Weitere Aktionen zum Öffnen des Vorbehandlung-Formulars"
-  },
-  "vorbehandlungHinweisAusblenden": "Hinweis ausblenden",
-  "@vorbehandlungHinweisAusblenden": {
-    "description": "Tooltip zum Ausblenden des Hinweises Vorbehandlung erfassen"
+    "description": "Schaltfläche in der Aktionsleiste und Eintrag in Weitere Aktionen zum Öffnen des Vorbehandlung-Formulars"
   },
   "vorbehandlungLaufzeitLabel": "Lief bei Übernahme seit",
   "@vorbehandlungLaufzeitLabel": {
