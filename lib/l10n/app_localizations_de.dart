@@ -336,12 +336,6 @@ class AppLocalizationsDe extends AppLocalizations {
       'Das haptische Feedback ist in den Systemeinstellungen des Geräts ausgeschaltet. Solange es aus ist, vibriert die App nicht.';
 
   @override
-  String get settingsSound => 'Ton';
-
-  @override
-  String get settingsSoundDescription => 'Ton bei fälligen Aktionen';
-
-  @override
   String get menuOpenTooltip => 'Menü öffnen';
 
   @override

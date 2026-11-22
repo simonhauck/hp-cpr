@@ -443,14 +443,6 @@
   "@settingsVibrationSystemHapticsOff": {
     "description": "Hinweis, wenn die Vibration in der App an, das haptische Feedback des Geräts aber aus ist"
   },
-  "settingsSound": "Ton",
-  "@settingsSound": {
-    "description": "Einstellung für Tonsignale"
-  },
-  "settingsSoundDescription": "Ton bei fälligen Aktionen",
-  "@settingsSoundDescription": {
-    "description": "Erklärung der Toneinstellung"
-  },
   "menuOpenTooltip": "Menü öffnen",
   "@menuOpenTooltip": {
     "description": "Tooltip der Menü-Schaltfläche"

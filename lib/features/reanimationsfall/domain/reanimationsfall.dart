@@ -65,7 +65,6 @@ class Reanimationsfall {
     required AppClock clock,
     this.leitlinienprofil = Leitlinienprofil.erc2025,
     this.vibrationEnabled = true,
-    this.soundEnabled = false,
     this.demoMode = false,
   }) : _clock = clock,
        _monotonicStartOffset = clock.monotonicNow(),
@@ -90,7 +89,6 @@ class Reanimationsfall {
        id = state.id,
        leitlinienprofil = state.leitlinienprofil,
        vibrationEnabled = state.vibrationEnabled,
-       soundEnabled = state.soundEnabled,
        demoMode = state.demoMode,
        erfassteUebernahme = state.erfassteUebernahme,
        erfassteUebernahmeUtc = state.erfassteUebernahmeUtc,
@@ -141,9 +139,6 @@ class Reanimationsfall {
 
   /// Whether vibration was enabled when the Reanimationsfall started.
   final bool vibrationEnabled;
-
-  /// Whether sound was enabled when the Reanimationsfall started.
-  final bool soundEnabled;
 
   /// Whether the Reanimationsfall was started in Demo-Modus.
   final bool demoMode;
@@ -1651,7 +1646,6 @@ class Reanimationsfall {
       phase: _phase,
       leitlinienprofil: leitlinienprofil,
       vibrationEnabled: vibrationEnabled,
-      soundEnabled: soundEnabled,
       demoMode: demoMode,
       startzeit: startzeit,
       uebernahme: uebernahme,
@@ -2117,7 +2111,6 @@ class Reanimationsfall {
       utcOffsetMinutes: utcOffsetMinutes,
       leitlinienprofil: leitlinienprofil,
       vibrationEnabled: vibrationEnabled,
-      soundEnabled: soundEnabled,
       demoMode: demoMode,
       demoOffset: _demoOffset,
       zustand: _zustand,
@@ -2214,7 +2207,6 @@ class ReanimationsfallSnapshot {
     required this.phase,
     required this.leitlinienprofil,
     required this.vibrationEnabled,
-    required this.soundEnabled,
     required this.demoMode,
     required this.startzeit,
     required this.uebernahme,
@@ -2257,7 +2249,6 @@ class ReanimationsfallSnapshot {
   final Reanimationsphase phase;
   final Leitlinienprofil leitlinienprofil;
   final bool vibrationEnabled;
-  final bool soundEnabled;
 
   /// Whether the Reanimationsfall was started in Demo-Modus.
   final bool demoMode;
@@ -2423,7 +2414,6 @@ class ReanimationsfallState {
     required this.utcOffsetMinutes,
     required this.leitlinienprofil,
     required this.vibrationEnabled,
-    required this.soundEnabled,
     required this.demoMode,
     required this.demoOffset,
     required this.zustand,
@@ -2471,7 +2461,6 @@ class ReanimationsfallState {
 
   final Leitlinienprofil leitlinienprofil;
   final bool vibrationEnabled;
-  final bool soundEnabled;
   final bool demoMode;
 
   /// The accumulated simulated time added by Demo-Modus.

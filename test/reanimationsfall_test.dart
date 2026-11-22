@@ -63,17 +63,15 @@ void main() {
       },
     );
 
-    test('snapshots the alert settings per Reanimationsfall', () {
+    test('snapshots the vibration setting per Reanimationsfall', () {
       final clock = FakeClock();
       final reanimationsfall = Reanimationsfall.start(
         clock: clock,
         vibrationEnabled: false,
-        soundEnabled: true,
       );
 
       final snapshot = reanimationsfall.snapshot();
       expect(snapshot.vibrationEnabled, isFalse);
-      expect(snapshot.soundEnabled, isTrue);
     });
   });
 
