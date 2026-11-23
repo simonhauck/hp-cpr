@@ -199,10 +199,6 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     );
   }
 
-  void _dismissVorbehandlungHinweis() {
-    _mutate(widget.reanimationsfall.dismissVorbehandlungHinweis);
-  }
-
   void _restartDruckphase() {
     _mutateWithUndo(() => [widget.reanimationsfall.restartDruckphase()]);
   }
@@ -353,11 +349,7 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
         if (didPop) return;
         unawaited(_requestLeave());
       },
-      child: _VorbehandlungHinweisScope(
-        onOpen: () => unawaited(openVorbehandlung()),
-        onDismiss: _dismissVorbehandlungHinweis,
-        child: Stack(children: [_buildScaffold(snapshot), _buildUndoBanner()]),
-      ),
+      child: Stack(children: [_buildScaffold(snapshot), _buildUndoBanner()]),
     );
   }
 
@@ -490,42 +482,28 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
           ],
         );
       },
-      footer: (context, layout) => snapshot.istRosc
-          ? _RoscActionBar(
-              layout: layout,
-              onResumeResuscitation: _resumeResuscitation,
-              onEndCase: _endReanimationsfall,
-              onOpenActions: _openActions,
-              onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
-            )
-          : PhaseActionBar(
-              layout: layout,
-              onOpenActions: _openActions,
-              onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
-            ),
+      footer: (context, layout) {
+        final recordVorbehandlung = snapshot.zeigeVorbehandlungErfassen
+            ? () => unawaited(openVorbehandlung())
+            : null;
+        return snapshot.istRosc
+            ? _RoscActionBar(
+                layout: layout,
+                onResumeResuscitation: _resumeResuscitation,
+                onEndCase: _endReanimationsfall,
+                onOpenActions: _openActions,
+                onRecordVorbehandlung: recordVorbehandlung,
+                onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
+              )
+            : PhaseActionBar(
+                layout: layout,
+                onOpenActions: _openActions,
+                onRecordVorbehandlung: recordVorbehandlung,
+                onAdvanceDemoTime: snapshot.demoMode ? _advanceDemoTime : null,
+              );
+      },
     );
   }
-}
-
-/// Hands the `Vorbehandlung erfassen` prompt actions to the phase strip of
-/// whichever phase panel is shown.
-class _VorbehandlungHinweisScope extends InheritedWidget {
-  const _VorbehandlungHinweisScope({
-    required this.onOpen,
-    required this.onDismiss,
-    required super.child,
-  });
-
-  final VoidCallback onOpen;
-  final VoidCallback onDismiss;
-
-  static _VorbehandlungHinweisScope? maybeOf(BuildContext context) {
-    return context
-        .dependOnInheritedWidgetOfExactType<_VorbehandlungHinweisScope>();
-  }
-
-  @override
-  bool updateShouldNotify(_VorbehandlungHinweisScope oldWidget) => false;
 }
 
 class _ReanimationsfallHeader extends StatelessWidget {
@@ -738,6 +716,7 @@ class _RoscActionBar extends StatelessWidget {
     required this.onResumeResuscitation,
     required this.onEndCase,
     required this.onOpenActions,
+    this.onRecordVorbehandlung,
     this.onAdvanceDemoTime,
   });
 
@@ -745,6 +724,7 @@ class _RoscActionBar extends StatelessWidget {
   final VoidCallback onResumeResuscitation;
   final VoidCallback onEndCase;
   final VoidCallback onOpenActions;
+  final VoidCallback? onRecordVorbehandlung;
   final VoidCallback? onAdvanceDemoTime;
 
   @override
@@ -764,6 +744,7 @@ class _RoscActionBar extends StatelessWidget {
       emphasis: PhaseActionEmphasis.outlined,
     );
     final advanceDemoTime = onAdvanceDemoTime;
+    final recordVorbehandlung = onRecordVorbehandlung;
 
     return PhaseActionRow(
       layout: layout,
@@ -772,6 +753,8 @@ class _RoscActionBar extends StatelessWidget {
         end,
         if (advanceDemoTime != null)
           DemoAdvanceButton(layout: layout, onPressed: advanceDemoTime),
+        if (recordVorbehandlung != null)
+          VorbehandlungButton(layout: layout, onPressed: recordVorbehandlung),
       ],
       actionsButton: ActionsButton(layout: layout, onPressed: onOpenActions),
     );
@@ -795,7 +778,6 @@ class _PhasePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = tone.colors(context);
-    final hinweis = _VorbehandlungHinweisScope.maybeOf(context);
 
     return Container(
       padding: layout.phasePanelPadding,
@@ -812,12 +794,7 @@ class _PhasePanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          PhaseStrip(
-            snapshot: snapshot,
-            onOpenVorbehandlung: hinweis?.onOpen,
-            onDismissVorbehandlungHinweis: hinweis?.onDismiss,
-            compact: layout.isCompact || layout.isLandscape,
-          ),
+          PhaseStrip(snapshot: snapshot),
           SizedBox(height: layout.phaseStripGap),
           Expanded(child: child),
         ],

@@ -56,6 +56,15 @@ void main() {
     expectNoScale(tester, find.textContaining('Druckphase ·'));
     expectNoScale(tester, find.text('02:00'));
     expectInsideViewport(tester, find.text('Schocks: 0'));
+    final vorbehandlung = find.text('Vorbehandlung erfassen');
+    expect(vorbehandlung, findsOneWidget);
+    expectNoScale(tester, vorbehandlung);
+    expectInsideViewport(tester, vorbehandlung);
+    expectInsideViewport(tester, find.text('Aktionen'));
+    expect(
+      tester.getRect(vorbehandlung).right,
+      lessThan(tester.getRect(find.text('Aktionen')).left),
+    );
     expectInsideViewport(tester, adrenalinGabe);
 
     final amiodaronNotRecommended = find.text('nicht empfohlen');

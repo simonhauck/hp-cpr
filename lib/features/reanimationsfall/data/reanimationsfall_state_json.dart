@@ -14,11 +14,9 @@ Map<String, dynamic> reanimationsfallStateToJson(ReanimationsfallState state) {
     'erfassteUebernahmeUtc': state.erfassteUebernahmeUtc
         .toUtc()
         .toIso8601String(),
-    'vorbehandlungHinweisAusgeblendet': state.vorbehandlungHinweisAusgeblendet,
     'utcOffsetMinutes': state.utcOffsetMinutes,
     'leitlinienprofil': state.leitlinienprofil.name,
     'vibrationEnabled': state.vibrationEnabled,
-    'soundEnabled': state.soundEnabled,
     'demoMode': state.demoMode,
     'demoOffset': _millis(state.demoOffset),
     'zustand': state.zustand.name,
@@ -125,14 +123,11 @@ ReanimationsfallState reanimationsfallStateFromJson(Map<String, dynamic> json) {
     erfassteUebernahmeUtc: DateTime.parse(
       (json['erfassteUebernahmeUtc'] ?? json['startzeitUtc']) as String,
     ).toUtc(),
-    vorbehandlungHinweisAusgeblendet:
-        json['vorbehandlungHinweisAusgeblendet'] as bool? ?? false,
     utcOffsetMinutes: json['utcOffsetMinutes'] as int,
     leitlinienprofil: Leitlinienprofil.values.byName(
       json['leitlinienprofil'] as String,
     ),
     vibrationEnabled: json['vibrationEnabled'] as bool,
-    soundEnabled: json['soundEnabled'] as bool,
     demoMode: json['demoMode'] as bool? ?? false,
     demoOffset: _duration(json['demoOffset']),
     zustand: ReanimationsfallZustand.values.byName(json['zustand'] as String),

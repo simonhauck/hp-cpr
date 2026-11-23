@@ -63,17 +63,15 @@ void main() {
       },
     );
 
-    test('snapshots the alert settings per Reanimationsfall', () {
+    test('snapshots the vibration setting per Reanimationsfall', () {
       final clock = FakeClock();
       final reanimationsfall = Reanimationsfall.start(
         clock: clock,
         vibrationEnabled: false,
-        soundEnabled: true,
       );
 
       final snapshot = reanimationsfall.snapshot();
       expect(snapshot.vibrationEnabled, isFalse);
-      expect(snapshot.soundEnabled, isTrue);
     });
   });
 
@@ -1222,11 +1220,31 @@ void main() {
       expect(snapshot.uebernahme, DateTime(2026, 10, 25, 8, 30));
       expect(snapshot.startzeit, DateTime(2026, 10, 25, 8, 30));
       expect(snapshot.laufzeitBeiUebernahme, Duration.zero);
-      expect(snapshot.zeigeVorbehandlungHinweis, isTrue);
+      expect(snapshot.zeigeVorbehandlungErfassen, isTrue);
       expect(
         snapshot.protokoll.eintraege.map((e) => e.typ),
         isNot(contains(ProtokollEintragTyp.uebernahme)),
       );
+    });
+
+    test('shows the action only on an open case until the form was saved', () {
+      final clock = FakeClock();
+      final saved = Reanimationsfall.start(clock: clock);
+      final ended = Reanimationsfall.start(clock: clock);
+      final rosc = Reanimationsfall.start(clock: clock);
+
+      saved.correctVorbehandlung(
+        uebernahme: saved.erfassteUebernahme,
+        laufzeitBeiUebernahme: const Duration(minutes: 1),
+      );
+      ended.endReanimationsfall(Beendigungsgrund.uebergabe);
+      clock.advance(const Duration(seconds: 1));
+      rosc.recordRosc();
+
+      expect(saved.snapshot().zeigeVorbehandlungErfassen, isFalse);
+      expect(ended.snapshot().zeigeVorbehandlungErfassen, isFalse);
+      expect(rosc.snapshot().istRosc, isTrue);
+      expect(rosc.snapshot().zeigeVorbehandlungErfassen, isTrue);
     });
 
     test('a Startzeit correction keeps every event at its wall-clock time and '
@@ -1510,21 +1528,6 @@ void main() {
         ),
         throwsArgumentError,
       );
-    });
-
-    test('hides the prompt once dismissed or saved', () {
-      final clock = FakeClock();
-      final dismissed = Reanimationsfall.start(clock: clock);
-      final saved = Reanimationsfall.start(clock: clock);
-
-      dismissed.dismissVorbehandlungHinweis();
-      saved.correctVorbehandlung(
-        uebernahme: saved.erfassteUebernahme,
-        laufzeitBeiUebernahme: const Duration(minutes: 1),
-      );
-
-      expect(dismissed.snapshot().zeigeVorbehandlungHinweis, isFalse);
-      expect(saved.snapshot().zeigeVorbehandlungHinweis, isFalse);
     });
   });
 

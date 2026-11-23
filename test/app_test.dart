@@ -9,7 +9,7 @@ import 'package:hp_cpr/features/einsatzlog/presentation/einsatzlog_page.dart';
 import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_store.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
-import 'package:hp_cpr/features/reanimationsfall/presentation/phase_strip.dart';
+import 'package:hp_cpr/features/reanimationsfall/presentation/phase_action_bar.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
 import 'package:hp_cpr/ui/theme/due_colors.dart';
 
@@ -91,6 +91,12 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
   }
+
+  // The action-bar button, not the entry in Weitere Aktionen.
+  Finder vorbehandlungButton() => find.descendant(
+    of: find.byType(PhaseActionRow),
+    matching: find.text('Vorbehandlung erfassen'),
+  );
 
   Future<void> openActions(WidgetTester tester) async {
     await tester.tap(find.text('Aktionen'));
@@ -597,7 +603,6 @@ void main() {
     expect(find.text('Leitlinienprofil'), findsOneWidget);
     expect(find.text('AHA 2025'), findsOneWidget);
     expect(find.text('Vibration'), findsOneWidget);
-    expect(find.text('Ton'), findsOneWidget);
 
     await tester.tap(find.text('AHA 2025'));
     await tester.pump();
@@ -610,14 +615,6 @@ void main() {
     await tester.tap(find.text('Vibration'));
     await tester.pump();
     expect(settings.vibrationEnabled, isFalse);
-
-    final soundSwitch = tester.widget<SwitchListTile>(
-      find.widgetWithText(SwitchListTile, 'Ton'),
-    );
-    expect(soundSwitch.value, isFalse);
-    await tester.tap(find.text('Ton'));
-    await tester.pump();
-    expect(settings.soundEnabled, isTrue);
 
     await tester.tap(find.byType(BackButton));
     await tester.pumpAndSettle();
@@ -717,20 +714,6 @@ void main() {
   });
 
   group('Zusammenfassung Vorbehandlung', () {
-    Finder vorbehandlungPrompt() {
-      final strip = find.byType(PhaseStrip);
-      final text = find.descendant(
-        of: strip,
-        matching: find.text('Vorbehandlung erfassen'),
-      );
-      return text.evaluate().isNotEmpty
-          ? text
-          : find.descendant(
-              of: strip,
-              matching: find.byTooltip('Vorbehandlung erfassen'),
-            );
-    }
-
     Finder summaryCard() => find.byType(Card).first;
 
     String summaryValue(WidgetTester tester, String label) {
@@ -770,7 +753,7 @@ void main() {
       int adrenalin = 0,
       int amiodaron = 0,
     }) async {
-      await tester.tap(vorbehandlungPrompt());
+      await tester.tap(vorbehandlungButton());
       await tester.pumpAndSettle();
       await tapCount(tester, 'vorbehandlung-schocks-mehr', schocks);
       await tapCount(tester, 'vorbehandlung-adrenalin-mehr', adrenalin);
@@ -843,7 +826,7 @@ void main() {
       await startNow(tester);
       clock.advance(const Duration(seconds: 30));
       await tester.pump(const Duration(milliseconds: 250));
-      await tester.tap(vorbehandlungPrompt());
+      await tester.tap(vorbehandlungButton());
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(ChoiceChip, '5 min'));
       await tester.pumpAndSettle();
@@ -887,22 +870,6 @@ void main() {
   });
 
   group('Vorbehandlung', () {
-    // The prompt shows its text when it fits beside the phase label and an
-    // icon with the same tooltip otherwise.
-    Finder vorbehandlungPrompt() {
-      final strip = find.byType(PhaseStrip);
-      final text = find.descendant(
-        of: strip,
-        matching: find.text('Vorbehandlung erfassen'),
-      );
-      return text.evaluate().isNotEmpty
-          ? text
-          : find.descendant(
-              of: strip,
-              matching: find.byTooltip('Vorbehandlung erfassen'),
-            );
-    }
-
     Future<void> saveLaufzeit(WidgetTester tester, String chip) async {
       expect(find.text('Lief bei Übernahme seit'), findsOneWidget);
       await tester.tap(find.widgetWithText(ChoiceChip, chip));
@@ -919,8 +886,8 @@ void main() {
       clock.advance(const Duration(seconds: 30));
       await tester.pump(const Duration(milliseconds: 250));
 
-      expect(vorbehandlungPrompt(), findsOneWidget);
-      await tester.tap(vorbehandlungPrompt());
+      expect(vorbehandlungButton(), findsOneWidget);
+      await tester.tap(vorbehandlungButton());
       await tester.pumpAndSettle();
       expect(find.text('08:00:00 Uhr'), findsOneWidget);
       await saveLaufzeit(tester, '5 min');
@@ -930,7 +897,7 @@ void main() {
       expect(find.text('05:30'), findsOneWidget);
       expect(find.text('01:30'), findsOneWidget);
       expect(find.textContaining('Druckphase ·'), findsOneWidget);
-      expect(vorbehandlungPrompt(), findsNothing);
+      expect(vorbehandlungButton(), findsNothing);
       expect(
         (await store.load()).single.startzeit,
         DateTime(2026, 10, 25, 7, 55),
@@ -944,38 +911,47 @@ void main() {
 
       expect(find.text('05:30'), findsOneWidget);
       expect(find.text('01:30'), findsOneWidget);
-      expect(vorbehandlungPrompt(), findsNothing);
+      expect(vorbehandlungButton(), findsNothing);
     });
 
-    testWidgets('a dismissed prompt stays hidden after a restart', (
-      tester,
-    ) async {
+    testWidgets('shows the button directly before Aktionen on a new case and '
+        'after ROSC, but not once the case has ended', (tester) async {
       await pumpApp(tester);
       await startNow(tester);
 
-      expect(vorbehandlungPrompt(), findsOneWidget);
-      await tester.tap(find.byTooltip('Hinweis ausblenden'));
-      await tester.pump();
-      expect(vorbehandlungPrompt(), findsNothing);
-      await tester.pump(const Duration(milliseconds: 250));
+      final button = tester.getRect(vorbehandlungButton());
+      final aktionen = tester.getRect(find.text('Aktionen'));
+      expect(vorbehandlungButton(), findsOneWidget);
+      expect(button.right, lessThan(aktionen.left));
+      expect(button.center.dy, closeTo(aktionen.center.dy, 4));
 
-      await pumpApp(tester);
-      await tester.tap(find.text('Fortsetzen'));
+      await tester.tap(find.text('Analyse starten'));
       await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
+      await tester.tap(find.text('ROSC'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('ROSC bestätigen'));
+      await tester.pumpAndSettle();
+      expect(find.text('Kreislauf zurückgekehrt'), findsOneWidget);
+      expect(vorbehandlungButton(), findsOneWidget);
 
-      expect(find.textContaining('Druckphase ·'), findsOneWidget);
-      expect(vorbehandlungPrompt(), findsNothing);
+      await tester.tap(find.text('Fall beenden'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Übergabe'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Zusammenfassung'), findsOneWidget);
+      expect(vorbehandlungButton(), findsNothing);
     });
 
     testWidgets('opens the form from Weitere Aktionen', (tester) async {
       await pumpApp(tester);
       await startNow(tester);
-      await tester.tap(find.byTooltip('Hinweis ausblenden'));
-      await tester.pump();
 
       await openActions(tester);
-      final entry = find.text('Vorbehandlung erfassen');
+      final entry = find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.text('Vorbehandlung erfassen'),
+      );
       await tester.ensureVisible(entry);
       await tester.pumpAndSettle();
       await tester.tap(entry);
@@ -1000,7 +976,7 @@ void main() {
       await startNow(tester);
       clock.advance(const Duration(minutes: 1));
       await tester.pump(const Duration(milliseconds: 250));
-      await tester.tap(vorbehandlungPrompt());
+      await tester.tap(vorbehandlungButton());
       await tester.pumpAndSettle();
       await saveLaufzeit(tester, '2 min');
       await tester.pump(const Duration(seconds: 5));
@@ -1077,7 +1053,7 @@ void main() {
         'and the Adrenalin card use them', (tester) async {
       await pumpApp(tester);
       await startNow(tester);
-      await tester.tap(vorbehandlungPrompt());
+      await tester.tap(vorbehandlungButton());
       await tester.pumpAndSettle();
 
       expect(
@@ -1151,7 +1127,7 @@ void main() {
         'opens the form prefilled', (tester) async {
       await pumpApp(tester);
       await startNow(tester);
-      await tester.tap(vorbehandlungPrompt());
+      await tester.tap(vorbehandlungButton());
       await tester.pumpAndSettle();
       await tapCount(tester, 'vorbehandlung-schocks-mehr', 2);
       await tapCount(tester, 'vorbehandlung-amiodaron-mehr');
@@ -1907,10 +1883,6 @@ void main() {
 
       await pumpApp(tester);
       await startNow(tester);
-      // Measure the plain phase strip; the Vorbehandlung prompt shortens its
-      // label on landscape phones.
-      await tester.tap(find.byTooltip('Hinweis ausblenden'));
-      await tester.pump();
 
       final phase = tester.getRect(find.textContaining('Druckphase ·'));
       final adrenalin = tester.getRect(find.text('Adrenalin'));
@@ -1922,6 +1894,7 @@ void main() {
         expect(adrenalin.top, greaterThan(phase.bottom), reason: '$size');
       }
       expect(amiodaron.top, greaterThan(adrenalin.bottom), reason: '$size');
+      expectInsideViewport(tester, vorbehandlungButton());
       expectInsideViewport(tester, amiodaronGabe);
       expect(tester.takeException(), isNull, reason: '$size');
 

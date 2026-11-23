@@ -17,7 +17,6 @@ void main() {
       clock: clock,
       leitlinienprofil: Leitlinienprofil.aha2025,
       vibrationEnabled: false,
-      soundEnabled: true,
     );
 
     clock.advance(const Duration(seconds: 10));
@@ -59,9 +58,12 @@ void main() {
       'schockRueckgaengigkeiten',
       'schockKorrekturen',
       'rhythmusanalyseNotizKorrekturen',
+      'soundEnabled',
     ]) {
       expect(encoded.containsKey(removed), isFalse, reason: removed);
     }
+    // Cases stored before the sound option was removed still carry the key.
+    encoded['soundEnabled'] = true;
     expect(
       ((encoded['uebersprungeneRhythmusanalysen'] as List<dynamic>).first
               as Map<String, dynamic>)
@@ -86,7 +88,6 @@ void main() {
     expect(decoded.utcOffsetMinutes, state.utcOffsetMinutes);
     expect(decoded.leitlinienprofil, Leitlinienprofil.aha2025);
     expect(decoded.vibrationEnabled, isFalse);
-    expect(decoded.soundEnabled, isTrue);
     expect(decoded.zustand, ReanimationsfallZustand.beendet);
     expect(decoded.ende!.grund, Beendigungsgrund.uebergabe);
     expect(decoded.schocks, hasLength(4));
@@ -345,14 +346,13 @@ void main() {
     expect(decoded.demoOffset, Duration.zero);
   });
 
-  test('round-trips the Übernahme, the Vorbehandlung and the dismissed '
-      'prompt so the corrected times survive a restart', () {
+  test('round-trips the Übernahme and the Vorbehandlung so the corrected '
+      'times survive a restart', () {
     final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
     final reanimationsfall = Reanimationsfall.start(clock: clock);
     clock.advance(const Duration(seconds: 30));
     reanimationsfall.recordSchock();
     clock.advance(const Duration(seconds: 30));
-    reanimationsfall.dismissVorbehandlungHinweis();
     reanimationsfall.correctVorbehandlung(
       uebernahme: DateTime(2026, 10, 25, 7, 59),
       laufzeitBeiUebernahme: const Duration(minutes: 3),
@@ -365,7 +365,6 @@ void main() {
     );
 
     expect(decoded.erfassteUebernahme, DateTime(2026, 10, 25, 8));
-    expect(decoded.vorbehandlungHinweisAusgeblendet, isTrue);
     expect(decoded.startzeit, DateTime(2026, 10, 25, 7, 56));
     final korrektur = decoded.korrekturen.single as VorbehandlungKorrigiert;
     expect(korrektur.uebernahme, const Duration(minutes: -1));
@@ -379,7 +378,7 @@ void main() {
     expect(after.reanimationsdauer, before.reanimationsdauer);
     expect(after.compressionRemaining, before.compressionRemaining);
     expect(after.schocks.single.zeitpunkt, before.schocks.single.zeitpunkt);
-    expect(after.zeigeVorbehandlungHinweis, isFalse);
+    expect(after.zeigeVorbehandlungErfassen, isFalse);
     expect(
       after.protokoll.eintraege.map((e) => e.typ),
       contains(ProtokollEintragTyp.uebernahme),
@@ -443,12 +442,12 @@ void main() {
     final encoded = reanimationsfallStateToJson(state);
     encoded['startzeit'] = encoded.remove('erfassteUebernahme');
     encoded['startzeitUtc'] = encoded.remove('erfassteUebernahmeUtc');
-    encoded.remove('vorbehandlungHinweisAusgeblendet');
+    // A state stored while the prompt could still be dismissed still decodes.
+    encoded['vorbehandlungHinweisAusgeblendet'] = true;
 
     final decoded = reanimationsfallStateFromJson(encoded);
 
     expect(decoded.erfassteUebernahme, DateTime(2026, 10, 25, 8));
     expect(decoded.startzeit, DateTime(2026, 10, 25, 8));
-    expect(decoded.vorbehandlungHinweisAusgeblendet, isFalse);
   });
 }

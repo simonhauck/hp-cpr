@@ -694,18 +694,6 @@ abstract class AppLocalizations {
   /// **'Das haptische Feedback ist in den Systemeinstellungen des Geräts ausgeschaltet. Solange es aus ist, vibriert die App nicht.'**
   String get settingsVibrationSystemHapticsOff;
 
-  /// Einstellung für Tonsignale
-  ///
-  /// In de, this message translates to:
-  /// **'Ton'**
-  String get settingsSound;
-
-  /// Erklärung der Toneinstellung
-  ///
-  /// In de, this message translates to:
-  /// **'Ton bei fälligen Aktionen'**
-  String get settingsSoundDescription;
-
   /// Tooltip der Menü-Schaltfläche
   ///
   /// In de, this message translates to:
@@ -1306,17 +1294,11 @@ abstract class AppLocalizations {
   /// **'Vorbehandlung'**
   String get vorbehandlungTitle;
 
-  /// Hinweis im Phasenstreifen und Eintrag in Weitere Aktionen zum Öffnen des Vorbehandlung-Formulars
+  /// Schaltfläche in der Aktionsleiste und Eintrag in Weitere Aktionen zum Öffnen des Vorbehandlung-Formulars
   ///
   /// In de, this message translates to:
   /// **'Vorbehandlung erfassen'**
   String get vorbehandlungErfassen;
-
-  /// Tooltip zum Ausblenden des Hinweises Vorbehandlung erfassen
-  ///
-  /// In de, this message translates to:
-  /// **'Hinweis ausblenden'**
-  String get vorbehandlungHinweisAusblenden;
 
   /// Beschriftung der Auswahl, wie lange die Reanimation bei der Übernahme bereits lief
   ///

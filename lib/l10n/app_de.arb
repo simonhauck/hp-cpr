@@ -443,14 +443,6 @@
   "@settingsVibrationSystemHapticsOff": {
     "description": "Hinweis, wenn die Vibration in der App an, das haptische Feedback des Geräts aber aus ist"
   },
-  "settingsSound": "Ton",
-  "@settingsSound": {
-    "description": "Einstellung für Tonsignale"
-  },
-  "settingsSoundDescription": "Ton bei fälligen Aktionen",
-  "@settingsSoundDescription": {
-    "description": "Erklärung der Toneinstellung"
-  },
   "menuOpenTooltip": "Menü öffnen",
   "@menuOpenTooltip": {
     "description": "Tooltip der Menü-Schaltfläche"
@@ -968,11 +960,7 @@
   },
   "vorbehandlungErfassen": "Vorbehandlung erfassen",
   "@vorbehandlungErfassen": {
-    "description": "Hinweis im Phasenstreifen und Eintrag in Weitere Aktionen zum Öffnen des Vorbehandlung-Formulars"
-  },
-  "vorbehandlungHinweisAusblenden": "Hinweis ausblenden",
-  "@vorbehandlungHinweisAusblenden": {
-    "description": "Tooltip zum Ausblenden des Hinweises Vorbehandlung erfassen"
+    "description": "Schaltfläche in der Aktionsleiste und Eintrag in Weitere Aktionen zum Öffnen des Vorbehandlung-Formulars"
   },
   "vorbehandlungLaufzeitLabel": "Lief bei Übernahme seit",
   "@vorbehandlungLaufzeitLabel": {
