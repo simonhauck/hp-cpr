@@ -66,6 +66,7 @@ All commits follow [Conventional Commits](https://www.conventionalcommits.org/):
 - The public web app is the latest GitHub Release at <https://simonhauck.github.io/hp-cpr/>. `main` is a checked development state, not the published site.
 - CI runs on pull requests and on `main`. Direct pushes to `main` are allowed; force pushes and deletions are blocked. Releases and Pages deployments are gated by the CI checks.
 - Releases are batched by release-please. Merge the release PR manually; do not auto-merge it. `GITHUB_TOKEN` is used deliberately, so the generated release PR does not run CI; the merged release commit is checked before tagging or deploying.
+- Renovate merges minor, patch, pin, and digest updates directly into `main` without a PR (`automergeType: branch`) once CI passes on its `renovate/**` branch; it may bypass the PR ruleset for this. Major updates and failed automerges arrive as PRs labeled `dependencies` and `maintenance`.
 - The APK attached to a release is release-mode but debug-signed. It is a test artifact, not a Play Store upload.
 - Google Play publishing is out of scope until a developer account exists.
 - `nix develop` points the local git hooks at `.githooks`; the pre-push hook runs format, analyze, and VM tests. Bypass it only deliberately with `git push --no-verify`.
