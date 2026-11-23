@@ -370,6 +370,19 @@ class AppLocalizationsDe extends AppLocalizations {
       'Lizenztexte der App und ihrer Bibliotheken';
 
   @override
+  String get aboutDatenschutzTile => 'Datenschutz';
+
+  @override
+  String get aboutDatenschutzDescription => 'Datenschutzerklärung der App';
+
+  @override
+  String get datenschutzTitle => 'Datenschutz';
+
+  @override
+  String get datenschutzLoadError =>
+      'Die Datenschutzerklärung konnte nicht geladen werden.';
+
+  @override
   String get amiodaronLabel => 'Amiodaron';
 
   @override

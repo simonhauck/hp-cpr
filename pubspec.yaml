@@ -35,3 +35,6 @@ flutter:
     - assets/branding/app_icon.png
     - assets/branding/app_icon_foreground.png
   generate: true
+  assets:
+    - assets/legal/datenschutz_web.md
+    - assets/legal/datenschutz_app.md

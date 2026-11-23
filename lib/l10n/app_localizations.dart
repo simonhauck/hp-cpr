@@ -754,6 +754,30 @@ abstract class AppLocalizations {
   /// **'Lizenztexte der App und ihrer Bibliotheken'**
   String get aboutLicensesDescription;
 
+  /// Eintrag zur Datenschutzerklärung auf der Über-Seite
+  ///
+  /// In de, this message translates to:
+  /// **'Datenschutz'**
+  String get aboutDatenschutzTile;
+
+  /// Erklärung des Datenschutz-Eintrags auf der Über-Seite
+  ///
+  /// In de, this message translates to:
+  /// **'Datenschutzerklärung der App'**
+  String get aboutDatenschutzDescription;
+
+  /// Titel der Seite mit der Datenschutzerklärung
+  ///
+  /// In de, this message translates to:
+  /// **'Datenschutz'**
+  String get datenschutzTitle;
+
+  /// Fehlermeldung, wenn der Text der Datenschutzerklärung nicht geladen werden kann
+  ///
+  /// In de, this message translates to:
+  /// **'Die Datenschutzerklärung konnte nicht geladen werden.'**
+  String get datenschutzLoadError;
+
   /// Beschriftung des Amiodaron-Hinweises
   ///
   /// In de, this message translates to:
