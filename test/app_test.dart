@@ -1402,7 +1402,7 @@ void main() {
       expect(find.textContaining('Letzte Gabe'), findsNothing);
     });
 
-    testWidgets('undoes Analyse starten and continues the earlier cycle', (
+    testWidgets('entering the Analysephase shows no undo notice', (
       tester,
     ) async {
       await pumpApp(tester);
@@ -1412,17 +1412,31 @@ void main() {
       await tester.pump(const Duration(milliseconds: 250));
       await tester.tap(find.text('Analyse starten'));
       await tester.pump();
-      expect(find.textContaining('Analysephase ·'), findsOneWidget);
-      expect(find.text('Erfasst: Analyse begonnen'), findsOneWidget);
 
-      clock.advance(const Duration(seconds: 10));
-      await tester.pump(const Duration(milliseconds: 250));
+      expect(find.textContaining('Analysephase ·'), findsOneWidget);
+      expect(find.textContaining('Erfasst:'), findsNothing);
+      expect(find.text('Rückgängig'), findsNothing);
+    });
+
+    testWidgets('keeps an earlier notice when entering the Analysephase', (
+      tester,
+    ) async {
+      await pumpApp(tester);
+      await startNow(tester);
+
+      await tester.tap(adrenalinGabe);
+      await tester.pump();
+      await tester.tap(find.text('Analyse starten'));
+      await tester.pump();
+
+      expect(find.text('Erfasst: Adrenalin 1 mg'), findsOneWidget);
+      expect(find.textContaining('Analysephase ·'), findsOneWidget);
+
       await tester.tap(find.text('Rückgängig'));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Druckphase ·'), findsOneWidget);
-      expect(find.text('Analyse starten'), findsOneWidget);
-      expect(find.text('00:50'), findsOneWidget);
+      expect(find.textContaining('Letzte Gabe'), findsNothing);
+      expect(find.textContaining('Analysephase ·'), findsOneWidget);
     });
 
     testWidgets('undoes a shockable result together with its Schock', (
@@ -1487,16 +1501,15 @@ void main() {
 
       await tester.tap(adrenalinGabe);
       await tester.pump();
-      await tester.tap(find.text('Analyse starten'));
-      await tester.pumpAndSettle();
+      await recordSchock(tester);
 
       expect(find.text('Erfasst: Adrenalin 1 mg'), findsNothing);
-      expect(find.text('Erfasst: Analyse begonnen'), findsOneWidget);
+      expect(find.text('Erfasst: Schock 1'), findsOneWidget);
 
       await tester.tap(find.text('Rückgängig'));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Druckphase ·'), findsOneWidget);
+      expect(find.text('Schocks: 0'), findsOneWidget);
       expect(find.text('Letzte Gabe: 08:00 Uhr, vor 00:00'), findsOneWidget);
     });
 

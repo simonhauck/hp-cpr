@@ -163,8 +163,10 @@ class _ReanimationsfallPageState extends State<ReanimationsfallPage>
     }
   }
 
+  /// Enters the Analysephase without an undo notice: the phase change is
+  /// self-evident, and the result entry that follows offers its own undo.
   void _enterAnalysephase() {
-    _mutateWithUndo(() => [widget.reanimationsfall.enterAnalysephase()]);
+    _mutate(widget.reanimationsfall.enterAnalysephase);
   }
 
   void _recordSchock() {
