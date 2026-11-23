@@ -6,6 +6,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:hp_cpr/app.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_store.dart';
+import 'package:hp_cpr/features/settings/domain/app_settings.dart';
 
 import 'support/fake_clock.dart';
 import 'support/medikament_finders.dart';
@@ -119,6 +120,102 @@ void main() {
     expect(amiodaronLastDose, findsOneWidget);
     expectNoScale(tester, amiodaronLastDose);
     expectInsideViewport(tester, amiodaronLastDose);
+    expect(tester.takeException(), isNull);
+  }, skip: kIsWeb);
+
+  testWidgets('wraps the Vorbehandlung button instead of shrinking it in '
+      'Demo-Modus at 360x640', (tester) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(360, 640);
+    PackageInfo.setMockInitialValues(
+      appName: 'HP-CPR',
+      packageName: 'de.simonhauck.hp_cpr',
+      version: '0.1.0',
+      buildNumber: '1',
+      buildSignature: '',
+    );
+
+    await tester.pumpWidget(
+      HpCprApp(
+        key: UniqueKey(),
+        clock: FakeClock(wallTime: DateTime(2026, 10, 25, 8)),
+        wakeLock: FakeWakeLock(),
+        settings: AppSettings(demoMode: true),
+        store: InMemoryReanimationsfallStore(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final startButton = find.text('Jetzt starten');
+    await tester.ensureVisible(startButton);
+    await tester.pumpAndSettle();
+    await tester.tap(startButton);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    final vorbehandlung = find.text('Vorbehandlung erfassen');
+    expect(vorbehandlung, findsOneWidget);
+    expectNoScale(tester, vorbehandlung);
+    expectNoScale(tester, find.text('+30 s'));
+    expectInsideViewport(tester, vorbehandlung);
+    expect(
+      tester.renderObject<RenderParagraph>(vorbehandlung).didExceedMaxLines,
+      isFalse,
+    );
+    expect(
+      tester.getRect(vorbehandlung).right,
+      lessThan(tester.getRect(find.text('Aktionen')).left),
+    );
+    expect(tester.takeException(), isNull);
+  }, skip: kIsWeb);
+
+  testWidgets('keeps the Rhythmusanalyse choice labels at full size at '
+      '360x640', (tester) async {
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(360, 640);
+    PackageInfo.setMockInitialValues(
+      appName: 'HP-CPR',
+      packageName: 'de.simonhauck.hp_cpr',
+      version: '0.1.0',
+      buildNumber: '1',
+      buildSignature: '',
+    );
+
+    final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
+    await tester.pumpWidget(
+      HpCprApp(
+        key: UniqueKey(),
+        clock: clock,
+        wakeLock: FakeWakeLock(),
+        store: InMemoryReanimationsfallStore(),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final startButton = find.text('Jetzt starten');
+    await tester.ensureVisible(startButton);
+    await tester.pumpAndSettle();
+    await tester.tap(startButton);
+    await tester.pump();
+
+    clock.advance(const Duration(minutes: 2));
+    await tester.pump(const Duration(milliseconds: 250));
+    await tester.tap(find.text('Analyse starten'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    for (final label in ['Schockbar', 'Nicht schockbar', 'ROSC', 'Unklar']) {
+      final choice = find.text(label);
+      expect(choice, findsOneWidget);
+      expectNoScale(tester, choice);
+      expectInsideViewport(tester, choice);
+      expect(
+        tester.renderObject<RenderParagraph>(choice).didExceedMaxLines,
+        isFalse,
+      );
+    }
     expect(tester.takeException(), isNull);
   }, skip: kIsWeb);
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
+import 'package:hp_cpr/ui/wrapping_button_label.dart';
 
 enum PhaseActionEmphasis { filled, outlined }
 
@@ -32,7 +33,8 @@ class PhaseActionBar extends StatelessWidget {
     final advanceDemoTime = onAdvanceDemoTime;
     final recordVorbehandlung = onRecordVorbehandlung;
     // Phones keep the buttons and Aktionen on one row. The Demo-Modus button
-    // is dense while the Vorbehandlung button needs the room.
+    // is dense and keeps its short width, so the Vorbehandlung button gets
+    // the room.
     final inline = recordVorbehandlung != null && layout.isPhone;
 
     return PhaseActionRow(
@@ -52,6 +54,10 @@ class PhaseActionBar extends StatelessWidget {
     );
   }
 }
+
+/// A phase action with a short label that keeps its own width in a
+/// [PhaseActionRow] instead of sharing the row equally.
+abstract interface class ShortPhaseAction implements Widget {}
 
 /// The shared responsive row for phase actions and the Aktionen entry point.
 class PhaseActionRow extends StatelessWidget {
@@ -78,7 +84,10 @@ class PhaseActionRow extends StatelessWidget {
         children: [
           for (var i = 0; i < buttons.length; i++) ...[
             if (i > 0) SizedBox(width: layout.compactActionGap),
-            Expanded(child: buttons[i]),
+            if (buttons[i] is ShortPhaseAction)
+              buttons[i]
+            else
+              Expanded(child: buttons[i]),
           ],
           SizedBox(width: layout.compactActionGap),
           actionsButton,
@@ -97,7 +106,7 @@ class PhaseActionRow extends StatelessWidget {
 }
 
 /// The Demo-Modus action that advances the simulated case time.
-class DemoAdvanceButton extends StatelessWidget {
+class DemoAdvanceButton extends StatelessWidget implements ShortPhaseAction {
   const DemoAdvanceButton({
     super.key,
     required this.layout,
@@ -205,6 +214,7 @@ class PhaseActionButton extends StatelessWidget {
   final PhaseActionEmphasis emphasis;
 
   /// Whether to use the dense icon-less style; defaults to the compact layout.
+  /// A dense label wraps onto a second line before it scales down.
   final bool? dense;
 
   @override
@@ -214,7 +224,7 @@ class PhaseActionButton extends StatelessWidget {
     final style = _style(theme, isDense);
 
     if (isDense) {
-      final child = FittedBox(fit: BoxFit.scaleDown, child: Text(label));
+      final child = WrappingButtonLabel(label);
       return switch (emphasis) {
         PhaseActionEmphasis.filled => FilledButton(
           onPressed: onPressed,

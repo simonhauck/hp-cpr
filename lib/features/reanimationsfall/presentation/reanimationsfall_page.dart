@@ -34,6 +34,7 @@ import 'package:hp_cpr/ui/theme/panel_tone.dart';
 import 'package:hp_cpr/ui/layout/page_scaffold.dart';
 import 'package:hp_cpr/ui/navigation/app_drawer.dart';
 import 'package:hp_cpr/ui/navigation/app_routes.dart';
+import 'package:hp_cpr/ui/wrapping_button_label.dart';
 
 /// The running Reanimationsfall in its current Reanimationsphase.
 class ReanimationsfallPage extends StatefulWidget {
@@ -1224,19 +1225,16 @@ class _RhythmusanalyseChoiceButton extends StatelessWidget {
   Widget _content() {
     final icon = this.icon;
     if (icon == null || layout.isCompact) {
-      return FittedBox(fit: BoxFit.scaleDown, child: Text(label));
+      return WrappingButtonLabel(label);
     }
 
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: PageLayout.iconSmall),
-          const SizedBox(width: PageLayout.space8),
-          Text(label),
-        ],
-      ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: PageLayout.iconSmall),
+        const SizedBox(width: PageLayout.space8),
+        Flexible(child: WrappingButtonLabel(label)),
+      ],
     );
   }
 }
