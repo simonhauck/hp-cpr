@@ -476,6 +476,14 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String undoRecordedNotice(String eintrag) {
+    return 'Erfasst: $eintrag';
+  }
+
+  @override
+  String get undoAction => 'Rückgängig';
+
+  @override
   String get eventRhythmusanalyseSkipped => 'Rhythmusanalyse übersprungen';
 
   @override

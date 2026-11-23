@@ -934,6 +934,18 @@ abstract class AppLocalizations {
   /// **'Rhythmusanalyse: {ergebnis}'**
   String eventRhythmusanalyse(String ergebnis);
 
+  /// Hinweis oben im laufenden Fall nach einer Ein-Tipp-Erfassung; nennt den erfassten Eintrag
+  ///
+  /// In de, this message translates to:
+  /// **'Erfasst: {eintrag}'**
+  String undoRecordedNotice(String eintrag);
+
+  /// Aktion im Hinweis, die die letzte Ein-Tipp-Erfassung entfernt
+  ///
+  /// In de, this message translates to:
+  /// **'Rückgängig'**
+  String get undoAction;
+
   /// Ereignis: Rhythmusanalyse übersprungen
   ///
   /// In de, this message translates to:

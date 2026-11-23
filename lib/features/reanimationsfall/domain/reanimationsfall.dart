@@ -229,60 +229,68 @@ class Reanimationsfall {
 
   /// Pauses the compression timer, records an [AnalysephaseBeginn], and
   /// starts the Analysephase.
-  void enterAnalysephase() {
+  ///
+  /// Returns the reference of the recorded entry.
+  ProtokollEintragRef enterAnalysephase() {
     _requireLaufend();
     if (_phase != Reanimationsphase.druckphase) {
       throw StateError('already in the Analysephase');
     }
 
     final now = _monotonicNow();
+    final id = _newEreignisId();
     _analysephaseBeginne.add(
-      AnalysephaseBeginn(
-        id: _newEreignisId(),
-        zeitpunkt: now - _monotonicStartOffset,
-      ),
+      AnalysephaseBeginn(id: id, zeitpunkt: now - _monotonicStartOffset),
     );
     _compressionRemainingAtPause = _remainingInCycle(now);
     _analysephaseStartOffset = now;
     _phase = Reanimationsphase.analysephase;
+    return _ref(ProtokollEintragTyp.analysephaseBeginn, id);
   }
 
   /// Records a Schock with optional energy.
   ///
   /// A Schock is a record-only event: it never pauses the compression timer
   /// and never changes the current phase.
-  void recordSchock({int? energieJoule}) {
+  ///
+  /// Returns the reference of the recorded entry.
+  ProtokollEintragRef recordSchock({int? energieJoule}) {
     _requireLaufend();
     _requireValidEnergie(energieJoule);
 
+    final id = _newEreignisId();
     _schocks.add(
       SchockEreignis(
-        id: _newEreignisId(),
+        id: id,
         zeitpunkt: _elapsedOffset,
         energieJoule: energieJoule,
       ),
     );
     // The shock count still feeds the derived Adrenalin and Amiodaron hints.
     _updateAdrenalinGabeFaelligkeit();
+    return _ref(ProtokollEintragTyp.schock, id);
   }
 
   /// Records an Adrenalin dose and starts a new Zeitfenster.
-  void recordAdrenalin() {
+  ///
+  /// Returns the reference of the recorded entry.
+  ProtokollEintragRef recordAdrenalin() {
     _requireLaufend();
+    final id = _newEreignisId();
     _adrenalinGaben.add(
-      AdrenalinGabe(
-        id: _newEreignisId(),
-        zeitpunkt: _monotonicNow() - _monotonicStartOffset,
-      ),
+      AdrenalinGabe(id: id, zeitpunkt: _monotonicNow() - _monotonicStartOffset),
     );
     _ersteAdrenalinGabeFaellig = false;
+    return _ref(ProtokollEintragTyp.adrenalin, id);
   }
 
   /// Records an Amiodaron dose.
   ///
   /// The first dose is 300 mg and the second 150 mg. The app never records a
   /// dose on its own; this command is only called when one was actually given.
-  void recordAmiodaron() {
+  ///
+  /// Returns the reference of the recorded entry.
+  ProtokollEintragRef recordAmiodaron() {
     _requireLaufend();
     final gaben = _effektiveAmiodaronGaben(_korrekturZustaende());
     final bisherige = _vorbehandlungDaten.amiodaron + gaben.length;
@@ -290,20 +298,26 @@ class Reanimationsfall {
       throw StateError('at most two Amiodaron doses are supported');
     }
 
+    final id = _newEreignisId();
     _amiodaronGaben.add(
       AmiodaronGabe(
-        id: _newEreignisId(),
+        id: id,
         zeitpunkt: _monotonicNow() - _monotonicStartOffset,
         dosisMg: bisherige == 0
             ? AmiodaronHinweis.ersteGabe.dosisMg!
             : AmiodaronHinweis.zweiteGabe.dosisMg!,
       ),
     );
+    return _ref(ProtokollEintragTyp.amiodaron, id);
   }
 
   /// Records the Rhythmusanalyse result, optionally records a Schock, and
   /// starts the next Druckphase or enters ROSC.
-  void completeRhythmusanalyse(
+  ///
+  /// Returns the references of the recorded entries: the Rhythmusanalyse, or
+  /// the ROSC for a ROSC result, followed by the Schock if one was given.
+  /// Removing all of them undoes the command.
+  List<ProtokollEintragRef> completeRhythmusanalyse(
     RhythmusanalyseErgebnis ergebnis, {
     bool schockAbgegeben = false,
   }) {
@@ -318,16 +332,15 @@ class Reanimationsfall {
       );
     }
 
-    final enteredRosc = _recordRhythmusanalyse(ergebnis);
-    if (schockAbgegeben) {
-      recordSchock();
-    }
-    if (enteredRosc) return;
-
-    _startNextDruckphase();
+    final eintrag = _recordRhythmusanalyse(ergebnis);
+    final refs = [eintrag, if (schockAbgegeben) recordSchock()];
+    if (eintrag.typ != ProtokollEintragTyp.rosc) _startNextDruckphase();
+    return refs;
   }
 
-  bool _recordRhythmusanalyse(RhythmusanalyseErgebnis ergebnis) {
+  /// Records a Rhythmusanalyse and returns the entry that undoes it: the
+  /// Rhythmusanalyse itself, or the ROSC paired with a ROSC result.
+  ProtokollEintragRef _recordRhythmusanalyse(RhythmusanalyseErgebnis ergebnis) {
     final id = _newEreignisId();
     _adrenalinAusloesendesErgebnis = ergebnis;
     _rhythmusanalyseEintraege.add(
@@ -340,10 +353,9 @@ class Reanimationsfall {
     _updateAdrenalinGabeFaelligkeit();
 
     if (ergebnis == RhythmusanalyseErgebnis.rosc) {
-      _recordRosc(rhythmusanalyseId: id);
-      return true;
+      return _recordRosc(rhythmusanalyseId: id);
     }
-    return false;
+    return _ref(ProtokollEintragTyp.rhythmusanalyse, id);
   }
 
   /// Resets the current Druckphase to a fresh 2-minute cycle.
@@ -351,16 +363,20 @@ class Reanimationsfall {
   /// This is a manual timing correction. It records an append-only
   /// [DruckphaseNeustart] event, starts no new Reanimationsabschnitt, and
   /// leaves the medication Zeitfenster untouched.
-  void restartDruckphase() {
+  ///
+  /// Returns the reference of the recorded entry.
+  ProtokollEintragRef restartDruckphase() {
     _requireLaufend();
     if (_phase != Reanimationsphase.druckphase) {
       throw StateError('only the Druckphase can be restarted');
     }
 
+    final id = _newEreignisId();
     _druckphaseNeustarts.add(
-      DruckphaseNeustart(id: _newEreignisId(), zeitpunkt: _elapsedOffset),
+      DruckphaseNeustart(id: id, zeitpunkt: _elapsedOffset),
     );
     _resetCompressionCycle();
+    return _ref(ProtokollEintragTyp.druckphaseNeustart, id);
   }
 
   void _resetCompressionCycle() {
@@ -503,23 +519,26 @@ class Reanimationsfall {
   }
 
   /// Records a skipped Rhythmusanalyse and starts a fresh Druckphase.
-  void skipRhythmusanalyse() {
+  ///
+  /// Returns the reference of the recorded entry.
+  ProtokollEintragRef skipRhythmusanalyse() {
     _requireLaufend();
     _requireAnalysephase();
+    final id = _newEreignisId();
     _uebersprungeneRhythmusanalysen.add(
-      RhythmusanalyseUeberspringung(
-        id: _newEreignisId(),
-        zeitpunkt: _elapsedOffset,
-      ),
+      RhythmusanalyseUeberspringung(id: id, zeitpunkt: _elapsedOffset),
     );
     _startNextDruckphase();
+    return _ref(ProtokollEintragTyp.ueberspringung, id);
   }
 
   /// Records ROSC, ends the current Reanimationsabschnitt, and stops the
   /// arrest timers without closing the Reanimationsfall.
-  void recordRosc() {
+  ///
+  /// Returns the reference of the recorded entry.
+  ProtokollEintragRef recordRosc() {
     _requireLaufend();
-    _recordRosc();
+    return _recordRosc();
   }
 
   /// Records a Reanimationswiederbeginn and starts a fresh Druckphase.
@@ -565,16 +584,18 @@ class Reanimationsfall {
     _resetAfterArrest();
   }
 
-  void _recordRosc({String? rhythmusanalyseId}) {
+  ProtokollEintragRef _recordRosc({String? rhythmusanalyseId}) {
+    final id = _newEreignisId();
     _roscEreignisse.add(
       RoscEreignis(
-        id: _newEreignisId(),
+        id: id,
         zeitpunkt: _elapsedOffset,
         rhythmusanalyseId: rhythmusanalyseId,
       ),
     );
     _zustand = ReanimationsfallZustand.rosc;
     _resetAfterArrest();
+    return _ref(ProtokollEintragTyp.rosc, id);
   }
 
   void _resetAfterArrest() {

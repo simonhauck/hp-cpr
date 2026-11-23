@@ -651,6 +651,19 @@
       }
     }
   },
+  "undoRecordedNotice": "Erfasst: {eintrag}",
+  "@undoRecordedNotice": {
+    "description": "Hinweis oben im laufenden Fall nach einer Ein-Tipp-Erfassung; nennt den erfassten Eintrag",
+    "placeholders": {
+      "eintrag": {
+        "type": "String"
+      }
+    }
+  },
+  "undoAction": "Rückgängig",
+  "@undoAction": {
+    "description": "Aktion im Hinweis, die die letzte Ein-Tipp-Erfassung entfernt"
+  },
   "eventRhythmusanalyseSkipped": "Rhythmusanalyse übersprungen",
   "@eventRhythmusanalyseSkipped": {
     "description": "Ereignis: Rhythmusanalyse übersprungen"

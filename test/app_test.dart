@@ -112,7 +112,15 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Waits until the undo notice of the last one-tap entry has hidden.
+  Future<void> waitForUndoToHide(WidgetTester tester) async {
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pumpAndSettle();
+  }
+
   Future<void> leaveRunningCase(WidgetTester tester) async {
+    // The undo notice covers the header right after a one-tap entry.
+    await waitForUndoToHide(tester);
     await tester.tap(find.byType(BackButton).first);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Verlassen'));
@@ -1375,6 +1383,138 @@ void main() {
 
     expect(find.text('Letzte Gabe: 08:05 Uhr, vor 00:00'), findsOneWidget);
     expect(find.text('wartet'), findsOneWidget);
+  });
+
+  group('Rückgängig nach Ein-Tipp-Erfassung', () {
+    testWidgets('undoes an Adrenalin dose', (tester) async {
+      await pumpApp(tester);
+      await startNow(tester);
+
+      await tester.tap(adrenalinGabe);
+      await tester.pump();
+      expect(find.text('Erfasst: Adrenalin 1 mg'), findsOneWidget);
+      expect(find.text('Letzte Gabe: 08:00 Uhr, vor 00:00'), findsOneWidget);
+
+      await tester.tap(find.text('Rückgängig'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Erfasst: Adrenalin 1 mg'), findsNothing);
+      expect(find.textContaining('Letzte Gabe'), findsNothing);
+    });
+
+    testWidgets('undoes Analyse starten and continues the earlier cycle', (
+      tester,
+    ) async {
+      await pumpApp(tester);
+      await startNow(tester);
+
+      clock.advance(const Duration(minutes: 1));
+      await tester.pump(const Duration(milliseconds: 250));
+      await tester.tap(find.text('Analyse starten'));
+      await tester.pump();
+      expect(find.textContaining('Analysephase ·'), findsOneWidget);
+      expect(find.text('Erfasst: Analyse begonnen'), findsOneWidget);
+
+      clock.advance(const Duration(seconds: 10));
+      await tester.pump(const Duration(milliseconds: 250));
+      await tester.tap(find.text('Rückgängig'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Druckphase ·'), findsOneWidget);
+      expect(find.text('Analyse starten'), findsOneWidget);
+      expect(find.text('00:50'), findsOneWidget);
+    });
+
+    testWidgets('undoes a shockable result together with its Schock', (
+      tester,
+    ) async {
+      await pumpApp(tester);
+      await startNow(tester);
+
+      await tester.tap(find.text('Analyse starten'));
+      await tester.pump();
+      await tester.tap(find.text('Schockbar'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Kammerflimmern (VF)'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Ja'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Druckphase ·'), findsOneWidget);
+      expect(find.text('Schocks: 1'), findsOneWidget);
+      expect(
+        find.text(
+          'Erfasst: Rhythmusanalyse: Schockbar – Kammerflimmern (VF) · '
+          'Schock 1',
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('Rückgängig'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Analysephase ·'), findsOneWidget);
+      expect(find.text('Schockbar'), findsOneWidget);
+      expect(find.text('Schocks: 0'), findsOneWidget);
+    });
+
+    testWidgets('undoes a ROSC and returns to the Analysephase', (
+      tester,
+    ) async {
+      await pumpApp(tester);
+      await startNow(tester);
+
+      await tester.tap(find.text('Analyse starten'));
+      await tester.pump();
+      await tester.tap(find.text('ROSC'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('ROSC bestätigen'));
+      await tester.pumpAndSettle();
+      expect(find.text('Erfasst: ROSC'), findsOneWidget);
+
+      await tester.tap(find.text('Rückgängig'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Analysephase ·'), findsOneWidget);
+      expect(find.text('Unklar'), findsOneWidget);
+    });
+
+    testWidgets('a new entry replaces the notice, and undo targets only it', (
+      tester,
+    ) async {
+      await pumpApp(tester);
+      await startNow(tester);
+
+      await tester.tap(adrenalinGabe);
+      await tester.pump();
+      await tester.tap(find.text('Analyse starten'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Erfasst: Adrenalin 1 mg'), findsNothing);
+      expect(find.text('Erfasst: Analyse begonnen'), findsOneWidget);
+
+      await tester.tap(find.text('Rückgängig'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Druckphase ·'), findsOneWidget);
+      expect(find.text('Letzte Gabe: 08:00 Uhr, vor 00:00'), findsOneWidget);
+    });
+
+    testWidgets('hides the notice after six seconds', (tester) async {
+      await pumpApp(tester);
+      await startNow(tester);
+
+      await tester.tap(adrenalinGabe);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 5));
+      expect(find.text('Erfasst: Adrenalin 1 mg'), findsOneWidget);
+
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pumpAndSettle();
+      expect(find.text('Erfasst: Adrenalin 1 mg'), findsNothing);
+      expect(find.text('Rückgängig'), findsNothing);
+      expect(find.text('Letzte Gabe: 08:00 Uhr, vor 00:00'), findsOneWidget);
+    });
   });
 
   testWidgets('keeps the Adrenalin window running during the Analysephase', (
