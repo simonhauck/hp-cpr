@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,109 +34,113 @@ class _DiskAssetBundle extends CachingAssetBundle {
 }
 
 void main() {
-  setUpAll(loadRobotoFont);
+  // The tests serve the bundled files from disk, which the web test runner
+  // cannot read.
+  group('Datenschutz page', () {
+    setUpAll(loadRobotoFont);
 
-  late AppRoutes routes;
+    late AppRoutes routes;
 
-  setUp(() {
-    final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
-    routes = AppRoutes(
-      settings: AppSettings(),
-      clock: clock,
-      vibrator: FakeVibrator(),
-      session: ReanimationsfallSession(
-        store: InMemoryReanimationsfallStore(),
+    setUp(() {
+      final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
+      routes = AppRoutes(
+        settings: AppSettings(),
         clock: clock,
-      ),
-    );
-    PackageInfo.setMockInitialValues(
-      appName: 'HP-CPR',
-      packageName: 'de.simonhauck.hp_cpr',
-      version: '0.1.0',
-      buildNumber: '1',
-      buildSignature: '',
-    );
-  });
+        vibrator: FakeVibrator(),
+        session: ReanimationsfallSession(
+          store: InMemoryReanimationsfallStore(),
+          clock: clock,
+        ),
+      );
+      PackageInfo.setMockInitialValues(
+        appName: 'HP-CPR',
+        packageName: 'de.simonhauck.hp_cpr',
+        version: '0.1.0',
+        buildNumber: '1',
+        buildSignature: '',
+      );
+    });
 
-  Future<void> pump(WidgetTester tester, Widget home) {
-    return tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('de'),
-        supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        home: DefaultAssetBundle(bundle: _DiskAssetBundle(), child: home),
-      ),
-    );
-  }
-
-  testWidgets('opens from the About page and shows the heading', (
-    tester,
-  ) async {
-    await pump(tester, AboutPage(routes: routes));
-    await tester.pumpAndSettle();
-
-    await tester.tap(find.text('Datenschutz'));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(DatenschutzPage), findsOneWidget);
-    expect(find.text('Datenschutzerklärung'), findsOneWidget);
-    expect(find.text('Simon Hauck'), findsNothing);
-  });
-
-  testWidgets('shows the app variant without the web-only sections', (
-    tester,
-  ) async {
-    await pump(tester, DatenschutzPage(routes: routes, isWeb: false));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Datenschutzerklärung'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.textContaining('Speicherung von Daten auf Ihrem Gerät'),
-      500,
-      scrollable: find.byType(Scrollable).last,
-    );
-    expect(find.textContaining('Google Fonts'), findsNothing);
-  });
-
-  testWidgets('shows the web variant with the web-only sections', (
-    tester,
-  ) async {
-    await pump(tester, DatenschutzPage(routes: routes, isWeb: true));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Datenschutzerklärung'), findsOneWidget);
-    final position = tester
-        .state<ScrollableState>(find.byType(Scrollable).last)
-        .position;
-    for (var i = 0; i < 3; i++) {
-      position.jumpTo(position.maxScrollExtent);
-      await tester.pump();
+    Future<void> pump(WidgetTester tester, Widget home) {
+      return tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('de'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          home: DefaultAssetBundle(bundle: _DiskAssetBundle(), child: home),
+        ),
+      );
     }
-    expect(find.textContaining('Google Fonts'), findsWidgets);
-  });
 
-  testWidgets('opens links with the link opener', (tester) async {
-    final opened = <Uri>[];
-    await pump(
+    testWidgets('opens from the About page and shows the heading', (
       tester,
-      DatenschutzPage(
-        routes: routes,
-        isWeb: false,
-        linkOpener: (uri) async => opened.add(uri),
-      ),
-    );
-    await tester.pumpAndSettle();
+    ) async {
+      await pump(tester, AboutPage(routes: routes));
+      await tester.pumpAndSettle();
 
-    await tester.scrollUntilVisible(
-      find.textContaining('Quellcode:', findRichText: true),
-      500,
-      scrollable: find.byType(Scrollable).last,
-    );
-    await tester.tapOnText(
-      find.textRange.ofSubstring('https://github.com/simonhauck/hp-cpr'),
-    );
-    await tester.pump();
+      await tester.tap(find.text('Datenschutz'));
+      await tester.pumpAndSettle();
 
-    expect(opened, [Uri.parse('https://github.com/simonhauck/hp-cpr')]);
-  });
+      expect(find.byType(DatenschutzPage), findsOneWidget);
+      expect(find.text('Datenschutzerklärung'), findsOneWidget);
+      expect(find.text('Simon Hauck'), findsNothing);
+    });
+
+    testWidgets('shows the app variant without the web-only sections', (
+      tester,
+    ) async {
+      await pump(tester, DatenschutzPage(routes: routes, isWeb: false));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Datenschutzerklärung'), findsOneWidget);
+      await tester.scrollUntilVisible(
+        find.textContaining('Speicherung von Daten auf Ihrem Gerät'),
+        500,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(find.textContaining('Google Fonts'), findsNothing);
+    });
+
+    testWidgets('shows the web variant with the web-only sections', (
+      tester,
+    ) async {
+      await pump(tester, DatenschutzPage(routes: routes, isWeb: true));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Datenschutzerklärung'), findsOneWidget);
+      final position = tester
+          .state<ScrollableState>(find.byType(Scrollable).last)
+          .position;
+      for (var i = 0; i < 3; i++) {
+        position.jumpTo(position.maxScrollExtent);
+        await tester.pump();
+      }
+      expect(find.textContaining('Google Fonts'), findsWidgets);
+    });
+
+    testWidgets('opens links with the link opener', (tester) async {
+      final opened = <Uri>[];
+      await pump(
+        tester,
+        DatenschutzPage(
+          routes: routes,
+          isWeb: false,
+          linkOpener: (uri) async => opened.add(uri),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.textContaining('Quellcode:', findRichText: true),
+        500,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.tapOnText(
+        find.textRange.ofSubstring('https://github.com/simonhauck/hp-cpr'),
+      );
+      await tester.pump();
+
+      expect(opened, [Uri.parse('https://github.com/simonhauck/hp-cpr')]);
+    });
+  }, skip: kIsWeb);
 }

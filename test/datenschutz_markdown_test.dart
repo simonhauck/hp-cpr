@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:hp_cpr/features/datenschutz/domain/datenschutz_markdown.dart';
@@ -68,6 +69,7 @@ void main() {
     });
   });
 
+  // Reads the bundled files from disk, which the web test runner cannot.
   group('bundled Datenschutzerklärung', () {
     List<DatenschutzBlock> load(String name) =>
         parseDatenschutzMarkdown(File('assets/legal/$name').readAsStringSync());
@@ -109,5 +111,5 @@ void main() {
         expect(numbers, [for (var i = 1; i <= numbers.length; i++) i]);
       }
     });
-  });
+  }, skip: kIsWeb);
 }
