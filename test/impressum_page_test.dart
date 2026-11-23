@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -33,56 +34,60 @@ class _DiskAssetBundle extends CachingAssetBundle {
 }
 
 void main() {
-  setUpAll(loadRobotoFont);
+  // The tests serve the bundled files from disk, which the web test runner
+  // cannot read.
+  group('Impressum page', () {
+    setUpAll(loadRobotoFont);
 
-  late AppRoutes routes;
+    late AppRoutes routes;
 
-  setUp(() {
-    final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
-    routes = AppRoutes(
-      settings: AppSettings(),
-      clock: clock,
-      vibrator: FakeVibrator(),
-      session: ReanimationsfallSession(
-        store: InMemoryReanimationsfallStore(),
+    setUp(() {
+      final clock = FakeClock(wallTime: DateTime(2026, 10, 25, 8));
+      routes = AppRoutes(
+        settings: AppSettings(),
         clock: clock,
-      ),
-    );
-    PackageInfo.setMockInitialValues(
-      appName: 'HP-CPR',
-      packageName: 'de.simonhauck.hp_cpr',
-      version: '0.1.0',
-      buildNumber: '1',
-      buildSignature: '',
-    );
-  });
+        vibrator: FakeVibrator(),
+        session: ReanimationsfallSession(
+          store: InMemoryReanimationsfallStore(),
+          clock: clock,
+        ),
+      );
+      PackageInfo.setMockInitialValues(
+        appName: 'HP-CPR',
+        packageName: 'de.simonhauck.hp_cpr',
+        version: '0.1.0',
+        buildNumber: '1',
+        buildSignature: '',
+      );
+    });
 
-  Future<void> pump(WidgetTester tester, Widget home) {
-    return tester.pumpWidget(
-      MaterialApp(
-        locale: const Locale('de'),
-        supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        home: DefaultAssetBundle(bundle: _DiskAssetBundle(), child: home),
-      ),
-    );
-  }
+    Future<void> pump(WidgetTester tester, Widget home) {
+      return tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('de'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          home: DefaultAssetBundle(bundle: _DiskAssetBundle(), child: home),
+        ),
+      );
+    }
 
-  testWidgets('opens from the About page and shows the contact data', (
-    tester,
-  ) async {
-    await pump(tester, AboutPage(routes: routes));
-    await tester.pumpAndSettle();
+    testWidgets('opens from the About page and shows the contact data', (
+      tester,
+    ) async {
+      await pump(tester, AboutPage(routes: routes));
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Impressum'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Impressum'));
+      await tester.pumpAndSettle();
 
-    expect(find.byType(ImpressumPage), findsOneWidget);
-    expect(find.text('Angaben gemäß § 5 DDG'), findsOneWidget);
-    expect(find.text('Simon Hauck'), findsOneWidget);
-    expect(find.text('Marktstraße 3B'), findsOneWidget);
-    expect(find.text('25451 Quickborn'), findsOneWidget);
-    expect(find.text('Telefon: 017664479035'), findsOneWidget);
-    expect(find.text('E-Mail: hp-cpr@simonhauck.de'), findsOneWidget);
-  });
+      expect(find.byType(ImpressumPage), findsOneWidget);
+      expect(find.text('Angaben gemäß § 5 DDG'), findsOneWidget);
+      expect(find.text('Simon Hauck'), findsOneWidget);
+      expect(find.text('Marktstraße 3B'), findsOneWidget);
+      expect(find.text('25451 Quickborn'), findsOneWidget);
+      expect(find.text('Telefon: 017664479035'), findsOneWidget);
+      expect(find.text('E-Mail: hp-cpr@simonhauck.de'), findsOneWidget);
+    });
+  }, skip: kIsWeb);
 }
