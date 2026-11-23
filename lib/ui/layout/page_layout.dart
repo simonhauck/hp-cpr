@@ -255,6 +255,9 @@ class PageLayout {
   /// The minimum width of a phase action button.
   double get phaseActionMinWidth => isCompact ? 0 : 180;
 
+  /// The most lines a button label wraps onto before it scales down.
+  static const int buttonLabelMaxLines = 2;
+
   /// The horizontal padding of a dense phase action button.
   static const EdgeInsets densePhaseActionPadding = EdgeInsets.symmetric(
     horizontal: space14,

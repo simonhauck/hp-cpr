@@ -5,6 +5,7 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart'
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 import 'package:hp_cpr/ui/theme/panel_tone.dart';
+import 'package:hp_cpr/ui/wrapping_button_label.dart';
 
 /// Shared shell of the medication cards: container, title row with status,
 /// the "Gabe erfassen" button and the arrangement for the current layout.
@@ -49,10 +50,7 @@ class MedikamentCard extends StatelessWidget {
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       textStyle: theme.textTheme.titleSmall,
     );
-    final buttonLabel = FittedBox(
-      fit: BoxFit.scaleDown,
-      child: Text(l10n.medikamentGabeButton),
-    );
+    final buttonLabel = WrappingButtonLabel(l10n.medikamentGabeButton);
     final gabeButton = tone.isEmphasized
         ? FilledButton(
             onPressed: onRecord,
