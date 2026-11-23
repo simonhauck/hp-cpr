@@ -4,7 +4,7 @@
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FFF8F6",
-    "theme_color": "#B3261E",
+    "theme_color": "#B00205",
     "description": "Companion-App für den High-Performance-CPR-Standard: Reanimations-Timer und Ablauf-Unterstützung.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
