@@ -11,8 +11,10 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/reanimationsfall_p
 import 'package:hp_cpr/features/reanimationsfall/presentation/start_card.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart';
 import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_chip.dart';
+import 'package:hp_cpr/features/settings/data/disclaimer_store.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
+import 'package:hp_cpr/ui/dialogs/rechtlicher_hinweis_dialog.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 import 'package:hp_cpr/ui/layout/page_scaffold.dart';
 import 'package:hp_cpr/ui/navigation/app_destination.dart';
@@ -28,6 +30,7 @@ class StartPage extends StatefulWidget {
     required this.wakeLock,
     required this.vibrator,
     required this.session,
+    required this.disclaimerStore,
   });
 
   final AppClock clock;
@@ -35,6 +38,7 @@ class StartPage extends StatefulWidget {
   final WakeLock wakeLock;
   final Vibrator vibrator;
   final ReanimationsfallSession session;
+  final DisclaimerStore disclaimerStore;
 
   @override
   State<StartPage> createState() => _StartPageState();
@@ -47,7 +51,17 @@ class _StartPageState extends State<StartPage> {
   @override
   void initState() {
     super.initState();
-    _loadActive();
+    _loadActive().then((_) => _showDisclaimerOnFirstStart());
+  }
+
+  /// Shows the Rechtlicher Hinweis once, never while a Reanimationsfall is
+  /// active, so an emergency is not delayed.
+  Future<void> _showDisclaimerOnFirstStart() async {
+    if (!mounted || _activeFall != null) return;
+    if (await widget.disclaimerStore.isAcknowledged()) return;
+    if (!mounted) return;
+    await showRechtlicherHinweisDialog(context);
+    await widget.disclaimerStore.acknowledge();
   }
 
   Future<void> _loadActive() async {

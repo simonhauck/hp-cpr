@@ -370,6 +370,16 @@ class AppLocalizationsDe extends AppLocalizations {
       'Lizenztexte der App und ihrer Bibliotheken';
 
   @override
+  String get legalNoticeTitle => 'Rechtlicher Hinweis';
+
+  @override
+  String get legalNoticeText =>
+      'HP-CPR ist eine Zeit- und Dokumentationshilfe für geschulte Reanimationsteams. Die App trifft keine Behandlungsentscheidungen und ersetzt weder Ausbildung noch aktuelle Leitlinien, lokale SOPs oder die Beurteilung durch das Team. Prüfe alle Zeiten und Hinweise eigenverantwortlich.';
+
+  @override
+  String get legalNoticeConfirm => 'Verstanden';
+
+  @override
   String get amiodaronLabel => 'Amiodaron';
 
   @override

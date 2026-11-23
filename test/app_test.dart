@@ -10,6 +10,7 @@ import 'package:hp_cpr/features/leitlinienprofil/domain/leitlinienprofil.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_store.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/phase_action_bar.dart';
+import 'package:hp_cpr/features/settings/data/disclaimer_store.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
 import 'package:hp_cpr/ui/theme/due_colors.dart';
 
@@ -59,6 +60,7 @@ void main() {
     WidgetTester tester, {
     AppSettings? settings,
     ReanimationsfallStore? appStore,
+    DisclaimerStore? disclaimerStore,
   }) async {
     await tester.pumpWidget(
       HpCprApp(
@@ -68,6 +70,7 @@ void main() {
         wakeLock: wakeLock,
         vibrator: vibrator,
         store: appStore ?? store,
+        disclaimerStore: disclaimerStore ?? InMemoryDisclaimerStore(),
       ),
     );
     await tester.pumpAndSettle();
@@ -3675,5 +3678,70 @@ void main() {
 
     expect(find.textContaining('Druckphase ·'), findsOneWidget);
     expect(vibrator.calls, 0);
+  });
+
+  group('Rechtlicher Hinweis', () {
+    const text =
+        'HP-CPR ist eine Zeit- und Dokumentationshilfe für geschulte '
+        'Reanimationsteams. Die App trifft keine Behandlungsentscheidungen '
+        'und ersetzt weder Ausbildung noch aktuelle Leitlinien, lokale SOPs '
+        'oder die Beurteilung durch das Team. Prüfe alle Zeiten und Hinweise '
+        'eigenverantwortlich.';
+
+    testWidgets('shows the notice on first start and blocks outside taps', (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        disclaimerStore: InMemoryDisclaimerStore(acknowledged: false),
+      );
+
+      expect(find.text('Rechtlicher Hinweis'), findsOneWidget);
+      expect(find.text(text), findsOneWidget);
+
+      await tester.tapAt(const Offset(2, 2));
+      await tester.pumpAndSettle();
+
+      expect(find.text(text), findsOneWidget);
+    });
+
+    testWidgets('persists the acknowledgement across a restart', (
+      tester,
+    ) async {
+      final disclaimerStore = InMemoryDisclaimerStore(acknowledged: false);
+      await pumpApp(tester, disclaimerStore: disclaimerStore);
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Verstanden'));
+      await tester.pumpAndSettle();
+
+      expect(find.text(text), findsNothing);
+      expect(find.text('Jetzt starten'), findsOneWidget);
+
+      await pumpApp(tester, disclaimerStore: disclaimerStore);
+
+      expect(find.text(text), findsNothing);
+      expect(find.text('Jetzt starten'), findsOneWidget);
+    });
+
+    testWidgets('does not block an active stored case', (tester) async {
+      final disclaimerStore = InMemoryDisclaimerStore(acknowledged: false);
+      await pumpApp(tester);
+      await startNow(tester);
+
+      await pumpApp(tester, disclaimerStore: disclaimerStore);
+
+      expect(find.text(text), findsNothing);
+      expect(find.text('Fortsetzen'), findsOneWidget);
+      expect(await disclaimerStore.isAcknowledged(), isFalse);
+    });
+
+    testWidgets('shows the text on the About page', (tester) async {
+      await pumpApp(tester);
+      await openDrawer(tester);
+      await selectFromDrawer(tester, 'Über');
+
+      expect(find.text('Rechtlicher Hinweis'), findsOneWidget);
+      expect(find.text(text), findsOneWidget);
+    });
   });
 }

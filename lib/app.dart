@@ -6,6 +6,7 @@ import 'package:hp_cpr/core/wake_lock.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_store.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/start_page.dart';
+import 'package:hp_cpr/features/settings/data/disclaimer_store.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/navigation/app_routes.dart';
@@ -19,6 +20,7 @@ class HpCprApp extends StatefulWidget {
     this.wakeLock,
     this.vibrator,
     this.store,
+    this.disclaimerStore,
   });
 
   /// Injectable for tests; defaults to the monotonic system clock.
@@ -36,6 +38,9 @@ class HpCprApp extends StatefulWidget {
   /// Injectable for tests; defaults to the local preferences store.
   final ReanimationsfallStore? store;
 
+  /// Injectable for tests; defaults to the local preferences store.
+  final DisclaimerStore? disclaimerStore;
+
   @override
   State<HpCprApp> createState() => _HpCprAppState();
 }
@@ -49,6 +54,8 @@ class _HpCprAppState extends State<HpCprApp> {
   late final bool _ownsSettings = widget.settings == null;
   late final ReanimationsfallStore _store =
       widget.store ?? const SharedPreferencesReanimationsfallStore();
+  late final DisclaimerStore _disclaimerStore =
+      widget.disclaimerStore ?? const SharedPreferencesDisclaimerStore();
   late final ReanimationsfallSession _session = ReanimationsfallSession(
     store: _store,
     clock: _clock,
@@ -102,6 +109,7 @@ class _HpCprAppState extends State<HpCprApp> {
         wakeLock: _wakeLock,
         vibrator: _vibrator,
         session: _session,
+        disclaimerStore: _disclaimerStore,
       ),
     );
   }

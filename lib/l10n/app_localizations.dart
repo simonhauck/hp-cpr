@@ -754,6 +754,24 @@ abstract class AppLocalizations {
   /// **'Lizenztexte der App und ihrer Bibliotheken'**
   String get aboutLicensesDescription;
 
+  /// Titel des Rechtlichen Hinweises (Dialog und Über-Seite)
+  ///
+  /// In de, this message translates to:
+  /// **'Rechtlicher Hinweis'**
+  String get legalNoticeTitle;
+
+  /// Text des Rechtlichen Hinweises, auch für den Store-Eintrag
+  ///
+  /// In de, this message translates to:
+  /// **'HP-CPR ist eine Zeit- und Dokumentationshilfe für geschulte Reanimationsteams. Die App trifft keine Behandlungsentscheidungen und ersetzt weder Ausbildung noch aktuelle Leitlinien, lokale SOPs oder die Beurteilung durch das Team. Prüfe alle Zeiten und Hinweise eigenverantwortlich.'**
+  String get legalNoticeText;
+
+  /// Bestätigung des Rechtlichen Hinweises beim ersten Start
+  ///
+  /// In de, this message translates to:
+  /// **'Verstanden'**
+  String get legalNoticeConfirm;
+
   /// Beschriftung des Amiodaron-Hinweises
   ///
   /// In de, this message translates to:
