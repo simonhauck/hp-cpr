@@ -15,7 +15,7 @@ const datenschutzAppAsset = 'assets/legal/datenschutz_app.md';
 /// Opens an external link of the Datenschutzerklärung.
 typedef DatenschutzLinkOpener = Future<void> Function(Uri uri);
 
-Future<void> _openExternally(Uri uri) =>
+Future<void> openLegalLinkExternally(Uri uri) =>
     launchUrl(uri, mode: LaunchMode.externalApplication);
 
 /// The Datenschutzerklärung, loaded from the bundled asset so it works offline.
@@ -26,7 +26,7 @@ class DatenschutzPage extends StatelessWidget {
     super.key,
     required this.routes,
     bool? isWeb,
-    this.linkOpener = _openExternally,
+    this.linkOpener = openLegalLinkExternally,
   }) : isWeb = isWeb ?? kIsWeb;
 
   final AppRoutes routes;
@@ -43,9 +43,10 @@ class DatenschutzPage extends StatelessWidget {
     return ContentPageScaffold.builder(
       title: l10n.datenschutzTitle,
       routes: routes,
-      bodyBuilder: (context) => _DatenschutzBody(
+      bodyBuilder: (context) => LegalDocumentBody(
         key: ValueKey(asset),
         asset: asset,
+        loadErrorText: l10n.datenschutzLoadError,
         bundle: DefaultAssetBundle.of(context),
         linkOpener: linkOpener,
       ),
@@ -53,38 +54,39 @@ class DatenschutzPage extends StatelessWidget {
   }
 }
 
-class _DatenschutzBody extends StatefulWidget {
-  const _DatenschutzBody({
+/// Renders a bundled legal Markdown document (Datenschutz, Impressum).
+class LegalDocumentBody extends StatefulWidget {
+  const LegalDocumentBody({
     super.key,
     required this.asset,
+    required this.loadErrorText,
     required this.bundle,
     required this.linkOpener,
   });
 
   final String asset;
+  final String loadErrorText;
   final AssetBundle bundle;
   final DatenschutzLinkOpener linkOpener;
 
   @override
-  State<_DatenschutzBody> createState() => _DatenschutzBodyState();
+  State<LegalDocumentBody> createState() => _LegalDocumentBodyState();
 }
 
-class _DatenschutzBodyState extends State<_DatenschutzBody> {
+class _LegalDocumentBodyState extends State<LegalDocumentBody> {
   late final Future<List<DatenschutzBlock>> _blocks = widget.bundle
       .loadString(widget.asset)
       .then(parseDatenschutzMarkdown);
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
     return FutureBuilder<List<DatenschutzBlock>>(
       future: _blocks,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Padding(
             padding: PageLayout.contentPagePadding,
-            child: Text(l10n.datenschutzLoadError),
+            child: Text(widget.loadErrorText),
           );
         }
         final blocks = snapshot.data;
