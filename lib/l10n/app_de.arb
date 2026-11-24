@@ -496,6 +496,22 @@
   "@aboutDatenschutzDescription": {
     "description": "Erklärung des Datenschutz-Eintrags auf der Über-Seite"
   },
+  "aboutImpressumTile": "Impressum",
+  "@aboutImpressumTile": {
+    "description": "Eintrag zum Impressum auf der Über-Seite"
+  },
+  "aboutImpressumDescription": "Anbieterkennzeichnung und Kontakt",
+  "@aboutImpressumDescription": {
+    "description": "Erklärung des Impressum-Eintrags auf der Über-Seite"
+  },
+  "impressumTitle": "Impressum",
+  "@impressumTitle": {
+    "description": "Titel der Impressum-Seite"
+  },
+  "impressumLoadError": "Das Impressum konnte nicht geladen werden.",
+  "@impressumLoadError": {
+    "description": "Fehlermeldung, wenn der Text des Impressums nicht geladen werden kann"
+  },
   "datenschutzTitle": "Datenschutz",
   "@datenschutzTitle": {
     "description": "Titel der Seite mit der Datenschutzerklärung"
@@ -503,6 +519,18 @@
   "datenschutzLoadError": "Die Datenschutzerklärung konnte nicht geladen werden.",
   "@datenschutzLoadError": {
     "description": "Fehlermeldung, wenn der Text der Datenschutzerklärung nicht geladen werden kann"
+  },
+  "legalNoticeTitle": "Rechtlicher Hinweis",
+  "@legalNoticeTitle": {
+    "description": "Titel des Rechtlichen Hinweises (Dialog und Über-Seite)"
+  },
+  "legalNoticeText": "HP-CPR ist eine Zeit- und Dokumentationshilfe für geschulte Reanimationsteams. Die App trifft keine Behandlungsentscheidungen und ersetzt weder Ausbildung noch aktuelle Leitlinien, lokale SOPs oder die Beurteilung durch das Team. Prüfe alle Zeiten und Hinweise eigenverantwortlich.",
+  "@legalNoticeText": {
+    "description": "Text des Rechtlichen Hinweises, auch für den Store-Eintrag"
+  },
+  "legalNoticeConfirm": "Verstanden",
+  "@legalNoticeConfirm": {
+    "description": "Bestätigung des Rechtlichen Hinweises beim ersten Start"
   },
   "amiodaronLabel": "Amiodaron",
   "@amiodaronLabel": {

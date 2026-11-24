@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:hp_cpr/core/app_info.dart';
 import 'package:hp_cpr/features/datenschutz/presentation/datenschutz_page.dart';
+import 'package:hp_cpr/features/impressum/presentation/impressum_page.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/content_page_scaffold.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
@@ -48,6 +49,14 @@ class _AboutPageState extends State<AboutPage> {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => DatenschutzPage(routes: widget.routes),
+      ),
+    );
+  }
+
+  void _openImpressum() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ImpressumPage(routes: widget.routes),
       ),
     );
   }
@@ -112,6 +121,14 @@ class _AboutPageState extends State<AboutPage> {
               ),
               const Divider(height: PageLayout.dividerHeight),
               ListTile(
+                leading: const Icon(Icons.badge_outlined),
+                title: Text(l10n.aboutImpressumTile),
+                subtitle: Text(l10n.aboutImpressumDescription),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: _openImpressum,
+              ),
+              const Divider(height: PageLayout.dividerHeight),
+              ListTile(
                 leading: const Icon(Icons.description_outlined),
                 title: Text(l10n.aboutLicensesTile),
                 subtitle: Text(l10n.aboutLicensesDescription),
@@ -119,6 +136,14 @@ class _AboutPageState extends State<AboutPage> {
                 onTap: _openLicenses,
               ),
             ],
+          ),
+        ),
+        const SizedBox(height: PageLayout.space16),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.gavel_outlined),
+            title: Text(l10n.legalNoticeTitle),
+            subtitle: Text(l10n.legalNoticeText),
           ),
         ),
       ],

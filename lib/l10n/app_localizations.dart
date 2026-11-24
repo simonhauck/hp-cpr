@@ -766,6 +766,30 @@ abstract class AppLocalizations {
   /// **'Datenschutzerklärung der App'**
   String get aboutDatenschutzDescription;
 
+  /// Eintrag zum Impressum auf der Über-Seite
+  ///
+  /// In de, this message translates to:
+  /// **'Impressum'**
+  String get aboutImpressumTile;
+
+  /// Erklärung des Impressum-Eintrags auf der Über-Seite
+  ///
+  /// In de, this message translates to:
+  /// **'Anbieterkennzeichnung und Kontakt'**
+  String get aboutImpressumDescription;
+
+  /// Titel der Impressum-Seite
+  ///
+  /// In de, this message translates to:
+  /// **'Impressum'**
+  String get impressumTitle;
+
+  /// Fehlermeldung, wenn der Text des Impressums nicht geladen werden kann
+  ///
+  /// In de, this message translates to:
+  /// **'Das Impressum konnte nicht geladen werden.'**
+  String get impressumLoadError;
+
   /// Titel der Seite mit der Datenschutzerklärung
   ///
   /// In de, this message translates to:
@@ -777,6 +801,24 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'Die Datenschutzerklärung konnte nicht geladen werden.'**
   String get datenschutzLoadError;
+
+  /// Titel des Rechtlichen Hinweises (Dialog und Über-Seite)
+  ///
+  /// In de, this message translates to:
+  /// **'Rechtlicher Hinweis'**
+  String get legalNoticeTitle;
+
+  /// Text des Rechtlichen Hinweises, auch für den Store-Eintrag
+  ///
+  /// In de, this message translates to:
+  /// **'HP-CPR ist eine Zeit- und Dokumentationshilfe für geschulte Reanimationsteams. Die App trifft keine Behandlungsentscheidungen und ersetzt weder Ausbildung noch aktuelle Leitlinien, lokale SOPs oder die Beurteilung durch das Team. Prüfe alle Zeiten und Hinweise eigenverantwortlich.'**
+  String get legalNoticeText;
+
+  /// Bestätigung des Rechtlichen Hinweises beim ersten Start
+  ///
+  /// In de, this message translates to:
+  /// **'Verstanden'**
+  String get legalNoticeConfirm;
 
   /// Beschriftung des Amiodaron-Hinweises
   ///

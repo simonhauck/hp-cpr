@@ -7,6 +7,7 @@ the in-app page and the public pages.
 | --- | --- |
 | `datenschutz_web.md` | Web app (in-app page when `kIsWeb`) and the public page `web/datenschutz.html` |
 | `datenschutz_app.md` | Android app (in-app page) and the public page `web/datenschutz-app.html` |
+| `impressum.md` | Impressum (§ 5 DDG), same for app and web: in-app page and the public page `web/impressum.html`. Contact data must match section 2 of the Datenschutzerklärung |
 
 The text is based on the WBS privacy policy generator. The app variant omits the
 website-only sections (server logfiles, GitHub, Google Fonts). Both variants
@@ -33,6 +34,7 @@ The script needs Nix (it runs pandoc via `nix shell nixpkgs#pandoc`) and uses
 
 - Web variant: <https://simonhauck.github.io/hp-cpr/datenschutz.html>
 - App variant (for the Google Play listing): <https://simonhauck.github.io/hp-cpr/datenschutz-app.html>
+- Impressum: <https://simonhauck.github.io/hp-cpr/impressum.html>
 
 GitHub Pages serves the latest GitHub Release, so the pages are live after the
 next release.
