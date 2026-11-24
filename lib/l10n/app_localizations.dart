@@ -766,6 +766,30 @@ abstract class AppLocalizations {
   /// **'Datenschutzerklärung der App'**
   String get aboutDatenschutzDescription;
 
+  /// Eintrag zum Impressum auf der Über-Seite
+  ///
+  /// In de, this message translates to:
+  /// **'Impressum'**
+  String get aboutImpressumTile;
+
+  /// Erklärung des Impressum-Eintrags auf der Über-Seite
+  ///
+  /// In de, this message translates to:
+  /// **'Anbieterkennzeichnung und Kontakt'**
+  String get aboutImpressumDescription;
+
+  /// Titel der Impressum-Seite
+  ///
+  /// In de, this message translates to:
+  /// **'Impressum'**
+  String get impressumTitle;
+
+  /// Fehlermeldung, wenn der Text des Impressums nicht geladen werden kann
+  ///
+  /// In de, this message translates to:
+  /// **'Das Impressum konnte nicht geladen werden.'**
+  String get impressumLoadError;
+
   /// Titel der Seite mit der Datenschutzerklärung
   ///
   /// In de, this message translates to:

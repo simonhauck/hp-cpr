@@ -496,6 +496,22 @@
   "@aboutDatenschutzDescription": {
     "description": "Erklärung des Datenschutz-Eintrags auf der Über-Seite"
   },
+  "aboutImpressumTile": "Impressum",
+  "@aboutImpressumTile": {
+    "description": "Eintrag zum Impressum auf der Über-Seite"
+  },
+  "aboutImpressumDescription": "Anbieterkennzeichnung und Kontakt",
+  "@aboutImpressumDescription": {
+    "description": "Erklärung des Impressum-Eintrags auf der Über-Seite"
+  },
+  "impressumTitle": "Impressum",
+  "@impressumTitle": {
+    "description": "Titel der Impressum-Seite"
+  },
+  "impressumLoadError": "Das Impressum konnte nicht geladen werden.",
+  "@impressumLoadError": {
+    "description": "Fehlermeldung, wenn der Text des Impressums nicht geladen werden kann"
+  },
   "datenschutzTitle": "Datenschutz",
   "@datenschutzTitle": {
     "description": "Titel der Seite mit der Datenschutzerklärung"

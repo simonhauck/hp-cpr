@@ -376,6 +376,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get aboutDatenschutzDescription => 'Datenschutzerklärung der App';
 
   @override
+  String get aboutImpressumTile => 'Impressum';
+
+  @override
+  String get aboutImpressumDescription => 'Anbieterkennzeichnung und Kontakt';
+
+  @override
+  String get impressumTitle => 'Impressum';
+
+  @override
+  String get impressumLoadError => 'Das Impressum konnte nicht geladen werden.';
+
+  @override
   String get datenschutzTitle => 'Datenschutz';
 
   @override

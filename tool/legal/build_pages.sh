@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Generates the public Datenschutz pages in web/ from the Markdown sources in
+# Generates the public legal pages (Datenschutz, Impressum) in web/ from the Markdown sources in
 # assets/legal/. Needs Nix; pandoc is fetched ad hoc.
 set -euo pipefail
 
@@ -18,3 +18,4 @@ build() {
 
 build datenschutz_web.md datenschutz.html "Datenschutzerklärung – HP-CPR (Web-App)"
 build datenschutz_app.md datenschutz-app.html "Datenschutzerklärung – HP-CPR (App)"
+build impressum.md impressum.html "Impressum – HP-CPR"
