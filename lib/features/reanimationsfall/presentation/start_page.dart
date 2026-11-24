@@ -13,6 +13,7 @@ import 'package:hp_cpr/features/reanimationsfall/presentation/timer_format.dart'
 import 'package:hp_cpr/features/leitlinienprofil/presentation/leitlinienprofil_chip.dart';
 import 'package:hp_cpr/features/settings/data/disclaimer_store.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
+import 'package:hp_cpr/features/tutorial/presentation/tutorial_page.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/dialogs/rechtlicher_hinweis_dialog.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
@@ -51,7 +52,20 @@ class _StartPageState extends State<StartPage> {
   @override
   void initState() {
     super.initState();
-    _loadActive().then((_) => _showDisclaimerOnFirstStart());
+    widget.routes.demoStartRequest.addListener(_startDemoReanimationsfall);
+    _loadActive().then((_) => _showFirstStartDialogs());
+  }
+
+  /// The Rechtlicher Hinweis comes before the Anleitung on the first start.
+  Future<void> _showFirstStartDialogs() async {
+    await _showDisclaimerOnFirstStart();
+    await _showTutorialOnFirstLaunch();
+  }
+
+  @override
+  void dispose() {
+    widget.routes.demoStartRequest.removeListener(_startDemoReanimationsfall);
+    super.dispose();
   }
 
   /// Shows the Rechtlicher Hinweis once, never while a Reanimationsfall is
@@ -62,6 +76,27 @@ class _StartPageState extends State<StartPage> {
     if (!mounted) return;
     await showRechtlicherHinweisDialog(context);
     await widget.disclaimerStore.acknowledge();
+  }
+
+  Future<void> _showTutorialOnFirstLaunch() async {
+    final store = widget.routes.tutorialStore;
+    if (!mounted || await store.hasSeen()) return;
+    await store.markSeen();
+    if (!mounted) return;
+
+    final outcome = await showTutorial(
+      context,
+      canStartDemo: _activeFall == null,
+    );
+    if (outcome == TutorialOutcome.startDemo) {
+      await _startDemoReanimationsfall();
+    }
+  }
+
+  Future<void> _startDemoReanimationsfall() async {
+    // A demo case must never replace the active one.
+    if (!mounted || _loading || _activeFall != null) return;
+    await _startReanimationsfall(demoMode: true);
   }
 
   Future<void> _loadActive() async {
@@ -89,13 +124,15 @@ class _StartPageState extends State<StartPage> {
     await _loadActive();
   }
 
-  Future<void> _startReanimationsfall() async {
+  /// Starts a Reanimationsfall; [demoMode] forces Demo-Modus for this case
+  /// without changing the setting.
+  Future<void> _startReanimationsfall({bool demoMode = false}) async {
     final settings = widget.routes.settings;
     final reanimationsfall = Reanimationsfall.start(
       clock: widget.clock,
       leitlinienprofil: settings.leitlinienprofil,
       vibrationEnabled: settings.vibrationEnabled,
-      demoMode: settings.demoMode,
+      demoMode: settings.demoMode || demoMode,
     );
 
     await widget.session.persist(reanimationsfall);

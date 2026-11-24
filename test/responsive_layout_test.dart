@@ -8,6 +8,9 @@ import 'package:hp_cpr/app.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_store.dart';
 import 'package:hp_cpr/features/settings/data/disclaimer_store.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
+import 'package:hp_cpr/features/tutorial/data/tutorial_store.dart';
+import 'package:hp_cpr/features/tutorial/presentation/tutorial_page.dart';
+import 'package:hp_cpr/l10n/app_localizations.dart';
 
 import 'support/fake_clock.dart';
 import 'support/medikament_finders.dart';
@@ -41,6 +44,7 @@ void main() {
         wakeLock: FakeWakeLock(),
         store: InMemoryReanimationsfallStore(),
         disclaimerStore: InMemoryDisclaimerStore(),
+        tutorialStore: InMemoryTutorialStore(seen: true),
       ),
     );
     await tester.pumpAndSettle();
@@ -146,6 +150,7 @@ void main() {
         wakeLock: FakeWakeLock(),
         settings: AppSettings(demoMode: true),
         store: InMemoryReanimationsfallStore(),
+        tutorialStore: InMemoryTutorialStore(seen: true),
       ),
     );
     await tester.pumpAndSettle();
@@ -194,6 +199,7 @@ void main() {
         wakeLock: FakeWakeLock(),
         store: InMemoryReanimationsfallStore(),
         disclaimerStore: InMemoryDisclaimerStore(),
+        tutorialStore: InMemoryTutorialStore(seen: true),
       ),
     );
     await tester.pumpAndSettle();
@@ -221,6 +227,36 @@ void main() {
     }
     expect(tester.takeException(), isNull);
   }, skip: kIsWeb);
+
+  for (final size in const [Size(360, 640), Size(640, 360)]) {
+    testWidgets('renders every tutorial page without overflow at '
+        '${size.width.toInt()}x${size.height.toInt()}', (tester) async {
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = size;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('de'),
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          home: const TutorialPage(canStartDemo: true),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      while (find.text('Weiter').evaluate().isNotEmpty) {
+        expect(tester.takeException(), isNull);
+        await tester.tap(find.text('Weiter'));
+        await tester.pumpAndSettle();
+      }
+
+      expectInsideViewport(tester, find.text('Demo-Fall starten'));
+      expectInsideViewport(tester, find.text('Später'));
+      expect(tester.takeException(), isNull);
+    }, skip: kIsWeb);
+  }
 }
 
 Future<void> recordSchock(WidgetTester tester) async {

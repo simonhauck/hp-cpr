@@ -7,6 +7,8 @@ import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_store.dar
 import 'package:hp_cpr/features/reanimationsfall/domain/messwert.dart';
 import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
+import 'package:hp_cpr/features/tutorial/data/tutorial_store.dart';
+import 'package:hp_cpr/features/tutorial/presentation/demo_start_request.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/navigation/app_routes.dart';
 
@@ -70,6 +72,8 @@ void main() {
             clock: clock,
             vibrator: FakeVibrator(),
             session: session,
+            tutorialStore: InMemoryTutorialStore(seen: true),
+            demoStartRequest: DemoStartRequest(),
           ),
           reanimationsfall: reanimationsfall,
           session: session,

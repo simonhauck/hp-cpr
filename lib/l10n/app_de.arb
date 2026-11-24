@@ -1130,5 +1130,101 @@
         "type": "int"
       }
     }
+  },
+  "tutorialTitle": "Anleitung",
+  "@tutorialTitle": {
+    "description": "Titel der Anleitung und ihres Menüeintrags"
+  },
+  "tutorialSkip": "Überspringen",
+  "@tutorialSkip": {
+    "description": "Schaltfläche zum Schließen der Anleitung vor der letzten Seite"
+  },
+  "tutorialNext": "Weiter",
+  "@tutorialNext": {
+    "description": "Schaltfläche zur nächsten Seite der Anleitung"
+  },
+  "tutorialDone": "Fertig",
+  "@tutorialDone": {
+    "description": "Schaltfläche zum Schließen der Anleitung auf der letzten Seite"
+  },
+  "tutorialLater": "Später",
+  "@tutorialLater": {
+    "description": "Schaltfläche zum Schließen der Anleitung ohne Demo-Fall"
+  },
+  "tutorialPageIndicator": "Seite {page} von {count}",
+  "@tutorialPageIndicator": {
+    "description": "Bedienungshilfe-Text der Seitenanzeige der Anleitung",
+    "placeholders": {
+      "page": {
+        "type": "int"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tutorialWelcomeTitle": "Willkommen bei HP-CPR",
+  "@tutorialWelcomeTitle": {
+    "description": "Anleitung: Titel der Begrüßungsseite"
+  },
+  "tutorialWelcomeBody": "Die App unterstützt den Zeitnehmer bei der Reanimation: Sie zeigt, was wann fällig ist, und führt das Protokoll.",
+  "@tutorialWelcomeBody": {
+    "description": "Anleitung: Text der Begrüßungsseite"
+  },
+  "tutorialStartTitle": "Fall starten",
+  "@tutorialStartTitle": {
+    "description": "Anleitung: Titel der Seite zum Fallstart"
+  },
+  "tutorialStartBody": "„Jetzt starten“ bei der ersten Thoraxkompression tippen. Der Leitlinien-Chip zeigt das Zeitprofil (ERC oder AHA). Lief die Reanimation schon, lässt sich die Vorbehandlung nachtragen.",
+  "@tutorialStartBody": {
+    "description": "Anleitung: Text der Seite zum Fallstart"
+  },
+  "tutorialDruckphaseTitle": "Druckphase und Analyse",
+  "@tutorialDruckphaseTitle": {
+    "description": "Anleitung: Titel der Seite zu Druckphase und Analysephase"
+  },
+  "tutorialDruckphaseBody": "Der Timer zählt die 2 Minuten der Druckphase herunter. Ist die Analyse fällig, führt „Analyse starten“ durch die Rhythmusanalyse und einen möglichen Schock. Fällige Aktionen werden hervorgehoben und vibrieren.",
+  "@tutorialDruckphaseBody": {
+    "description": "Anleitung: Text der Seite zu Druckphase und Analysephase"
+  },
+  "tutorialMedikamenteTitle": "Medikamente",
+  "@tutorialMedikamenteTitle": {
+    "description": "Anleitung: Titel der Seite zu Adrenalin und Amiodaron"
+  },
+  "tutorialMedikamenteBody": "Die Karten für Adrenalin und Amiodaron zeigen, wann eine Gabe fällig ist. „Gabe erfassen“ dokumentiert sie mit einem Tipp, „Rückgängig“ nimmt sie direkt wieder zurück.",
+  "@tutorialMedikamenteBody": {
+    "description": "Anleitung: Text der Seite zu Adrenalin und Amiodaron"
+  },
+  "tutorialAktionenTitle": "Aktionen und Protokoll",
+  "@tutorialAktionenTitle": {
+    "description": "Anleitung: Titel der Seite zu weiteren Aktionen und Protokoll"
+  },
+  "tutorialAktionenBody": "Unter „Aktionen“ lassen sich Schocks, Notizen und Messwerte erfassen und die Druckphase neu starten. Das Protokoll zeichnet alles mit Zeit auf, Einträge können korrigiert werden.",
+  "@tutorialAktionenBody": {
+    "description": "Anleitung: Text der Seite zu weiteren Aktionen und Protokoll"
+  },
+  "tutorialEndTitle": "Fall beenden",
+  "@tutorialEndTitle": {
+    "description": "Anleitung: Titel der Seite zum Fallende"
+  },
+  "tutorialEndBody": "„Fall beenden“ unter „Aktionen“ schließt den Fall ab und zeigt eine Zusammenfassung. Abgeschlossene Fälle stehen im Einsatzlog im Menü.",
+  "@tutorialEndBody": {
+    "description": "Anleitung: Text der Seite zum Fallende"
+  },
+  "tutorialDemoTitle": "Gefahrlos ausprobieren",
+  "@tutorialDemoTitle": {
+    "description": "Anleitung: Titel der letzten Seite mit dem Demo-Fall"
+  },
+  "tutorialDemoBody": "Im Demo-Fall lässt sich die Zeit vorspulen. So können alle Abläufe ohne Patient geübt werden.",
+  "@tutorialDemoBody": {
+    "description": "Anleitung: Text der letzten Seite, wenn ein Demo-Fall gestartet werden kann"
+  },
+  "tutorialDemoActiveCaseBody": "Im Demo-Modus lässt sich die Zeit vorspulen. Ein Demo-Fall kann gestartet werden, sobald der laufende Reanimationsfall beendet ist.",
+  "@tutorialDemoActiveCaseBody": {
+    "description": "Anleitung: Text der letzten Seite, solange ein Reanimationsfall aktiv ist"
+  },
+  "tutorialStartDemoButton": "Demo-Fall starten",
+  "@tutorialStartDemoButton": {
+    "description": "Schaltfläche der Anleitung, die einen Reanimationsfall im Demo-Modus startet"
   }
 }

@@ -12,6 +12,7 @@ import 'package:hp_cpr/features/reanimationsfall/domain/reanimationsfall.dart';
 import 'package:hp_cpr/features/reanimationsfall/presentation/phase_action_bar.dart';
 import 'package:hp_cpr/features/settings/data/disclaimer_store.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
+import 'package:hp_cpr/features/tutorial/data/tutorial_store.dart';
 import 'package:hp_cpr/ui/theme/due_colors.dart';
 
 import 'support/fake_clock.dart';
@@ -71,6 +72,7 @@ void main() {
         vibrator: vibrator,
         store: appStore ?? store,
         disclaimerStore: disclaimerStore ?? InMemoryDisclaimerStore(),
+        tutorialStore: InMemoryTutorialStore(seen: true),
       ),
     );
     await tester.pumpAndSettle();

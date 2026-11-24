@@ -8,6 +8,8 @@ import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_store.dar
 import 'package:hp_cpr/features/reanimationsfall/presentation/start_page.dart';
 import 'package:hp_cpr/features/settings/data/disclaimer_store.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
+import 'package:hp_cpr/features/tutorial/data/tutorial_store.dart';
+import 'package:hp_cpr/features/tutorial/presentation/demo_start_request.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/navigation/app_routes.dart';
 import 'package:hp_cpr/ui/theme/due_colors.dart';
@@ -21,6 +23,7 @@ class HpCprApp extends StatefulWidget {
     this.vibrator,
     this.store,
     this.disclaimerStore,
+    this.tutorialStore,
   });
 
   /// Injectable for tests; defaults to the monotonic system clock.
@@ -40,6 +43,7 @@ class HpCprApp extends StatefulWidget {
 
   /// Injectable for tests; defaults to the local preferences store.
   final DisclaimerStore? disclaimerStore;
+  final TutorialStore? tutorialStore;
 
   @override
   State<HpCprApp> createState() => _HpCprAppState();
@@ -56,6 +60,9 @@ class _HpCprAppState extends State<HpCprApp> {
       widget.store ?? const SharedPreferencesReanimationsfallStore();
   late final DisclaimerStore _disclaimerStore =
       widget.disclaimerStore ?? const SharedPreferencesDisclaimerStore();
+  late final TutorialStore _tutorialStore =
+      widget.tutorialStore ?? const SharedPreferencesTutorialStore();
+  final DemoStartRequest _demoStartRequest = DemoStartRequest();
   late final ReanimationsfallSession _session = ReanimationsfallSession(
     store: _store,
     clock: _clock,
@@ -65,11 +72,14 @@ class _HpCprAppState extends State<HpCprApp> {
     clock: _clock,
     vibrator: _vibrator,
     session: _session,
+    tutorialStore: _tutorialStore,
+    demoStartRequest: _demoStartRequest,
   );
 
   @override
   void dispose() {
     if (_ownsSettings) _settings.dispose();
+    _demoStartRequest.dispose();
     super.dispose();
   }
 

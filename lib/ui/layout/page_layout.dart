@@ -112,6 +112,12 @@ class PageLayout {
   );
   static const double touchTargetSize = 48;
 
+  // The tutorial.
+  static const double tutorialIconSize = 72;
+  static const double tutorialDotSize = 8;
+  static const double tutorialActiveDotWidth = 24;
+  static const Duration tutorialPageDuration = Duration(milliseconds: 300);
+
   // The Adrenalin Zeitfenster bar.
   static const double barHeight = 8;
   static const double barTickWidth = 2;
@@ -194,6 +200,9 @@ class PageLayout {
 
   /// The gap between the two main panels in landscape.
   double get panelGap => isCompact ? space12 : space16;
+
+  /// Whether the tutorial slides show their large icon.
+  bool get showsTutorialIcon => !isCompact;
 
   /// Whether settings descriptions fit alongside their control.
   bool get showSettingDescriptions => !isCompact;
