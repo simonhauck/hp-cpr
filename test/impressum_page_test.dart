@@ -11,6 +11,8 @@ import 'package:hp_cpr/features/impressum/presentation/impressum_page.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_session.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_store.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
+import 'package:hp_cpr/features/tutorial/data/tutorial_store.dart';
+import 'package:hp_cpr/features/tutorial/presentation/demo_start_request.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/navigation/app_routes.dart';
 
@@ -51,6 +53,8 @@ void main() {
           store: InMemoryReanimationsfallStore(),
           clock: clock,
         ),
+        tutorialStore: InMemoryTutorialStore(seen: true),
+        demoStartRequest: DemoStartRequest(),
       );
       PackageInfo.setMockInitialValues(
         appName: 'HP-CPR',

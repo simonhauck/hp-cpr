@@ -802,4 +802,80 @@ class AppLocalizationsDe extends AppLocalizations {
   String adrenalinVorbehandlung(int count) {
     return '$count × vor Übernahme';
   }
+
+  @override
+  String get tutorialTitle => 'Anleitung';
+
+  @override
+  String get tutorialSkip => 'Überspringen';
+
+  @override
+  String get tutorialNext => 'Weiter';
+
+  @override
+  String get tutorialDone => 'Fertig';
+
+  @override
+  String get tutorialLater => 'Später';
+
+  @override
+  String tutorialPageIndicator(int page, int count) {
+    return 'Seite $page von $count';
+  }
+
+  @override
+  String get tutorialWelcomeTitle => 'Willkommen bei HP-CPR';
+
+  @override
+  String get tutorialWelcomeBody =>
+      'Die App unterstützt den Zeitnehmer bei der Reanimation: Sie zeigt, was wann fällig ist, und führt das Protokoll.';
+
+  @override
+  String get tutorialStartTitle => 'Fall starten';
+
+  @override
+  String get tutorialStartBody =>
+      '„Jetzt starten“ bei der ersten Thoraxkompression tippen. Der Leitlinien-Chip zeigt das Zeitprofil (ERC oder AHA). Lief die Reanimation schon, lässt sich die Vorbehandlung nachtragen.';
+
+  @override
+  String get tutorialDruckphaseTitle => 'Druckphase und Analyse';
+
+  @override
+  String get tutorialDruckphaseBody =>
+      'Der Timer zählt die 2 Minuten der Druckphase herunter. Ist die Analyse fällig, führt „Analyse starten“ durch die Rhythmusanalyse und einen möglichen Schock. Fällige Aktionen werden hervorgehoben und vibrieren.';
+
+  @override
+  String get tutorialMedikamenteTitle => 'Medikamente';
+
+  @override
+  String get tutorialMedikamenteBody =>
+      'Die Karten für Adrenalin und Amiodaron zeigen, wann eine Gabe fällig ist. „Gabe erfassen“ dokumentiert sie mit einem Tipp, „Rückgängig“ nimmt sie direkt wieder zurück.';
+
+  @override
+  String get tutorialAktionenTitle => 'Aktionen und Protokoll';
+
+  @override
+  String get tutorialAktionenBody =>
+      'Unter „Aktionen“ lassen sich Schocks, Notizen und Messwerte erfassen und die Druckphase neu starten. Das Protokoll zeichnet alles mit Zeit auf, Einträge können korrigiert werden.';
+
+  @override
+  String get tutorialEndTitle => 'Fall beenden';
+
+  @override
+  String get tutorialEndBody =>
+      '„Fall beenden“ unter „Aktionen“ schließt den Fall ab und zeigt eine Zusammenfassung. Abgeschlossene Fälle stehen im Einsatzlog im Menü.';
+
+  @override
+  String get tutorialDemoTitle => 'Gefahrlos ausprobieren';
+
+  @override
+  String get tutorialDemoBody =>
+      'Im Demo-Fall lässt sich die Zeit vorspulen. So können alle Abläufe ohne Patient geübt werden.';
+
+  @override
+  String get tutorialDemoActiveCaseBody =>
+      'Im Demo-Modus lässt sich die Zeit vorspulen. Ein Demo-Fall kann gestartet werden, sobald der laufende Reanimationsfall beendet ist.';
+
+  @override
+  String get tutorialStartDemoButton => 'Demo-Fall starten';
 }

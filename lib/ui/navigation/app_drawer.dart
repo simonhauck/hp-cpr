@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:hp_cpr/features/tutorial/presentation/tutorial_page.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
 import 'package:hp_cpr/ui/navigation/app_destination.dart';
@@ -53,6 +54,11 @@ class AppDrawer extends StatelessWidget {
               icon: Icons.settings_outlined,
               label: l10n.settingsTitle,
             ),
+            ListTile(
+              leading: const Icon(Icons.school_outlined),
+              title: Text(l10n.tutorialTitle),
+              onTap: () => _openTutorial(context),
+            ),
             _destination(
               context,
               AppDestination.ueber,
@@ -77,6 +83,23 @@ class AppDrawer extends StatelessWidget {
       selected: destination == currentDestination,
       onTap: () => _select(context, destination),
     );
+  }
+
+  Future<void> _openTutorial(BuildContext context) async {
+    final navigator = Navigator.of(context);
+    navigator.pop();
+    final canStartDemo = await routes.session.loadActive() == null;
+    if (!navigator.mounted) return;
+
+    final outcome = await showTutorial(
+      navigator.context,
+      canStartDemo: canStartDemo,
+    );
+    if (outcome != TutorialOutcome.startDemo || !navigator.mounted) return;
+
+    // Only the start page creates Reanimationsfälle, so return to it first.
+    navigator.popUntil((route) => route.isFirst);
+    routes.demoStartRequest.request();
   }
 
   void _select(BuildContext context, AppDestination destination) {

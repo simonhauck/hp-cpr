@@ -1495,6 +1495,138 @@ abstract class AppLocalizations {
   /// In de, this message translates to:
   /// **'{count} × vor Übernahme'**
   String adrenalinVorbehandlung(int count);
+
+  /// Titel der Anleitung und ihres Menüeintrags
+  ///
+  /// In de, this message translates to:
+  /// **'Anleitung'**
+  String get tutorialTitle;
+
+  /// Schaltfläche zum Schließen der Anleitung vor der letzten Seite
+  ///
+  /// In de, this message translates to:
+  /// **'Überspringen'**
+  String get tutorialSkip;
+
+  /// Schaltfläche zur nächsten Seite der Anleitung
+  ///
+  /// In de, this message translates to:
+  /// **'Weiter'**
+  String get tutorialNext;
+
+  /// Schaltfläche zum Schließen der Anleitung auf der letzten Seite
+  ///
+  /// In de, this message translates to:
+  /// **'Fertig'**
+  String get tutorialDone;
+
+  /// Schaltfläche zum Schließen der Anleitung ohne Demo-Fall
+  ///
+  /// In de, this message translates to:
+  /// **'Später'**
+  String get tutorialLater;
+
+  /// Bedienungshilfe-Text der Seitenanzeige der Anleitung
+  ///
+  /// In de, this message translates to:
+  /// **'Seite {page} von {count}'**
+  String tutorialPageIndicator(int page, int count);
+
+  /// Anleitung: Titel der Begrüßungsseite
+  ///
+  /// In de, this message translates to:
+  /// **'Willkommen bei HP-CPR'**
+  String get tutorialWelcomeTitle;
+
+  /// Anleitung: Text der Begrüßungsseite
+  ///
+  /// In de, this message translates to:
+  /// **'Die App unterstützt den Zeitnehmer bei der Reanimation: Sie zeigt, was wann fällig ist, und führt das Protokoll.'**
+  String get tutorialWelcomeBody;
+
+  /// Anleitung: Titel der Seite zum Fallstart
+  ///
+  /// In de, this message translates to:
+  /// **'Fall starten'**
+  String get tutorialStartTitle;
+
+  /// Anleitung: Text der Seite zum Fallstart
+  ///
+  /// In de, this message translates to:
+  /// **'„Jetzt starten“ bei der ersten Thoraxkompression tippen. Der Leitlinien-Chip zeigt das Zeitprofil (ERC oder AHA). Lief die Reanimation schon, lässt sich die Vorbehandlung nachtragen.'**
+  String get tutorialStartBody;
+
+  /// Anleitung: Titel der Seite zu Druckphase und Analysephase
+  ///
+  /// In de, this message translates to:
+  /// **'Druckphase und Analyse'**
+  String get tutorialDruckphaseTitle;
+
+  /// Anleitung: Text der Seite zu Druckphase und Analysephase
+  ///
+  /// In de, this message translates to:
+  /// **'Der Timer zählt die 2 Minuten der Druckphase herunter. Ist die Analyse fällig, führt „Analyse starten“ durch die Rhythmusanalyse und einen möglichen Schock. Fällige Aktionen werden hervorgehoben und vibrieren.'**
+  String get tutorialDruckphaseBody;
+
+  /// Anleitung: Titel der Seite zu Adrenalin und Amiodaron
+  ///
+  /// In de, this message translates to:
+  /// **'Medikamente'**
+  String get tutorialMedikamenteTitle;
+
+  /// Anleitung: Text der Seite zu Adrenalin und Amiodaron
+  ///
+  /// In de, this message translates to:
+  /// **'Die Karten für Adrenalin und Amiodaron zeigen, wann eine Gabe fällig ist. „Gabe erfassen“ dokumentiert sie mit einem Tipp, „Rückgängig“ nimmt sie direkt wieder zurück.'**
+  String get tutorialMedikamenteBody;
+
+  /// Anleitung: Titel der Seite zu weiteren Aktionen und Protokoll
+  ///
+  /// In de, this message translates to:
+  /// **'Aktionen und Protokoll'**
+  String get tutorialAktionenTitle;
+
+  /// Anleitung: Text der Seite zu weiteren Aktionen und Protokoll
+  ///
+  /// In de, this message translates to:
+  /// **'Unter „Aktionen“ lassen sich Schocks, Notizen und Messwerte erfassen und die Druckphase neu starten. Das Protokoll zeichnet alles mit Zeit auf, Einträge können korrigiert werden.'**
+  String get tutorialAktionenBody;
+
+  /// Anleitung: Titel der Seite zum Fallende
+  ///
+  /// In de, this message translates to:
+  /// **'Fall beenden'**
+  String get tutorialEndTitle;
+
+  /// Anleitung: Text der Seite zum Fallende
+  ///
+  /// In de, this message translates to:
+  /// **'„Fall beenden“ unter „Aktionen“ schließt den Fall ab und zeigt eine Zusammenfassung. Abgeschlossene Fälle stehen im Einsatzlog im Menü.'**
+  String get tutorialEndBody;
+
+  /// Anleitung: Titel der letzten Seite mit dem Demo-Fall
+  ///
+  /// In de, this message translates to:
+  /// **'Gefahrlos ausprobieren'**
+  String get tutorialDemoTitle;
+
+  /// Anleitung: Text der letzten Seite, wenn ein Demo-Fall gestartet werden kann
+  ///
+  /// In de, this message translates to:
+  /// **'Im Demo-Fall lässt sich die Zeit vorspulen. So können alle Abläufe ohne Patient geübt werden.'**
+  String get tutorialDemoBody;
+
+  /// Anleitung: Text der letzten Seite, solange ein Reanimationsfall aktiv ist
+  ///
+  /// In de, this message translates to:
+  /// **'Im Demo-Modus lässt sich die Zeit vorspulen. Ein Demo-Fall kann gestartet werden, sobald der laufende Reanimationsfall beendet ist.'**
+  String get tutorialDemoActiveCaseBody;
+
+  /// Schaltfläche der Anleitung, die einen Reanimationsfall im Demo-Modus startet
+  ///
+  /// In de, this message translates to:
+  /// **'Demo-Fall starten'**
+  String get tutorialStartDemoButton;
 }
 
 class _AppLocalizationsDelegate
