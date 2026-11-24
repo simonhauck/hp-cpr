@@ -6,6 +6,8 @@ Flutter companion app for the High-Performance CPR standard. The app supports th
 
 ## Commands
 
+Human-facing setup and delivery docs live in `docs/development.md` (dev shell, running, builds, project structure, MCP) and `docs/delivery.md` (CI checks, releases, rollback). Keep them in sync when commands or workflows change.
+
 If the environment is not already active via `nix develop` or direnv:
 
 ```bash

@@ -1,301 +1,52 @@
 # HP-CPR Companion
 
-Flutter app as a companion for the **High-Performance CPR standard**. The app is intended to support the resuscitation workflow with timing: resuscitation duration, medication administration, rhythm analyses, and further steps.
+A timekeeping app for the **Zeitnehmer** during an adult resuscitation, built around the **High-Performance CPR (HP-CPR)** standard.
 
-> **Status:** The Zeitnehmer can start a Reanimationsfall immediately or with a corrected Startzeit, run the Druckphase countdown, enter the Analysephase, record a Rhythmusanalyse result, skip it, and return to the Druckphase. Adrenalin and Amiodaron hints are implemented, the case can be interrupted by ROSC, resumed after a rearrest, and ended with an in-app summary, and active, completed, and Verworfene Reanimationsfälle are stored locally in the Einsatzlog. Messwerte and free-text notes are recorded in a separate view and included in the summary. A live and completed Protokoll shows every recorded event and supports append-only corrections with an Änderungsverlauf; the summary, CPR duration, and Einsatzlog are derived from the corrected timeline.
+HP-CPR is a team approach to resuscitation: every team member has a defined role, chest compressions run with as few interruptions as possible, and rhythm analyses, shocks, and drugs follow a fixed rhythm. One of those roles is the Zeitnehmer, who watches the clock and tells the team when the next action is due. This app replaces the stopwatch and the paper notes of that role. It shows what is due now, what comes next, and records what happened so the case can be reviewed afterwards.
 
-## Goals
+**Try it:** <https://simonhauck.github.io/hp-cpr/> (latest release, runs in the browser). An Android APK for testing is attached to each [GitHub Release](https://github.com/simonhauck/hp-cpr/releases).
+
+> [!WARNING]
+> HP-CPR Companion is under active development. It is not a medical device and must not be used to treat patients.
+
+## A Reanimationsfall in the app
+
+The interface is German, and so are the domain terms used here. Their meaning is defined in the [glossary](GLOSSARY.md).
+
+1. **Start.** The Zeitnehmer starts a new **Reanimationsfall** immediately or with a corrected **Startzeit**, for example when compressions began before the app was opened. When the team takes over a resuscitation that was already running, the **Übernahme** and the **Vorbehandlung** (Schocks and drug doses given before) are recorded as well.
+2. **Druckphase.** Compressions run and a 2-minute countdown shows when the next Rhythmusanalyse is due.
+3. **Analysephase.** Compressions pause for the **Rhythmusanalyse**. A guided dialog records whether the rhythm is *schockbar* or *nicht schockbar* and whether a **Schock** was delivered, then returns to the next Druckphase.
+4. **Medikamente.** The app shows the **Zeitfenster** for the next **Adrenalin** Gabe and when **Amiodaron** should be considered, based on the selected **Leitlinienprofil** (ERC 2025 or AHA 2025). The phone vibrates when an action becomes due.
+5. **ROSC and rearrest.** ROSC interrupts the resuscitation; a **Reanimationswiederbeginn** continues the same case if the patient rearrests.
+6. **Messwerte and notes.** Blood pressure, heart rate, blood sugar, temperature, and free-text notes can be recorded at any time.
+7. **End.** The case ends with a reason and an in-app summary, including the Reanimationsdauer and every Schock and Gabe.
+
+Throughout the case, the **Protokoll** lists every recorded event. Mistakes are fixed with append-only **Korrekturen**: the original entry is never lost and stays visible in the **Änderungsverlauf**. Completed and **verworfene** cases are kept in the **Einsatzlog**.
+
+All data stays on the device. There is no account, no server, and no network sync. A **Demo-Modus** lets you fast-forward a case to try the timing behaviour without waiting.
+
+## Domain knowledge
+
+- [`GLOSSARY.md`](GLOSSARY.md): the shared vocabulary of the app, code, and issues.
+- [`docs/research/cpr-timing-guidelines.md`](docs/research/cpr-timing-guidelines.md): the AHA 2025 and ERC 2025 timing baselines the app is designed against.
+- [`docs/adr/`](docs/adr/): architecture decisions, for example how Protokoll corrections and the Demo-Modus work.
+
+## Platforms
 
 | Platform | Status |
 | --- | --- |
-| Android | ✅ prepared and built |
-| Web | ✅ prepared and built |
+| Web | ✅ available |
+| Android | ✅ available as a test APK; no Play Store release yet |
 | iOS | ⏳ later, requires macOS with Xcode |
-
-## Prerequisites
-
-- NixOS or another Linux with Nix flakes enabled
-- Optional: [direnv](https://direnv.net/) to automatically enter the development environment
-- For Android tests: a device connected via USB (an emulator is not part of the dev shell)
-
-## Development environment
-
-All required tools are provided by the Nix flake:
-
-- Flutter 3.47.4 and Dart 3.13.3
-- JDK 21
-- Android SDK 35 and 36, Build-Tools 36.0.0, NDK 28.2, and CMake
-- Chromium for web development
-- Git, GitHub CLI, ripgrep, jq, and other CLI tools
-
-```bash
-nix develop
-```
-
-The first invocation downloads and builds the dependencies and may take some time. Afterwards, check the toolchain:
-
-```bash
-flutter doctor -v
-```
-
-With direnv, a one-time `direnv allow` is enough; the dev shell is then activated automatically.
-
-### Updating Nix dependencies
-
-```bash
-nix flake update
-nix develop
-```
-
-The exact versions are pinned in `flake.lock`. The dev shell currently uses `nixos-unstable` so that a current stable Flutter version is available.
-
-## Getting started
-
-```bash
-flutter pub get
-
-# Start web in the browser
-flutter run -d chrome
-
-# Alternatively, start only a web server (e.g. under WSL2)
-flutter run -d web-server --web-port 8080
-
-# Show available devices
-flutter devices
-
-# Start the Android app on a connected device
-flutter run -d <device-id>
-```
-
-### Builds
-
-```bash
-# Web release, output under build/web
-flutter build web --release
-
-# Android APKs, output under build/app/outputs/flutter-apk/
-flutter build apk --debug
-flutter build apk --release # release-mode, debug-signed by the current signing config
-
-# Quality checks
-dart format --output=none --set-exit-if-changed lib test
-flutter analyze
-flutter test
-flutter test --platform chrome
-```
-
-### Android device on NixOS
-
-For `adb` and Flutter to see the device without root, enable ADB in the NixOS configuration:
-
-```nix
-programs.adb.enable = true;
-```
-
-After `nixos-rebuild switch`, connect the device and check:
-
-```bash
-adb devices
-```
-
-Under WSL2, the USB device may first need to be passed through to the distribution with `usbipd-win`.
-
-## OpenCode and Dart MCP
-
-The project contains an `opencode.json` with the official Dart/Flutter MCP server. The server is started directly via `dart mcp-server`, without `nix develop` in the MCP command. For this, OpenCode itself must be started from the Nix dev shell so that `dart` is on the `PATH`:
-
-```bash
-nix develop
-opencode --standalone
-```
-
-`--standalone` matters when an OpenCode background service is already running outside the dev shell. Otherwise OpenCode would reuse that service; the MCP process inherits its `PATH` and cannot find `dart` (`NotFound: ChildProcess.spawn`). With `--standalone`, OpenCode starts a private server with the current shell's environment.
-
-If you deliberately want to use the shared background service, stop it first and then restart OpenCode inside the dev shell:
-
-```bash
-nix develop
-opencode service stop
-opencode
-```
-
-Check the status in the OpenCode TUI via `/mcps`. When using the shared background service, additionally via the CLI:
-
-```bash
-opencode mcp list
-# ✓ dart  connected
-```
-
-The server provides, among other things, analysis, tests, pub, hot reload/restart, the widget inspector, and the connection to the running app via the Dart Tooling Daemon (DTD).
-
-## Delivery
-
-The public web app is available at <https://simonhauck.github.io/hp-cpr/>. It serves the latest GitHub Release, not `main`.
-
-### Pull requests
-
-Every pull request runs the same checks in CI:
-
-- `dart format --output=none --set-exit-if-changed lib test`
-- `flutter analyze`
-- `flutter test`
-- `flutter test --platform chrome`
-- `flutter gen-l10n` plus a diff check on `lib/l10n`
-- `flutter build web --release`
-- `flutter build apk --release`
-- Conventional PR title and exactly one type label
-
-The type label follows the PR title:
-
-| Title type | Label |
-| --- | --- |
-| `fix` | `bug` |
-| `feat` | `feature` |
-| `docs` | `documentation` |
-| everything else | `maintenance` |
-
-release-please PRs are exempt from the label check.
-
-### Releases
-
-release-please keeps one release PR open. Merge it when you want to cut a release. Merging it bumps `pubspec.yaml` (including the `+build` number) and `CHANGELOG.md`; the CI/CD workflow then checks the merged commit, creates the `vX.Y.Z` tag and GitHub Release, deploys the release build to Pages, and attaches:
-
-- `hp-cpr-<version>-debug-signed.apk` — release-mode, debug-signed, for testing only
-- `hp-cpr-web-<version>.zip`
-
-The release PR itself does not run CI because release-please uses `GITHUB_TOKEN`. The merged release commit is checked before anything is tagged or deployed.
-
-Direct pushes to `main` are allowed, but they are not checked before they land. Force pushes and deletions are blocked. To catch problems early, enable the local hook once:
-
-```bash
-git config core.hooksPath .githooks
-```
-
-`nix develop` does this automatically when `.githooks` exists.
-
-### Rollback
-
-Revert the bad commit on `main` and merge a new release PR. The live page stays on the previous release until the new release is published. For the APK, use the previous GitHub Release asset. Play Store rollback will be documented with the Play workflow.
-
-## Project structure
-
-```text
-lib/
-├── app.dart                                    # MaterialApp, theme, localization, dependencies
-├── main.dart                                   # entry point
-├── core/
-│   ├── app_info.dart                           # installed version via package_info_plus
-│   ├── clock.dart                              # wall-clock + monotonic time source
-│   └── wake_lock.dart                          # keeps the screen awake during a case
-├── features/
-│   ├── about/
-│   │   └── presentation/about_page.dart         # app info, copyright, and licenses
-│   ├── einsatzlog/
-│   │   └── presentation/einsatzlog_page.dart    # local case log + deletion
-│   ├── messwerte/
-│   │   └── presentation/
-│   │       ├── messwert_erfassen_dialog.dart    # two-step measurement entry
-│   │       ├── messwert_format.dart             # value formatting + icons
-│   │       ├── messwerte_page.dart              # measurements and notes
-│   │       └── notiz_erfassen_dialog.dart       # free-text note entry
-│   ├── reanimationsfall/
-│   │   ├── data/
-│   │   │   ├── reanimationsfall_session.dart    # load/restore/persist a case
-│   │   │   ├── reanimationsfall_state_json.dart # local state codec
-│   │   │   └── reanimationsfall_store.dart      # store interface + shared_preferences
-│   │   ├── domain/
-│   │   │   ├── adrenalin.dart                   # Adrenalin doses + Zeitfenster state
-│   │   │   ├── amiodaron.dart                   # Amiodaron doses + hint state
-│   │   │   ├── messwert.dart                    # Messwerte + free-text notes
-│   │   │   ├── reanimationsfall.dart           # Startzeit, Reanimationsphase, read model
-│   │   │   ├── rhythmusanalyse.dart            # Rhythmusanalyse result types
-│   │   │   └── schock.dart                     # Schock events
-│   │   └── presentation/
-│   │       ├── actions_sheet.dart              # Weitere Aktionen sheet
-│   │       ├── adrenalin_panel.dart            # Adrenalin Zeitfenster bar
-│   │       ├── amiodaron_panel.dart            # Amiodaron hint + last dose
-│   │       ├── custom_startzeit_dialog.dart    # custom backdate entry
-│   │       ├── end_reanimationsfall_dialog.dart # ending reason
-│   │       ├── phase_action_bar.dart           # phase actions + Aktionen entry
-│   │       ├── phase_strip.dart                # current action + shock count
-│   │       ├── reanimationsfall_page.dart      # running Reanimationsfall
-│   │       ├── reanimationsfall_summary_page.dart # in-app case summary
-│   │       ├── rhythmusanalyse_dialog.dart     # guided result flow
-│   │       ├── rhythmusanalyse_format.dart     # result labels
-│   │       ├── start_card.dart                 # shared start-choice card shell
-│   │       ├── start_page.dart                 # new Reanimationsfall + backdated Startzeit
-│   │       └── timer_format.dart               # MM:SS / H:MM:SS formatting
-│   ├── leitlinienprofil/
-│   │   ├── domain/leitlinienprofil.dart        # ERC 2025 / AHA 2025
-│   │   └── presentation/
-│   │       └── leitlinienprofil_chip.dart      # read-only Leitlinienprofil chip
-│   └── settings/
-│       ├── domain/app_settings.dart            # Leitlinienprofil selection, alerts
-│       └── presentation/settings_page.dart     # settings form
-├── ui/
-│   ├── layout/
-│   │   ├── page_layout.dart                    # breakpoints + density tokens
-│   │   └── page_scaffold.dart                  # shared page frame
-│   └── navigation/
-│       ├── app_destination.dart                # menu destinations
-│       ├── app_drawer.dart                     # drawer + menu button
-│       └── app_routes.dart                     # destination builders
-└── l10n/
-    ├── app_de.arb                              # German UI strings
-    └── app_localizations*.dart                 # generated
-test/
-├── app_settings_test.dart                      # settings behavior
-├── app_test.dart                               # app-seam flows, persistence, and log
-├── reanimationsfall_test.dart                  # start, phases, drugs, ROSC, and Messwerte
-├── reanimationsfall_state_json_test.dart       # local state codec round-trips
-├── reanimationsfall_store_test.dart            # shared_preferences store behavior
-├── timer_format_test.dart                      # timer and wall-clock formatting
-└── support/                                    # fake clock and wake lock
-android/                                        # Android target
-web/                                            # web target
-flake.nix                                       # Nix dev shell
-LICENSE                                         # MIT license
-opencode.json                                   # OpenCode/MCP configuration
-```
-
-## Localization
-
-The interface is currently pinned to German (`Locale('de')`). All visible text lives in `lib/l10n/app_de.arb`; new text belongs there as well.
-
-```bash
-flutter gen-l10n
-```
-
-The generated files under `lib/l10n/` are versioned. If more languages are added later, a corresponding ARB file is added and the fixed locale in `lib/app.dart` is removed.
-
-## Adding iOS later
-
-The iOS files are deliberately not created yet, because building requires macOS with Xcode. On a Mac in the project directory:
-
-```bash
-flutter create --platforms=ios .
-flutter build ios
-```
 
 ## Contributing
 
-Commits follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `docs:`, …) and commit messages are written in English. PRs link the issues they fully resolve with `Closes #<number>` (one keyword per issue) so GitHub closes them on merge. Specs use GitHub sub-issues for their tickets, and dependencies use the native blocked-by relation (`gh issue edit <child> --add-blocked-by <blocker>`). See `AGENTS.md` for the full issue, commit, and PR rules.
-
-## Clinical review
-
-The AHA 2025 profile gives no explicit shock-count trigger for the second
-Amiodaron dose. The app therefore suggests it in the next CPR block after the
-first dose (after Schock 4 when the first dose followed Schock 3). This
-operational choice, the medication behavior across ROSC, and any local HP-CPR
-deviations need clinical review before release.
+- **Development setup:** see [`docs/development.md`](docs/development.md) for the Nix dev shell, running the app, tests, and builds.
+- **CI and releases:** see [`docs/delivery.md`](docs/delivery.md).
+- **Commits** follow [Conventional Commits](https://www.conventionalcommits.org/): `<type>(<optional scope>): <description>`, in English, imperative mood, lowercase, for example `feat(timer): add cycle countdown` or `fix(ui): wrap action button labels`. PR titles use the same format, because a squash merge turns the title into the commit message. release-please derives the version and the [changelog](CHANGELOG.md) from these messages.
+- **Pull requests** link the issues they resolve with `Closes #<number>` (one keyword per issue).
+- **Coding agents** and anyone who wants the full rules for issues, commits, PRs, naming, and layout: see [`AGENTS.md`](AGENTS.md).
 
 ## License
 
 HP-CPR is released under the [MIT License](LICENSE).
-
-## Project metadata
-
-- Flutter project name: `hp_cpr`
-- Android `applicationId` and namespace: `de.simonhauck.hp_cpr`
-- Web app title: `HP-CPR`
-- Repository: [simonhauck/hp-cpr](https://github.com/simonhauck/hp-cpr) (public)
