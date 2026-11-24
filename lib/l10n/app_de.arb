@@ -488,6 +488,22 @@
   "@aboutLicensesDescription": {
     "description": "Erklärung des Lizenzen-Eintrags auf der Über-Seite"
   },
+  "aboutDatenschutzTile": "Datenschutz",
+  "@aboutDatenschutzTile": {
+    "description": "Eintrag zur Datenschutzerklärung auf der Über-Seite"
+  },
+  "aboutDatenschutzDescription": "Datenschutzerklärung der App",
+  "@aboutDatenschutzDescription": {
+    "description": "Erklärung des Datenschutz-Eintrags auf der Über-Seite"
+  },
+  "datenschutzTitle": "Datenschutz",
+  "@datenschutzTitle": {
+    "description": "Titel der Seite mit der Datenschutzerklärung"
+  },
+  "datenschutzLoadError": "Die Datenschutzerklärung konnte nicht geladen werden.",
+  "@datenschutzLoadError": {
+    "description": "Fehlermeldung, wenn der Text der Datenschutzerklärung nicht geladen werden kann"
+  },
   "legalNoticeTitle": "Rechtlicher Hinweis",
   "@legalNoticeTitle": {
     "description": "Titel des Rechtlichen Hinweises (Dialog und Über-Seite)"

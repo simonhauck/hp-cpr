@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:hp_cpr/core/app_info.dart';
+import 'package:hp_cpr/features/datenschutz/presentation/datenschutz_page.dart';
 import 'package:hp_cpr/l10n/app_localizations.dart';
 import 'package:hp_cpr/ui/layout/content_page_scaffold.dart';
 import 'package:hp_cpr/ui/layout/page_layout.dart';
@@ -40,6 +41,14 @@ class _AboutPageState extends State<AboutPage> {
       applicationName: l10n.appTitle,
       applicationVersion: info?.versionLabel(l10n.versionWithBuild),
       applicationLegalese: l10n.licensesLegalese,
+    );
+  }
+
+  void _openDatenschutz() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => DatenschutzPage(routes: widget.routes),
+      ),
     );
   }
 
@@ -92,6 +101,14 @@ class _AboutPageState extends State<AboutPage> {
                 subtitle: Text(l10n.aboutGithubDescription),
                 trailing: const Icon(Icons.open_in_new),
                 onTap: _openGithub,
+              ),
+              const Divider(height: PageLayout.dividerHeight),
+              ListTile(
+                leading: const Icon(Icons.privacy_tip_outlined),
+                title: Text(l10n.aboutDatenschutzTile),
+                subtitle: Text(l10n.aboutDatenschutzDescription),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: _openDatenschutz,
               ),
               const Divider(height: PageLayout.dividerHeight),
               ListTile(
