@@ -520,6 +520,18 @@
   "@datenschutzLoadError": {
     "description": "Fehlermeldung, wenn der Text der Datenschutzerklärung nicht geladen werden kann"
   },
+  "legalNoticeTitle": "Rechtlicher Hinweis",
+  "@legalNoticeTitle": {
+    "description": "Titel des Rechtlichen Hinweises (Dialog und Über-Seite)"
+  },
+  "legalNoticeText": "HP-CPR ist eine Zeit- und Dokumentationshilfe für geschulte Reanimationsteams. Die App trifft keine Behandlungsentscheidungen und ersetzt weder Ausbildung noch aktuelle Leitlinien, lokale SOPs oder die Beurteilung durch das Team. Prüfe alle Zeiten und Hinweise eigenverantwortlich.",
+  "@legalNoticeText": {
+    "description": "Text des Rechtlichen Hinweises, auch für den Store-Eintrag"
+  },
+  "legalNoticeConfirm": "Verstanden",
+  "@legalNoticeConfirm": {
+    "description": "Bestätigung des Rechtlichen Hinweises beim ersten Start"
+  },
   "amiodaronLabel": "Amiodaron",
   "@amiodaronLabel": {
     "description": "Beschriftung des Amiodaron-Hinweises"

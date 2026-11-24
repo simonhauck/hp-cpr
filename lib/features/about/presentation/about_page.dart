@@ -138,6 +138,14 @@ class _AboutPageState extends State<AboutPage> {
             ],
           ),
         ),
+        const SizedBox(height: PageLayout.space16),
+        Card(
+          child: ListTile(
+            leading: const Icon(Icons.gavel_outlined),
+            title: Text(l10n.legalNoticeTitle),
+            subtitle: Text(l10n.legalNoticeText),
+          ),
+        ),
       ],
     );
   }

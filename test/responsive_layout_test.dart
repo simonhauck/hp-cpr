@@ -6,6 +6,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:hp_cpr/app.dart';
 import 'package:hp_cpr/features/reanimationsfall/data/reanimationsfall_store.dart';
+import 'package:hp_cpr/features/settings/data/disclaimer_store.dart';
 import 'package:hp_cpr/features/settings/domain/app_settings.dart';
 
 import 'support/fake_clock.dart';
@@ -39,6 +40,7 @@ void main() {
         clock: clock,
         wakeLock: FakeWakeLock(),
         store: InMemoryReanimationsfallStore(),
+        disclaimerStore: InMemoryDisclaimerStore(),
       ),
     );
     await tester.pumpAndSettle();
@@ -191,6 +193,7 @@ void main() {
         clock: clock,
         wakeLock: FakeWakeLock(),
         store: InMemoryReanimationsfallStore(),
+        disclaimerStore: InMemoryDisclaimerStore(),
       ),
     );
     await tester.pumpAndSettle();
